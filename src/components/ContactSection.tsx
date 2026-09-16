@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { Github, Twitter, Mail, Copy, Check, Send, MessageSquare, ExternalLink, MapPin, CheckCircle2 } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,29 +38,42 @@ export const ContactSection: React.FC = () => {
   };
 
   return (
-    <section id="kontak" className="py-16 bg-[#F7FAFC]">
+    <section id="kontak" aria-labelledby="contact-heading" className="py-16 bg-[#F7FAFC] overflow-hidden scroll-mt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header */}
-        <div className="max-w-3xl mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EDF2F7] text-[#2B6CB0] text-xs font-semibold uppercase tracking-wider mb-2">
+        {/* Semantic Section Header */}
+        <motion.header 
+          id="contact-header"
+          className="max-w-3xl mb-12"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EBF8FF] text-[#2B6CB0] text-xs font-semibold uppercase tracking-wider border border-[#BEE3F8] mb-3">
             {t.contact.badge}
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading text-[#1A202C]">
+          <h2 id="contact-heading" className="text-3xl sm:text-4xl font-extrabold font-heading text-[#1A202C] tracking-tight leading-tight">
             {t.contact.heading}
           </h2>
-          <p className="mt-3 text-base sm:text-lg text-[#718096]">
+          <p className="mt-3 text-base sm:text-lg text-[#718096] leading-relaxed">
             {t.contact.subheading}
           </p>
-        </div>
+        </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left: Contact Info & Social Media Cards */}
-          <div className="lg:col-span-5 space-y-4">
+          <motion.div 
+            className="lg:col-span-5 space-y-4"
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          >
             
             {/* Identity Card with Profile Photo */}
-            <div className="custom-card p-4 border border-[#E2E8F0] flex items-center gap-3.5 bg-white">
+            <div className="custom-card p-4 border border-[#E2E8F0] flex items-center gap-3.5 bg-white shadow-2xs">
               <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#CBD5E0] shrink-0 shadow-2xs">
                 <img
                   src={profileAvatarImg || "/assets/uray_fazli_portrait.png"}
@@ -92,7 +106,7 @@ export const ContactSection: React.FC = () => {
             </div>
             
             {/* GitHub Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors">
+            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#1A202C] text-white flex items-center justify-center">
@@ -105,6 +119,7 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    id="contact-copy-github-btn"
                     onClick={() => handleCopy(personalInfo.socials.github.username, 'github')}
                     className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
                     title={t.profileCard.copyEmail}
@@ -112,6 +127,7 @@ export const ContactSection: React.FC = () => {
                     {copiedKey === 'github' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <a
+                    id="contact-open-github-link"
                     href={personalInfo.socials.github.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -125,7 +141,7 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* X (Twitter) Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors">
+            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#2B6CB0] text-white flex items-center justify-center">
@@ -138,6 +154,7 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    id="contact-copy-x-btn"
                     onClick={() => handleCopy(personalInfo.socials.x.username, 'x')}
                     className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
                     title={t.profileCard.copyEmail}
@@ -145,6 +162,7 @@ export const ContactSection: React.FC = () => {
                     {copiedKey === 'x' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <a
+                    id="contact-open-x-link"
                     href={personalInfo.socials.x.url}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -158,7 +176,7 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* Email Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors">
+            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-[#38A169] text-white flex items-center justify-center">
@@ -171,6 +189,7 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    id="contact-copy-email-btn"
                     onClick={() => handleCopy(personalInfo.socials.email, 'email')}
                     className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
                     title={t.profileCard.copyEmail}
@@ -178,6 +197,7 @@ export const ContactSection: React.FC = () => {
                     {copiedKey === 'email' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <a
+                    id="contact-send-email-link"
                     href={`mailto:${personalInfo.socials.email}`}
                     className="p-2 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors"
                     title={t.contact.sendEmailAction}
@@ -189,16 +209,22 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* Status note */}
-            <div className="p-4 bg-white rounded-lg border border-[#E2E8F0] text-xs text-[#718096] flex items-center gap-3">
+            <div className="p-4 bg-white rounded-lg border border-[#E2E8F0] text-xs text-[#718096] flex items-center gap-3 shadow-2xs">
               <span className="w-2.5 h-2.5 rounded-full bg-[#38A169] animate-pulse shrink-0"></span>
               <span>{t.contact.availabilityNotice}</span>
             </div>
 
-          </div>
+          </motion.div>
 
           {/* Right: Interactive Message Form */}
-          <div className="lg:col-span-7">
-            <div className="custom-card p-6 sm:p-8 border border-[#E2E8F0]">
+          <motion.div 
+            className="lg:col-span-7"
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="custom-card p-6 sm:p-8 border border-[#E2E8F0] shadow-sm">
               <div className="flex items-center gap-2 mb-6">
                 <MessageSquare className="w-5 h-5 text-[#2B6CB0]" />
                 <h3 className="text-lg font-bold font-heading text-[#1A202C]">
@@ -214,6 +240,7 @@ export const ContactSection: React.FC = () => {
                     {t.contact.successDesc}
                   </p>
                   <button
+                    id="contact-send-another-btn"
                     onClick={() => setIsSubmitted(false)}
                     className="mt-3 text-xs text-[#2B6CB0] font-semibold underline cursor-pointer"
                   >
@@ -228,6 +255,7 @@ export const ContactSection: React.FC = () => {
                         {t.contact.formNameLabel}
                       </label>
                       <input
+                        id="contact-input-name"
                         type="text"
                         required
                         placeholder={t.contact.formNamePlaceholder}
@@ -241,6 +269,7 @@ export const ContactSection: React.FC = () => {
                         {t.contact.formEmailLabel}
                       </label>
                       <input
+                        id="contact-input-email"
                         type="email"
                         required
                         placeholder={t.contact.formEmailPlaceholder}
@@ -256,6 +285,7 @@ export const ContactSection: React.FC = () => {
                       {t.contact.formTopicLabel}
                     </label>
                     <input
+                      id="contact-input-topic"
                       type="text"
                       placeholder={t.contact.formTopicPlaceholder}
                       value={formState.networkOrProject}
@@ -269,6 +299,7 @@ export const ContactSection: React.FC = () => {
                       {t.contact.formMessageLabel}
                     </label>
                     <textarea
+                      id="contact-input-message"
                       required
                       rows={4}
                       placeholder={t.contact.formMessagePlaceholder}
@@ -279,6 +310,7 @@ export const ContactSection: React.FC = () => {
                   </div>
 
                   <button
+                    id="contact-submit-btn"
                     type="submit"
                     className="btn-primary w-full py-2.5 text-sm cursor-pointer shadow-xs"
                   >
@@ -288,7 +320,7 @@ export const ContactSection: React.FC = () => {
                 </form>
               )}
             </div>
-          </div>
+          </motion.div>
 
         </div>
 

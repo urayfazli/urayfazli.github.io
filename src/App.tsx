@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { ScrollProgressBar } from './components/ScrollProgressBar';
 import { Hero } from './components/Hero';
 import { NodeExperienceSection } from './components/NodeExperienceSection';
 import { LiveNodeMonitor } from './components/LiveNodeMonitor';
@@ -20,14 +21,14 @@ function PortfolioApp() {
   useEffect(() => {
     const handleScroll = () => {
       const sections = ['tentang', 'pengalaman', 'monitor', 'keahlian', 'kontak'];
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 120;
 
-      for (const sectionId of sections) {
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const sectionId = sections[i];
         const element = document.getElementById(sectionId);
         if (element) {
           const top = element.offsetTop;
-          const height = element.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
+          if (scrollPosition >= top - 80) {
             setActiveSection(sectionId);
             break;
           }
@@ -43,12 +44,20 @@ function PortfolioApp() {
     setActiveSection(sectionId);
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const navbarHeight = 64;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: Math.max(0, elementPosition - navbarHeight - 8),
+        behavior: 'smooth'
+      });
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7FAFC] text-[#1A202C]">
+      {/* Scroll Progress Indicator */}
+      <ScrollProgressBar />
+
       {/* Top Navigation */}
       <Navbar activeSection={activeSection} setActiveSection={setActiveSection} />
 

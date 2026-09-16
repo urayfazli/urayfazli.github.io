@@ -1,4 +1,4 @@
-import { Language, LanguageOption, NodeExperience, SkillCategory } from '../types';
+import { Language, LanguageOption, NodeExperience, SkillCategory, MilestoneItem } from '../types';
 
 export const languageOptions: LanguageOption[] = [
   { code: 'id', label: 'ID', name: 'Bahasa Indonesia', nativeName: 'Indonesia', flag: '🇮🇩' },
@@ -56,6 +56,10 @@ export interface TranslationDictionary {
     hardwareSpecsTitle: string;
     metricsTitle: string;
     techStackTitle: string;
+    timelineBadge: string;
+    timelineTitle: string;
+    timelineSubheading: string;
+    milestones: MilestoneItem[];
     nodes: NodeExperience[];
   };
   telemetry: {
@@ -174,6 +178,107 @@ export const translations: Record<Language, TranslationDictionary> = {
       hardwareSpecsTitle: 'Spesifikasi Server & Arsitektur',
       metricsTitle: 'Metrik Performa Node',
       techStackTitle: 'Teknologi & Tooling',
+      timelineBadge: 'Linimasa Perjalanan Operasional',
+      timelineTitle: 'Milestone & Rekam Jejak Infrastruktur',
+      timelineSubheading: 'Perjalanan profesional mengoperasikan validator consensus, pengamanan arsitektur bare-metal, dan ekspansi indexing multi-chain dari masa ke masa.',
+      milestones: [
+        {
+          id: 'm1',
+          year: '2021',
+          period: 'Q3 2021 - Q4 2021',
+          title: 'Inisiasi Operasional & Riset Node Proof-of-Stake',
+          role: 'Infrastruktur & Linux Systems Engineer',
+          network: 'Cosmos & PoS Testnets',
+          badgeColor: '#718096',
+          description: 'Memulai perjalanan operasional node blockchain dengan mengeksplorasi Cosmos SDK, konfigurasi Linux server hardening (UFW, SSH key authentication), automasi systemd, dan partisipasi aktif dalam testnet terdistribusi.',
+          achievements: [
+            'Setup server bare-metal dan VPS terisolasi dengan optimasi memory swap dan firewall bertingkat.',
+            'Mempelajari mekanika konsensus Tendermint/CometBFT serta mitigasi slashing akibat double-signing.',
+            'Mengembangkan automated shell scripts untuk monitoring resource dan rotasi log berkala.'
+          ],
+          metrics: [
+            { label: 'Eksperimen Testnet', value: '4+ Jaringan' },
+            { label: 'Uptime Awal', value: '99.8%' }
+          ]
+        },
+        {
+          id: 'm2',
+          year: '2022',
+          period: 'Q3 2022 - Sekarang',
+          title: 'Validator Aptos Mainnet & Eksekusi Mesin Block-STM',
+          role: 'Validator & FullNode Operator',
+          network: 'Aptos Network',
+          badgeColor: '#38A169',
+          description: 'Berpartisipasi dalam peluncuran Aptos Mainnet (AIT3 Testnet ke Mainnet), mengoperasikan validator berkemampuan tinggi dengan mesin eksekusi transaksi paralel Block-STM dan arsitektur key management berbasis hardware/vault.',
+          achievements: [
+            'Mengimplementasikan zero-downtime maintenance pipeline menggunakan Docker container orchestration.',
+            'Menyediakan public REST dan gRPC API endpoint berkapasitas tinggi untuk ekosistem dApps Move.',
+            'Mencatatkan rekor 100% zero-slashing dan tingkat keandalan sinkronisasi ledger paralel tinggi.'
+          ],
+          metrics: [
+            { label: 'Uptime Konsensus', value: '99.96%' },
+            { label: 'Insiden Slashing', value: '0 Insiden' }
+          ]
+        },
+        {
+          id: 'm3',
+          year: '2023',
+          period: 'Q1 2023 - Sekarang',
+          title: 'Validator Sei Network & Arsitektur Sentry (SNA)',
+          role: 'Lead Validator Operator',
+          network: 'Sei Network',
+          badgeColor: '#2B6CB0',
+          description: 'Mengoperasikan validator node dan cluster RPC publik pada Layer 1 tercepat untuk trading. Mengadopsi Sentry Node Architecture (SNA) berlapis untuk memitigasi serangan DDoS dan memaksimalkan throughput konsensus Twin-Turbo sub-second.',
+          achievements: [
+            'Membangun sistem kompresi snapshot harian otomatis untuk mempercepat peer bootstrap < 5 menit.',
+            'Menerapkan telemetry real-time Prometheus & Grafana untuk mendeteksi latensi p2p dan missed proposal.',
+            'Berhasil melewati seluruh hardfork dan governance upgrade Sei tanpa downtime konsensus.'
+          ],
+          metrics: [
+            { label: 'Block Latency', value: '~390ms' },
+            { label: 'Partisipasi Blok', value: '99.99%' }
+          ]
+        },
+        {
+          id: 'm4',
+          year: '2023 - 2024',
+          period: 'Q3 2023 - Sekarang',
+          title: 'Infrastruktur SubQuery Data Indexing & Multi-Chain RPC',
+          role: 'Indexer Node Operator & RPC Coordinator',
+          network: 'SubQuery Network',
+          badgeColor: '#DD6B20',
+          description: 'Memperluas kapabilitas ke layer indexing data terdesentralisasi. Mengelola node runner SubQuery terhubung ke PostgreSQL cluster berperforma tinggi untuk menyajikan GraphQL API latensi rendah ke dApps multi-chain.',
+          achievements: [
+            'Optimasi arsitektur database dengan tuning indexing query, buffer cache Redis, dan connection pool.',
+            'Mengindeks lebih dari 50 juta blok lintas ekosistem EVM, Cosmos, dan Substrate.',
+            'Menjamin ketersediaan API 99.95% SLA dengan response time eksekusi rata-rata di bawah 25ms.'
+          ],
+          metrics: [
+            { label: 'Query SLA', value: '99.95%' },
+            { label: 'Response Time', value: '<25ms' }
+          ]
+        },
+        {
+          id: 'm5',
+          year: '2024 - Sekarang',
+          period: '2024 - Present',
+          title: 'Automasi Skala Penuh, Zero-Slashing & High-Availability',
+          role: 'Principal Node Infrastructure Specialist',
+          network: 'Multi-Network Fleet',
+          badgeColor: '#2B6CB0',
+          isCurrent: true,
+          description: 'Mengonsolidasikan seluruh node dalam sistem manajemen terpadu dengan failover otomatis, pemantauan status kesehatan sentry multi-region, dan sistem alert webhook instan untuk kesiapan operasional enterprise 24/7.',
+          achievements: [
+            'Mempertahankan rekor 0 slashing di seluruh validator mainnet dan testnet aktif.',
+            'Membangun infrastruktur backup terenkripsi otomatis dengan offsite snapshot synchronization.',
+            'Membuka layanan konsultasi deployment node dan delegasi staking terpercaya untuk komunitas Web3.'
+          ],
+          metrics: [
+            { label: 'Total Track Record', value: '100% Zero-Slashing' },
+            { label: 'Monitoring SLA', value: '24/7 Real-Time' }
+          ]
+        }
+      ],
       nodes: [
         {
           id: 'sei-network',
@@ -416,6 +521,107 @@ export const translations: Record<Language, TranslationDictionary> = {
       hardwareSpecsTitle: 'Hardware Specifications & Architecture',
       metricsTitle: 'Node Performance Metrics',
       techStackTitle: 'Technologies & Tooling',
+      timelineBadge: 'Operational Journey Timeline',
+      timelineTitle: 'Infrastructure Milestones & Track Record',
+      timelineSubheading: 'A chronological journey of professional node operations, bare-metal server hardening, consensus security, and decentralized indexing expansion.',
+      milestones: [
+        {
+          id: 'm1',
+          year: '2021',
+          period: 'Q3 2021 - Q4 2021',
+          title: 'Proof-of-Stake Node Operations & Research Genesis',
+          role: 'Infrastructure & Linux Systems Engineer',
+          network: 'Cosmos & PoS Testnets',
+          badgeColor: '#718096',
+          description: 'Initiated the blockchain validator journey by mastering Cosmos SDK architectures, Linux enterprise server hardening (UFW firewall rules, key-based SSH), systemd service automations, and decentralized testnet deployments.',
+          achievements: [
+            'Configured bare-metal and dedicated servers with memory swap optimizations and defense-in-depth firewalls.',
+            'Analyzed Tendermint/CometBFT consensus mechanisms and implemented safeguards against double-signing slashing.',
+            'Developed automated bash toolsets for real-time node health monitoring and log rotation.'
+          ],
+          metrics: [
+            { label: 'Testnet Labs', value: '4+ Networks' },
+            { label: 'Early Uptime', value: '99.8%' }
+          ]
+        },
+        {
+          id: 'm2',
+          year: '2022',
+          period: 'Q3 2022 - Present',
+          title: 'Aptos Mainnet Validator & Block-STM Engine Execution',
+          role: 'Validator & FullNode Operator',
+          network: 'Aptos Network',
+          badgeColor: '#38A169',
+          description: 'Participated in the Aptos Mainnet genesis launch (AIT3 Testnet transition to Mainnet), deploying high-throughput validator infrastructure optimized for Block-STM parallel execution engine and hardware-secured key management.',
+          achievements: [
+            'Engineered zero-downtime maintenance workflows leveraging Docker container orchestration and live health checks.',
+            'Provided high-bandwidth public REST and gRPC API endpoints supporting the Move ecosystem.',
+            'Maintained a spotless 100% zero-slashing track record with uninterrupted parallel ledger synchronization.'
+          ],
+          metrics: [
+            { label: 'Consensus Uptime', value: '99.96%' },
+            { label: 'Slashing Incidents', value: '0 Incidents' }
+          ]
+        },
+        {
+          id: 'm3',
+          year: '2023',
+          period: 'Q1 2023 - Present',
+          title: 'Sei Network Validator & Sentry Node Architecture (SNA)',
+          role: 'Lead Validator Operator',
+          network: 'Sei Network',
+          badgeColor: '#2B6CB0',
+          description: 'Deployed validator node and public RPC cluster on the fastest Layer 1 trading blockchain. Implemented multi-tier Sentry Node Architecture (SNA) to isolate validators from DDoS vectors and sustain sub-second Twin-Turbo consensus.',
+          achievements: [
+            'Built automated high-compression daily snapshot pipelines, slashing peer bootstrap time to under 5 minutes.',
+            'Deployed full-stack Prometheus & Grafana dashboards tracking peer latency, memory pressure, and block proposals.',
+            'Seamlessly executed all protocol hardforks and governance upgrades with zero validator downtime.'
+          ],
+          metrics: [
+            { label: 'Block Latency', value: '~390ms' },
+            { label: 'Block Participation', value: '99.99%' }
+          ]
+        },
+        {
+          id: 'm4',
+          year: '2023 - 2024',
+          period: 'Q3 2023 - Present',
+          title: 'SubQuery Decentralized Indexer & Multi-Chain RPC Fleet',
+          role: 'Indexer Node Operator & RPC Coordinator',
+          network: 'SubQuery Network',
+          badgeColor: '#DD6B20',
+          description: 'Expanded infrastructure capabilities into the decentralized data indexing layer. Managed SubQuery node runners paired with high-performance PostgreSQL clusters to serve sub-30ms GraphQL queries across multi-chain ecosystems.',
+          achievements: [
+            'Fine-tuned relational indexing queries, Redis buffer caches, and connection pooling for maximum throughput.',
+            'Successfully indexed over 50 million blocks across EVM, Cosmos, and Substrate networks.',
+            'Delivered enterprise-grade 99.95% API SLA availability with average execution response times below 25ms.'
+          ],
+          metrics: [
+            { label: 'Query SLA', value: '99.95%' },
+            { label: 'Response Time', value: '<25ms' }
+          ]
+        },
+        {
+          id: 'm5',
+          year: '2024 - Present',
+          period: '2024 - Present',
+          title: 'Full-Spectrum Node Automation, Zero-Slashing & Enterprise HA',
+          role: 'Principal Node Infrastructure Specialist',
+          network: 'Multi-Network Fleet',
+          badgeColor: '#2B6CB0',
+          isCurrent: true,
+          description: 'Consolidated multi-network operations into a unified management architecture with automatic failover, multi-region sentry telemetry, and instant webhook alert dispatch for round-the-clock enterprise reliability.',
+          achievements: [
+            'Maintained an unbroken 100% zero-slashing record across all active production mainnet and testnet validators.',
+            'Engineered encrypted offsite snapshot distribution and automated disaster recovery protocols.',
+            'Provided validator delegation infrastructure and institutional consulting services for Web3 builders.'
+          ],
+          metrics: [
+            { label: 'Track Record', value: '100% Zero-Slashing' },
+            { label: 'Monitoring SLA', value: '24/7 Real-Time' }
+          ]
+        }
+      ],
       nodes: [
         {
           id: 'sei-network',
@@ -658,6 +864,107 @@ export const translations: Record<Language, TranslationDictionary> = {
       hardwareSpecsTitle: '硬件配置与服务器架构',
       metricsTitle: '节点运行表现指标',
       techStackTitle: '技术栈与工具链',
+      timelineBadge: '专业运营发展时间线',
+      timelineTitle: '基础设施里程碑与成长历程',
+      timelineSubheading: '记录从 PoS 测试网初探、裸金属服务器加固，到 Layer 1 共识验证与去中心化数据索引集群的完整技术进阶。',
+      milestones: [
+        {
+          id: 'm1',
+          year: '2021',
+          period: '2021年 Q3 - Q4',
+          title: 'PoS 节点运营与底层区块链基建探索',
+          role: 'Linux 系统与基础设施工程师',
+          network: 'Cosmos & PoS 测试网',
+          badgeColor: '#718096',
+          description: '开启区块链节点运营之旅，深入 Cosmos SDK 架构，完成 Linux 企业级服务器加固（UFW 防火墙配置、SSH 密钥认证）、systemd 服务守护及多测试网部署。',
+          achievements: [
+            '配置独立裸金属与 VPS 服务器，深度优化 Swap 内存交换与纵深防御防火墙规则。',
+            '钻研 Tendermint/CometBFT 共识机制，严格规避双签名惩罚（Double-Signing Slashing）。',
+            '编写自动化 Shell 运维脚本，实现资源水位监控与定时日志轮替。'
+          ],
+          metrics: [
+            { label: '测试网实验室', value: '4+ 网络' },
+            { label: '初期在线率', value: '99.8%' }
+          ]
+        },
+        {
+          id: 'm2',
+          year: '2022',
+          period: '2022年 Q3 - 至今',
+          title: 'Aptos 主网验证者部署与 Block-STM 并行架构',
+          role: '验证者 & 全节点运营商',
+          network: 'Aptos Network',
+          badgeColor: '#38A169',
+          description: '深度参与 Aptos 主网创世上线（AIT3 测试网平滑过渡至主网），部署适配 Block-STM 并行执行引擎的高吞吐量验证者与全节点，采用硬件/金库级密钥隔离。',
+          achievements: [
+            '基于 Docker 容器编排构建零停机热升级与实时健康探针。',
+            '为 Move 生态 dApps 提供高并发公共 REST 与 gRPC API 接入点。',
+            '保持 100% 零罚没记录，并行账本同步稳定可靠。'
+          ],
+          metrics: [
+            { label: '共识在线率', value: '99.96%' },
+            { label: '罚没事件', value: '0 次' }
+          ]
+        },
+        {
+          id: 'm3',
+          year: '2023',
+          period: '2023年 Q1 - 至今',
+          title: 'Sei Network 极速验证者与哨兵防护体系 (SNA)',
+          role: '主验证者运维负责人',
+          network: 'Sei Network',
+          badgeColor: '#2B6CB0',
+          description: '在最快交易公链 Sei Network 上部署主网验证者与公共 RPC 集群。实施多层哨兵节点架构（SNA），抵御外部 DDoS 攻击，支撑 Twin-Turbo 亚秒级极速出块。',
+          achievements: [
+            '搭建高压缩比每日快照自动化流水线，将新节点引导时间缩短至 5 分钟以内。',
+            '部署 Prometheus & Grafana 监控大屏，实时追踪 P2P 延迟、内存负载及区块提案状态。',
+            '零故障完成所有硬分叉升级与链上治理决策。'
+          ],
+          metrics: [
+            { label: '出块延迟', value: '~390ms' },
+            { label: '出块参与率', value: '99.99%' }
+          ]
+        },
+        {
+          id: 'm4',
+          year: '2023 - 2024',
+          period: '2023年 Q3 - 至今',
+          title: 'SubQuery 去中心化多链数据索引与 RPC 集群',
+          role: '索引器节点运营商 & RPC 协调员',
+          network: 'SubQuery Network',
+          badgeColor: '#DD6B20',
+          description: '拓展基础设施能力至去中心化数据索引层。管理 SubQuery 运行节点与高性能 PostgreSQL 数据库集群，为多链应用提供低于 30ms 的 GraphQL 查询服务。',
+          achievements: [
+            '调优关系型数据库索引、Redis 高速缓存及连接池参数以释放极致吞吐。',
+            '成功索引跨 EVM、Cosmos 与 Substrate 生态超 5000 万区块高度数据。',
+            '提供企业级 99.95% API SLA 可用性保障，平均查询响应时间低于 25ms。'
+          ],
+          metrics: [
+            { label: '服务 SLA', value: '99.95%' },
+            { label: '响应延迟', value: '<25ms' }
+          ]
+        },
+        {
+          id: 'm5',
+          year: '2024 - 至今',
+          period: '2024 - Present',
+          title: '全链路自动化运维、零罚没记录与企业级高可用',
+          role: '首席节点基础设施架构师',
+          network: '多网络节点集群',
+          badgeColor: '#2B6CB0',
+          isCurrent: true,
+          description: '统一多链多网络运营体系，引入自动故障转移、多地域哨兵遥测与即时 Webhook 告警系统，确保 7x24 小时不间断的企业级安全与稳定性。',
+          achievements: [
+            '全网所有活跃主网与测试网验证者始终保持 100% 零罚没（Zero-Slashing）记录。',
+            '构建加密异地快照同步与灾难恢复机制。',
+            '为 Web3 项目与质押委托者提供专业的节点部署咨询与托管服务。'
+          ],
+          metrics: [
+            { label: '历史惩罚', value: '100% 零罚没' },
+            { label: '监控保障', value: '24/7 实时' }
+          ]
+        }
+      ],
       nodes: [
         {
           id: 'sei-network',
@@ -900,6 +1207,107 @@ export const translations: Record<Language, TranslationDictionary> = {
       hardwareSpecsTitle: 'Характеристики серверов и архитектура',
       metricsTitle: 'Метрики производительности нод',
       techStackTitle: 'Стек технологий и инструменты',
+      timelineBadge: 'Хронология профессионального опыта',
+      timelineTitle: 'Инфраструктурные вехи и трек-рекорд',
+      timelineSubheading: 'Хронологический путь: от тестирования PoS сетей и харденинга серверов до валидации Layer 1 и мультичейн индексации.',
+      milestones: [
+        {
+          id: 'm1',
+          year: '2021',
+          period: 'Q3 2021 - Q4 2021',
+          title: 'Запуск операций с нодами PoS и исследование инфраструктуры',
+          role: 'Инженер Linux-систем и инфраструктуры',
+          network: 'Cosmos & PoS Testnets',
+          badgeColor: '#718096',
+          description: 'Начало пути оператора блокчейн-нод: изучение Cosmos SDK, глубокий харденинг серверов Linux (фаервол UFW, аутентификация по SSH-ключам), автоматизация systemd и участие в распределенных тестнетах.',
+          achievements: [
+            'Настройка bare-metal и VPS-серверов с оптимизацией swap-памяти и эшелонированной защитой.',
+            'Изучение консенсуса Tendermint/CometBFT и предотвращение слэшинга за двойную подпись (Double-Signing).',
+            'Разработка автоматических Bash-скриптов мониторинга нагрузки и ротации логов.'
+          ],
+          metrics: [
+            { label: 'Тестнет-лаборатории', value: '4+ Сети' },
+            { label: 'Начальный аптайм', value: '99.8%' }
+          ]
+        },
+        {
+          id: 'm2',
+          year: '2022',
+          period: 'Q3 2022 - Настоящее время',
+          title: 'Валидатор Aptos Mainnet и оптимизация движка Block-STM',
+          role: 'Validator & FullNode Operator',
+          network: 'Aptos Network',
+          badgeColor: '#38A169',
+          description: 'Участие в запуске Aptos Mainnet (переход из AIT3 тестнета в основную сеть), развертывание высокопроизводительных нод с движком параллельного исполнения Block-STM и аппаратной изоляцией ключей.',
+          achievements: [
+            'Создание пайплайна обновлений без простоя на базе Docker-контейнеризации.',
+            'Предоставление публичных REST и gRPC API для инфраструктуры dApps Move.',
+            'Безупречный рекорд 100% Zero-Slashing и стабильная параллельная синхронизация.'
+          ],
+          metrics: [
+            { label: 'Аптайм консенсуса', value: '99.96%' },
+            { label: 'Инциденты слэшинга', value: '0 Инцидентов' }
+          ]
+        },
+        {
+          id: 'm3',
+          year: '2023',
+          period: 'Q1 2023 - Настоящее время',
+          title: 'Валидатор Sei Network и архитектура Sentry (SNA)',
+          role: 'Lead Validator Operator',
+          network: 'Sei Network',
+          badgeColor: '#2B6CB0',
+          description: 'Развертывание валидатора и публичного RPC-кластера в быстрейшем блокчейне Layer 1. Внедрение многоуровневой архитектуры Sentry Node (SNA) для защиты от DDoS и поддержки субсекундного консенсуса Twin-Turbo.',
+          achievements: [
+            'Создание автоматических сжатых снапшотов с ускорением бутстрапа пиров до < 5 минут.',
+            'Дашборды Prometheus & Grafana для отслеживания задержек p2p и пропущенных блоков в реальном времени.',
+            'Успешное прохождение всех хардфорков протокола и обновлений governance без даунтайма.'
+          ],
+          metrics: [
+            { label: 'Задержка блока', value: '~390мс' },
+            { label: 'Участие в блоках', value: '99.99%' }
+          ]
+        },
+        {
+          id: 'm4',
+          year: '2023 - 2024',
+          period: 'Q3 2023 - Настоящее время',
+          title: 'Децентрализованная индексация SubQuery и мультичейн RPC',
+          role: 'Indexer Node Operator & RPC Coordinator',
+          network: 'SubQuery Network',
+          badgeColor: '#DD6B20',
+          description: 'Расширение инфраструктурного стека на уровень индексации данных. Управление нодами SubQuery в связке с кластером PostgreSQL для мгновенных GraphQL-запросов (<30мс) для мультичейн dApps.',
+          achievements: [
+            'Тюнинг SQL-индексов, кэширование Redis и оптимизация пулов соединений.',
+            'Успешная индексация более 50 миллионов блоков в сетях EVM, Cosmos и Substrate.',
+            'Гарантия SLA доступности API 99.95% со средним временем выполнения запроса менее 25мс.'
+          ],
+          metrics: [
+            { label: 'SLA сервиса', value: '99.95%' },
+            { label: 'Время ответа', value: '<25мс' }
+          ]
+        },
+        {
+          id: 'm5',
+          year: '2024 - Настоящее время',
+          period: '2024 - Present',
+          title: 'Комплексная автоматизация, 100% Zero-Slashing и Enterprise HA',
+          role: 'Principal Node Infrastructure Specialist',
+          network: 'Мультичейн флот нод',
+          badgeColor: '#2B6CB0',
+          isCurrent: true,
+          description: 'Консолидация мультичейн операций в единую систему управления с автоматическим failover, многорегиональной телеметрией sentry и мгновенными Webhook-оповещениями для надежности 24/7.',
+          achievements: [
+            '100% Zero-Slashing рекорд на всех активных валидаторах mainnet и testnet.',
+            'Зашифрованная синхронизация снапшотов и автоматические протоколы disaster recovery.',
+            'Консалтинг по развертыванию нод и инфраструктура стейкинг-делегаций для Web3 сообщества.'
+          ],
+          metrics: [
+            { label: 'История слэшинга', value: '100% Zero-Slashing' },
+            { label: 'Мониторинг SLA', value: '24/7 Real-Time' }
+          ]
+        }
+      ],
       nodes: [
         {
           id: 'sei-network',

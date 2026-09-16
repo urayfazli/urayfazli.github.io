@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Server, CheckCircle2, Cpu, HardDrive, Wifi, ExternalLink, Zap, ShieldAlert, Activity, Database, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { NodeExperience } from '../types';
+import { MilestoneTimeline } from './MilestoneTimeline';
 
 export const NodeExperienceSection: React.FC = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string>('sei-network');
@@ -11,24 +13,37 @@ export const NodeExperienceSection: React.FC = () => {
   const selectedNode = currentNodes.find(n => n.id === selectedNodeId) || currentNodes[0];
 
   return (
-    <section id="pengalaman" className="py-16 bg-[#FFFFFF] border-y border-[#E2E8F0]">
+    <section id="pengalaman" aria-labelledby="experience-heading" className="py-16 bg-[#FFFFFF] border-y border-[#E2E8F0] overflow-hidden scroll-mt-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header */}
-        <div className="max-w-3xl mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EDF2F7] text-[#2B6CB0] text-xs font-semibold uppercase tracking-wider mb-2">
+        {/* Semantic Section Header */}
+        <motion.header 
+          id="experience-header"
+          className="max-w-3xl mb-12"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#EBF8FF] text-[#2B6CB0] text-xs font-semibold uppercase tracking-wider border border-[#BEE3F8] mb-3">
             {t.experience.badge}
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-heading text-[#1A202C]">
+          <h2 id="experience-heading" className="text-3xl sm:text-4xl font-extrabold font-heading text-[#1A202C] tracking-tight leading-tight">
             {t.experience.heading}
           </h2>
-          <p className="mt-3 text-base sm:text-lg text-[#718096]">
+          <p className="mt-3 text-base sm:text-lg text-[#718096] leading-relaxed">
             {t.experience.subheading}
           </p>
-        </div>
+        </motion.header>
 
         {/* Network Selector Tabs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <motion.div 
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        >
           {currentNodes.map((node) => {
             const isSelected = node.id === selectedNodeId;
             return (
@@ -55,10 +70,16 @@ export const NodeExperienceSection: React.FC = () => {
               </button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Detailed Node View */}
-        <div className="custom-card p-6 sm:p-8 border border-[#E2E8F0]">
+        <motion.div 
+          className="custom-card p-6 sm:p-8 border border-[#E2E8F0]"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-[#E2E8F0]">
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
@@ -197,19 +218,32 @@ export const NodeExperienceSection: React.FC = () => {
             </div>
 
           </div>
-        </div>
+        </motion.div>
 
         {/* Comprehensive Grid of All 3 Networks */}
-        <div className="mt-12 pt-8 border-t border-[#E2E8F0]">
+        <motion.div 
+          className="mt-12 pt-8 border-t border-[#E2E8F0]"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h3 className="text-lg font-bold font-heading text-[#1A202C] mb-6">
             {t.experience.heading}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {currentNodes.map((node) => (
-              <div 
+            {currentNodes.map((node, index) => (
+              <motion.div 
                 key={node.id}
                 onClick={() => setSelectedNodeId(node.id)}
-                className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors cursor-pointer"
+                className={`custom-card p-5 border transition-colors cursor-pointer ${
+                  node.id === selectedNodeId ? 'border-[#2B6CB0] ring-1 ring-[#2B6CB0]' : 'border-[#E2E8F0] hover:border-[#2B6CB0]'
+                }`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                whileHover={{ y: -2 }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-bold text-sm text-white px-2 py-0.5 rounded" style={{ backgroundColor: node.badgeColor }}>
@@ -226,10 +260,19 @@ export const NodeExperienceSection: React.FC = () => {
                     {node.status}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
+
+        {/* Vertical Timeline of Professional Milestones */}
+        <MilestoneTimeline 
+          milestones={t.experience.milestones}
+          badgeText={t.experience.timelineBadge}
+          title={t.experience.timelineTitle}
+          subheading={t.experience.timelineSubheading}
+          onSelectNode={(nodeId) => setSelectedNodeId(nodeId)}
+        />
 
       </div>
     </section>

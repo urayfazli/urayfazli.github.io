@@ -45,6 +45,20 @@ export interface SkillCategory {
   }[];
 }
 
+export interface MilestoneItem {
+  id: string;
+  year: string;
+  period: string;
+  title: string;
+  role: string;
+  network?: string;
+  badgeColor?: string;
+  description: string;
+  achievements: string[];
+  metrics?: { label: string; value: string }[];
+  isCurrent?: boolean;
+}
+
 export interface TerminalLog {
   id: string;
   timestamp: string;
