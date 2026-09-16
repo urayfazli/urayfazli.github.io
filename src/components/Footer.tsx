@@ -17,11 +17,19 @@ export const Footer: React.FC = () => {
           
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-[#2B6CB0] flex items-center justify-center text-white">
+              <div 
+                id="footer-logo-tag" 
+                className="w-7 h-7 rounded bg-[#2B6CB0] flex items-center justify-center text-white"
+                title="Logo Uray Fazli Alman"
+                aria-label="Logo Uray Fazli Alman"
+              >
                 <Server className="w-4 h-4" />
               </div>
-              <span className="text-base font-bold font-heading text-[#1A202C]">
+              <span id="footer-web-name-tag" className="text-base font-bold font-heading text-[#1A202C]">
                 {personalInfo.name}
+              </span>
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#EBF8FF] text-[#2B6CB0] border border-[#BEE3F8]">
+                NODE.OPS
               </span>
             </div>
             <p className="text-xs text-[#718096]">
