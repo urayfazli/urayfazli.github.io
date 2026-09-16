@@ -9,6 +9,36 @@
     <meta property="og:description" content="Portofolio profesional Uray Fazli Alman sebagai Node Operator dan Web3 Infrastructure Specialist di Sei Network, Aptos Network, dan SubQuery Network." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      // Defensive guard against browser wallet extension conflicts (e.g. "Cannot redefine property: ethereum")
+      (function () {
+        try {
+          var _eth = window.ethereum;
+          Object.defineProperty(window, 'ethereum', {
+            configurable: true,
+            enumerable: true,
+            get: function () {
+              return _eth;
+            },
+            set: function (val) {
+              _eth = val;
+            }
+          });
+        } catch (e) {}
+
+        window.addEventListener('error', function (event) {
+          if (event && event.message && (event.message.indexOf('ethereum') !== -1 || event.message.indexOf('Cannot redefine property') !== -1)) {
+            if (typeof event.stopImmediatePropagation === 'function') {
+              event.stopImmediatePropagation();
+            }
+            if (typeof event.preventDefault === 'function') {
+              event.preventDefault();
+            }
+            return true;
+          }
+        }, true);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
