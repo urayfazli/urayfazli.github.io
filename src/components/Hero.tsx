@@ -53,32 +53,53 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onContactClick }) =>
               </p>
             </motion.div>
 
-            {/* Featured Network Badges */}
+            {/* Featured Network Badges with Staggered Entrance */}
             <motion.div 
               className="pt-2"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
             >
-              <div className="text-xs uppercase font-semibold text-[#718096] tracking-wider mb-3">
-                {t.hero.operatingNetworksTitle}
+              <div className="text-xs uppercase font-semibold text-[#718096] tracking-wider mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2B6CB0]"></span>
+                <span>{t.hero.operatingNetworksTitle}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#2B6CB0] transition-colors shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-[#2B6CB0]"></span>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -2, boxShadow: "0 6px 14px -3px rgba(43, 108, 176, 0.15)" }}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#2B6CB0] transition-colors shadow-2xs cursor-default"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#2B6CB0] animate-pulse"></span>
                   <span className="text-xs font-semibold text-[#1A202C]">Sei Network</span>
                   <span className="text-[11px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#718096] rounded font-medium">Cosmos SDK</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#38A169] transition-colors shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-[#38A169]"></span>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -2, boxShadow: "0 6px 14px -3px rgba(56, 161, 105, 0.15)" }}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#38A169] transition-colors shadow-2xs cursor-default"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#38A169] animate-pulse"></span>
                   <span className="text-xs font-semibold text-[#1A202C]">Aptos Network</span>
                   <span className="text-[11px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#718096] rounded font-medium">Block-STM</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#DD6B20] transition-colors shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-[#DD6B20]"></span>
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                  whileHover={{ y: -2, boxShadow: "0 6px 14px -3px rgba(221, 107, 32, 0.15)" }}
+                  className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded hover:border-[#DD6B20] transition-colors shadow-2xs cursor-default"
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#DD6B20] animate-pulse"></span>
                   <span className="text-xs font-semibold text-[#1A202C]">SubQuery Network</span>
                   <span className="text-[11px] px-1.5 py-0.5 bg-[#EDF2F7] text-[#718096] rounded font-medium">GraphQL Indexer</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
 
@@ -87,47 +108,59 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onContactClick }) =>
               className="pt-4 flex flex-wrap items-center gap-3"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.35 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
             >
-              <button
+              <motion.button
                 id="hero-explore-btn"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={onExploreClick}
-                className="btn-primary cursor-pointer text-sm py-2.5 px-5 shadow-xs"
+                className="btn-primary cursor-pointer text-sm py-2.5 px-5 min-h-[44px] shadow-xs"
               >
                 <span>{t.hero.viewExperienceBtn}</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
+              </motion.button>
+              
+              <motion.button
                 id="hero-contact-btn"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={onContactClick}
-                className="btn-secondary cursor-pointer text-sm py-2.5 px-5"
+                className="btn-secondary cursor-pointer text-sm py-2.5 px-5 min-h-[44px]"
               >
                 {t.hero.contactBtn}
-              </button>
+              </motion.button>
 
               <div className="flex items-center gap-2 sm:ml-2">
-                <a
+                <motion.a
                   id="hero-github-link"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   href={personalInfo.socials.github.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2.5 bg-white border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors flex items-center gap-1.5 text-xs font-medium shadow-2xs"
-                  title="GitHub @urayfazli"
+                  className="p-2.5 bg-white border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors flex items-center justify-center gap-1.5 text-xs font-medium shadow-2xs min-h-[44px] min-w-[44px]"
+                  title={`GitHub: ${personalInfo.socials.github.username}`}
+                  aria-label={`GitHub Profile ${personalInfo.socials.github.username}`}
                 >
                   <Github className="w-4 h-4" />
                   <span className="hidden sm:inline">{personalInfo.socials.github.username}</span>
-                </a>
-                <a
+                </motion.a>
+                
+                <motion.a
                   id="hero-twitter-link"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                   href={personalInfo.socials.x.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2.5 bg-white border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors flex items-center gap-1.5 text-xs font-medium shadow-2xs"
-                  title="X (Twitter) @urayfazli17"
+                  className="p-2.5 bg-white border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors flex items-center justify-center gap-1.5 text-xs font-medium shadow-2xs min-h-[44px] min-w-[44px]"
+                  title={`X: ${personalInfo.socials.x.username}`}
+                  aria-label={`X Profile ${personalInfo.socials.x.username}`}
                 >
                   <Twitter className="w-4 h-4" />
                   <span className="hidden sm:inline">{personalInfo.socials.x.username}</span>
-                </a>
+                </motion.a>
               </div>
             </motion.div>
           </motion.div>

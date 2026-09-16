@@ -119,44 +119,46 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ customClass = '' }) =>
         </div>
 
         {/* Social & Contact Bar */}
-        <div className="pt-4 flex items-center justify-between gap-2">
+        <div className="pt-4 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <a
               href={personalInfo.socials.github.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 bg-[#F7FAFC] border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors text-xs flex items-center gap-1 font-medium"
+              className="px-3 py-2 bg-[#F7FAFC] border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors text-xs flex items-center justify-center gap-1.5 font-medium min-h-[38px]"
               title={`GitHub: ${personalInfo.socials.github.username}`}
+              aria-label={`GitHub Profile ${personalInfo.socials.github.username}`}
             >
-              <Github className="w-3.5 h-3.5" />
-              <span className="text-[11px]">GitHub</span>
+              <Github className="w-4 h-4" />
+              <span className="text-xs">GitHub</span>
             </a>
             <a
               href={personalInfo.socials.x.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 bg-[#F7FAFC] border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors text-xs flex items-center gap-1 font-medium"
+              className="px-3 py-2 bg-[#F7FAFC] border border-[#E2E8F0] text-[#1A202C] hover:text-[#2B6CB0] hover:border-[#2B6CB0] rounded transition-colors text-xs flex items-center justify-center gap-1.5 font-medium min-h-[38px]"
               title={`X: ${personalInfo.socials.x.username}`}
+              aria-label={`X Profile ${personalInfo.socials.x.username}`}
             >
-              <Twitter className="w-3.5 h-3.5" />
-              <span className="text-[11px]">X.com</span>
+              <Twitter className="w-4 h-4" />
+              <span className="text-xs">X.com</span>
             </a>
           </div>
 
           <button
             onClick={handleCopyEmail}
-            className="text-xs px-2.5 py-2 bg-[#F7FAFC] border border-[#E2E8F0] hover:border-[#2B6CB0] text-[#2B6CB0] font-semibold rounded transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs px-3 py-2 bg-[#F7FAFC] border border-[#E2E8F0] hover:border-[#2B6CB0] text-[#2B6CB0] font-semibold rounded transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[38px]"
             title={t.profileCard.copyEmail}
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-[#38A169]" />
-                <span className="text-[#38A169] text-[11px]">{t.profileCard.copied}</span>
+                <Check className="w-4 h-4 text-[#38A169]" />
+                <span className="text-[#38A169] text-xs font-semibold">{t.profileCard.copied}</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5" />
-                <span className="text-[11px]">{t.profileCard.copyEmail}</span>
+                <Copy className="w-4 h-4" />
+                <span className="text-xs">{t.profileCard.copyEmail}</span>
               </>
             )}
           </button>

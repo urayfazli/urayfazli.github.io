@@ -47,14 +47,20 @@ export const NodeExperienceSection: React.FC = () => {
           {currentNodes.map((node) => {
             const isSelected = node.id === selectedNodeId;
             return (
-              <button
+              <motion.button
                 key={node.id}
                 onClick={() => setSelectedNodeId(node.id)}
                 className={`p-4 text-left rounded-lg transition-all cursor-pointer border ${
                   isSelected
-                    ? 'border-[#2B6CB0] bg-[#F7FAFC] shadow-sm ring-1 ring-[#2B6CB0]'
-                    : 'border-[#E2E8F0] bg-[#FFFFFF] hover:border-[#CBD5E0] hover:bg-[#F7FAFC]'
+                    ? 'border-[#2B6CB0] bg-[#FFFFFF] shadow-sm ring-1 ring-[#2B6CB0]'
+                    : 'border-[#E2E8F0] bg-[#FFFFFF] hover:border-[#CBD5E0]'
                 }`}
+                whileHover={{
+                  y: -3,
+                  boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold px-2 py-0.5 rounded text-white" style={{ backgroundColor: node.badgeColor }}>
@@ -67,18 +73,22 @@ export const NodeExperienceSection: React.FC = () => {
                 </div>
                 <h3 className="text-base font-bold font-heading text-[#1A202C]">{node.name}</h3>
                 <p className="text-xs text-[#718096] truncate mt-0.5">{node.role}</p>
-              </button>
+              </motion.button>
             );
           })}
         </motion.div>
 
         {/* Detailed Node View */}
         <motion.div 
-          className="custom-card p-6 sm:p-8 border border-[#E2E8F0]"
+          className="custom-card p-6 sm:p-8 border border-[#E2E8F0] bg-white transition-all duration-300"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          whileHover={{
+            boxShadow: "0 16px 32px -8px rgba(0, 0, 0, 0.08), 0 6px 12px -2px rgba(0, 0, 0, 0.04)",
+            transition: { duration: 0.25, ease: "easeOut" }
+          }}
         >
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-[#E2E8F0]">
             <div>
@@ -120,13 +130,22 @@ export const NodeExperienceSection: React.FC = () => {
           {/* Performance Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             {selectedNode.metrics.map((metric, idx) => (
-              <div key={idx} className="p-4 bg-[#F7FAFC] rounded-lg border border-[#EDF2F7]">
+              <motion.div 
+                key={idx} 
+                className="p-4 bg-[#F7FAFC] rounded-lg border border-[#EDF2F7] transition-colors"
+                whileHover={{
+                  y: -3,
+                  borderColor: "#2B6CB0",
+                  boxShadow: "0 8px 18px -4px rgba(43, 108, 176, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.04)",
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+              >
                 <div className="text-xs font-medium text-[#718096]">{metric.label}</div>
                 <div className="text-2xl font-extrabold font-heading text-[#2B6CB0] mt-1">
                   {metric.value}
                 </div>
                 <div className="text-xs text-[#718096] mt-0.5">{metric.sublabel}</div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -170,7 +189,15 @@ export const NodeExperienceSection: React.FC = () => {
 
             {/* Hardware & Server Specifications */}
             <div className="lg:col-span-5">
-              <div className="p-5 bg-[#F7FAFC] rounded-lg border border-[#E2E8F0] space-y-4">
+              <motion.div 
+                className="p-5 bg-[#F7FAFC] rounded-lg border border-[#E2E8F0] space-y-4 transition-colors"
+                whileHover={{
+                  y: -3,
+                  borderColor: "#2B6CB0",
+                  boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.03)",
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+              >
                 <h4 className="text-sm font-bold font-heading uppercase text-[#1A202C] tracking-wide flex items-center gap-2">
                   <Server className="w-4 h-4 text-[#2B6CB0]" />
                   {t.experience.hardwareSpecsTitle}
@@ -214,7 +241,7 @@ export const NodeExperienceSection: React.FC = () => {
                   <ShieldAlert className="w-4 h-4 text-[#38A169] shrink-0" />
                   <span>SNA Sentry Node Architecture & DDoS shielded</span>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
           </div>
@@ -236,14 +263,19 @@ export const NodeExperienceSection: React.FC = () => {
               <motion.div 
                 key={node.id}
                 onClick={() => setSelectedNodeId(node.id)}
-                className={`custom-card p-5 border transition-colors cursor-pointer ${
+                className={`custom-card p-5 border transition-colors cursor-pointer bg-white ${
                   node.id === selectedNodeId ? 'border-[#2B6CB0] ring-1 ring-[#2B6CB0]' : 'border-[#E2E8F0] hover:border-[#2B6CB0]'
                 }`}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                whileHover={{ y: -2 }}
+                whileHover={{ 
+                  y: -5,
+                  boxShadow: "0 14px 28px -6px rgba(43, 108, 176, 0.12), 0 6px 12px -2px rgba(0, 0, 0, 0.05)",
+                  transition: { duration: 0.2, ease: "easeOut" }
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-bold text-sm text-white px-2 py-0.5 rounded" style={{ backgroundColor: node.badgeColor }}>

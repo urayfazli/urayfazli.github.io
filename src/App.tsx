@@ -13,9 +13,13 @@ import { SkillsSection } from './components/SkillsSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
+import { useDynamicSEO } from './hooks/useDynamicSEO';
 
 function PortfolioApp() {
   const [activeSection, setActiveSection] = useState<string>('tentang');
+
+  // Dynamically update document title and SEO metadata according to active section and language
+  useDynamicSEO(activeSection);
 
   // Handle active section on scroll
   useEffect(() => {

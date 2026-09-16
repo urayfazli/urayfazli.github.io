@@ -113,8 +113,9 @@ export const MilestoneTimeline: React.FC<MilestoneTimelineProps> = ({
                     : 'border-[#E2E8F0] hover:border-[#CBD5E0] bg-[#FFFFFF]'
                 }`}
                 whileHover={{ 
-                  y: -3, 
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.03)" 
+                  y: -4, 
+                  boxShadow: "0 12px 26px -6px rgba(43, 108, 176, 0.10), 0 4px 8px -2px rgba(0, 0, 0, 0.04)",
+                  transition: { duration: 0.2, ease: "easeOut" }
                 }}
               >
                 {/* Header Row: Period, Role, Network Tag */}

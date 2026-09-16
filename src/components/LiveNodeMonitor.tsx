@@ -156,19 +156,26 @@ export const LiveNodeMonitor: React.FC = () => {
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.35 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4 }}
           >
             {/* Sei Network Status */}
             <motion.div 
-              className="custom-card p-5 border border-[#E2E8F0]"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.05 }}
+              className="custom-card p-5 border border-[#E2E8F0] bg-white hover:border-[#2B6CB0] transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.45, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -4, 
+                boxShadow: "0 12px 24px -6px rgba(43, 108, 176, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#2B6CB0]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#2B6CB0] animate-pulse"></span>
                   <h3 className="text-sm font-bold font-heading text-[#1A202C]">Sei Network Validator</h3>
                 </div>
                 <span className="text-[11px] px-2 py-0.5 bg-[#F0FFF4] text-[#38A169] font-semibold rounded border border-[#C6F6D5]">
@@ -193,14 +200,20 @@ export const LiveNodeMonitor: React.FC = () => {
 
             {/* Aptos Status */}
             <motion.div 
-              className="custom-card p-5 border border-[#E2E8F0]"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.1 }}
+              className="custom-card p-5 border border-[#E2E8F0] bg-white hover:border-[#38A169] transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.45, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -4, 
+                boxShadow: "0 12px 24px -6px rgba(56, 161, 105, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#38A169]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#38A169] animate-pulse"></span>
                   <h3 className="text-sm font-bold font-heading text-[#1A202C]">Aptos FullNode</h3>
                 </div>
                 <span className="text-[11px] px-2 py-0.5 bg-[#F0FFF4] text-[#38A169] font-semibold rounded border border-[#C6F6D5]">
@@ -225,14 +238,20 @@ export const LiveNodeMonitor: React.FC = () => {
 
             {/* SubQuery Status */}
             <motion.div 
-              className="custom-card p-5 border border-[#E2E8F0]"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.15 }}
+              className="custom-card p-5 border border-[#E2E8F0] bg-white hover:border-[#DD6B20] transition-colors"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.45, delay: 0.19, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -4, 
+                boxShadow: "0 12px 24px -6px rgba(221, 107, 32, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#DD6B20]"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#DD6B20] animate-pulse"></span>
                   <h3 className="text-sm font-bold font-heading text-[#1A202C]">SubQuery Indexer</h3>
                 </div>
                 <span className="text-[11px] px-2 py-0.5 bg-[#F0FFF4] text-[#38A169] font-semibold rounded border border-[#C6F6D5]">
@@ -263,9 +282,10 @@ export const LiveNodeMonitor: React.FC = () => {
         ) : (
           <motion.div 
             className="custom-card overflow-hidden border border-[#E2E8F0] shadow-sm"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* Terminal Top Bar */}
             <div className="bg-[#1A202C] px-3.5 sm:px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#2D3748]">

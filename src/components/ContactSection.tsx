@@ -73,7 +73,18 @@ export const ContactSection: React.FC = () => {
           >
             
             {/* Identity Card with Profile Photo */}
-            <div className="custom-card p-4 border border-[#E2E8F0] flex items-center gap-3.5 bg-white shadow-2xs">
+            <motion.div 
+              className="custom-card p-4 border border-[#E2E8F0] flex items-center gap-3.5 bg-white shadow-2xs hover:border-[#2B6CB0] transition-colors"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -3, 
+                boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
+            >
               <div className="w-14 h-14 rounded-lg overflow-hidden border border-[#CBD5E0] shrink-0 shadow-2xs">
                 <img
                   src={profileAvatarImg || "/assets/uray_fazli_portrait.png"}
@@ -103,13 +114,24 @@ export const ContactSection: React.FC = () => {
                   Sei • Aptos • SubQuery
                 </p>
               </div>
-            </div>
+            </motion.div>
             
             {/* GitHub Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
-              <div className="flex items-center justify-between">
+            <motion.div 
+              className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs bg-white"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -3, 
+                boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
+            >
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#1A202C] text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-[#1A202C] text-white flex items-center justify-center shrink-0">
                     <Github className="w-5 h-5" />
                   </div>
                   <div>
@@ -121,8 +143,9 @@ export const ContactSection: React.FC = () => {
                   <button
                     id="contact-copy-github-btn"
                     onClick={() => handleCopy(personalInfo.socials.github.username, 'github')}
-                    className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
+                    className="p-2.5 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title={t.profileCard.copyEmail}
+                    aria-label="Salin username GitHub"
                   >
                     {copiedKey === 'github' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
@@ -131,20 +154,32 @@ export const ContactSection: React.FC = () => {
                     href={personalInfo.socials.github.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors"
+                    className="p-2.5 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title="Buka GitHub"
+                    aria-label="Buka profil GitHub"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* X (Twitter) Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
-              <div className="flex items-center justify-between">
+            <motion.div 
+              className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs bg-white"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -3, 
+                boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
+            >
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#2B6CB0] text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-[#2B6CB0] text-white flex items-center justify-center shrink-0">
                     <Twitter className="w-5 h-5" />
                   </div>
                   <div>
@@ -156,8 +191,9 @@ export const ContactSection: React.FC = () => {
                   <button
                     id="contact-copy-x-btn"
                     onClick={() => handleCopy(personalInfo.socials.x.username, 'x')}
-                    className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
+                    className="p-2.5 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title={t.profileCard.copyEmail}
+                    aria-label="Salin username X.com"
                   >
                     {copiedKey === 'x' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
@@ -166,20 +202,32 @@ export const ContactSection: React.FC = () => {
                     href={personalInfo.socials.x.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors"
+                    className="p-2.5 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title="Buka X.com"
+                    aria-label="Buka profil X.com"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Email Card */}
-            <div className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs">
-              <div className="flex items-center justify-between">
+            <motion.div 
+              className="custom-card p-5 border border-[#E2E8F0] hover:border-[#2B6CB0] transition-colors shadow-2xs bg-white"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ 
+                y: -3, 
+                boxShadow: "0 10px 22px -4px rgba(43, 108, 176, 0.10), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
+                transition: { duration: 0.2, ease: "easeOut" }
+              }}
+            >
+              <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#38A169] text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-[#38A169] text-white flex items-center justify-center shrink-0">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
@@ -191,28 +239,36 @@ export const ContactSection: React.FC = () => {
                   <button
                     id="contact-copy-email-btn"
                     onClick={() => handleCopy(personalInfo.socials.email, 'email')}
-                    className="p-2 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer"
+                    className="p-2.5 text-[#718096] hover:text-[#1A202C] hover:bg-[#EDF2F7] rounded-lg transition-colors cursor-pointer min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title={t.profileCard.copyEmail}
+                    aria-label="Salin Alamat Email"
                   >
                     {copiedKey === 'email' ? <Check className="w-4 h-4 text-[#38A169]" /> : <Copy className="w-4 h-4" />}
                   </button>
                   <a
                     id="contact-send-email-link"
                     href={`mailto:${personalInfo.socials.email}`}
-                    className="p-2 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors"
+                    className="p-2.5 text-[#2B6CB0] hover:bg-[#EBF8FF] rounded-lg transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
                     title={t.contact.sendEmailAction}
+                    aria-label="Kirim Pesan Email"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Status note */}
-            <div className="p-4 bg-white rounded-lg border border-[#E2E8F0] text-xs text-[#718096] flex items-center gap-3 shadow-2xs">
+            <motion.div 
+              className="p-4 bg-white rounded-lg border border-[#E2E8F0] text-xs text-[#718096] flex items-center gap-3 shadow-2xs"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
               <span className="w-2.5 h-2.5 rounded-full bg-[#38A169] animate-pulse shrink-0"></span>
               <span>{t.contact.availabilityNotice}</span>
-            </div>
+            </motion.div>
 
           </motion.div>
 

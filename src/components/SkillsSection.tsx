@@ -49,15 +49,15 @@ export const SkillsSection: React.FC = () => {
             <motion.div 
               key={idx} 
               id={`skills-category-card-${idx}`}
-              className="custom-card p-6 border border-[#E2E8F0] flex flex-col justify-between hover:border-[#2B6CB0] transition-colors cursor-default"
+              className="custom-card p-6 border border-[#E2E8F0] flex flex-col justify-between hover:border-[#2B6CB0] transition-colors cursor-default bg-white"
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.45, delay: idx * 0.12, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ 
                 y: -5, 
-                scale: 1.02, 
-                boxShadow: "0 12px 24px -8px rgba(43, 108, 176, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" 
+                boxShadow: "0 14px 28px -6px rgba(43, 108, 176, 0.12), 0 6px 12px -2px rgba(0, 0, 0, 0.05)",
+                transition: { duration: 0.2, ease: "easeOut" }
               }}
               whileTap={{ scale: 0.99 }}
             >
@@ -106,7 +106,11 @@ export const SkillsSection: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2, scale: 1.008 }}
+          whileHover={{ 
+            y: -3, 
+            boxShadow: "0 12px 24px -6px rgba(43, 108, 176, 0.10), 0 4px 8px -2px rgba(0, 0, 0, 0.04)",
+            transition: { duration: 0.2, ease: "easeOut" }
+          }}
         >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-lg bg-[#2B6CB0] text-white flex items-center justify-center shrink-0 shadow-xs">

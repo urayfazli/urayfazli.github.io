@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Server, Github, Twitter, ArrowUp, Mail, ShieldCheck } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,9 +12,15 @@ export const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-[#FFFFFF] border-t border-[#E2E8F0] pt-12 pb-8 text-[#718096] text-xs">
+    <footer className="bg-[#FFFFFF] border-t border-[#E2E8F0] pt-12 pb-8 text-[#718096] text-xs overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#E2E8F0]">
+        <motion.div 
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[#E2E8F0]"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-30px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
@@ -74,9 +81,15 @@ export const Footer: React.FC = () => {
             </button>
           </div>
 
-        </div>
+        </motion.div>
 
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+        <motion.div 
+          className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-10px" }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-3.5 h-3.5 text-[#38A169]" />
             <span>{t.footer.slaNote}</span>
@@ -84,7 +97,7 @@ export const Footer: React.FC = () => {
           <div>
             {t.footer.rightsReserved}
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );
