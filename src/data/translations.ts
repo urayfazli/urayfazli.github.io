@@ -21,6 +21,7 @@ export interface TranslationDictionary {
     greeting: string;
     name: string;
     bio: string;
+    jobTitles?: string[];
     operatingNetworksTitle: string;
     viewExperienceBtn: string;
     contactBtn: string;
@@ -46,6 +47,21 @@ export interface TranslationDictionary {
     copied: string;
     openProfile: string;
     statsHeading: string;
+  };
+  musicPlayer?: {
+    title: string;
+    subtitle: string;
+    nowPlaying: string;
+    paused: string;
+    play: string;
+    pause: string;
+    next: string;
+    prev: string;
+    volume: string;
+    mute: string;
+    unmute: string;
+    selectTrack: string;
+    ambientBeats: string;
   };
   experience: {
     badge: string;
@@ -143,6 +159,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       greeting: 'Halo, saya',
       name: 'Uray Fazli Alman',
       bio: 'Mengoperasikan validator & full-node berkinerja tinggi serta infrastruktur indexing terdesentralisasi dengan prinsip zero-slashing, arsitektur sentry terlindungi, dan pemantauan real-time 24/7.',
+      jobTitles: [
+        'Web3 Infrastructure Specialist',
+        'Node Operator & Validator',
+        'RPC & Sentry Node Architect',
+        'Decentralized Indexer Operator'
+      ],
       operatingNetworksTitle: 'Node Operator di Jaringan:',
       viewExperienceBtn: 'Lihat Pengalaman Node',
       contactBtn: 'Hubungi Saya',
@@ -168,6 +190,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       copied: 'Tersalin!',
       openProfile: 'Buka Profil',
       statsHeading: 'Metrik Operasional'
+    },
+    musicPlayer: {
+      title: 'Node Ambient Radio',
+      subtitle: 'Lo-Fi Chill & Web3 Node Synth Beats',
+      nowPlaying: 'SEDANG DIPUTAR',
+      paused: 'DIJEDA',
+      play: 'Putar Ambient',
+      pause: 'Jeda Audio',
+      next: 'Track Selanjutnya',
+      prev: 'Track Sebelumnya',
+      volume: 'Volume Audio',
+      mute: 'Bungkam Suara',
+      unmute: 'Nyalakan Suara',
+      selectTrack: 'Daftar Track Ambient',
+      ambientBeats: 'Frekuensi Infrastruktur Node'
     },
     experience: {
       badge: 'Pengalaman Validator & Indexer',
@@ -486,6 +523,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       greeting: "Hello, I'm",
       name: 'Uray Fazli Alman',
       bio: 'Operating high-performance validator & full-nodes and decentralized indexing infrastructure with a strict zero-slashing record, protected sentry architecture, and 24/7 real-time monitoring.',
+      jobTitles: [
+        'Web3 Infrastructure Specialist',
+        'Node Operator & Validator',
+        'RPC & Sentry Node Architect',
+        'Decentralized Indexer Operator'
+      ],
       operatingNetworksTitle: 'Node Operator across Networks:',
       viewExperienceBtn: 'View Node Experience',
       contactBtn: 'Get in Touch',
@@ -511,6 +554,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       copied: 'Copied!',
       openProfile: 'Open Profile',
       statsHeading: 'Operational Metrics'
+    },
+    musicPlayer: {
+      title: 'Node Ambient Radio',
+      subtitle: 'Lo-Fi Chill & Web3 Node Synth Beats',
+      nowPlaying: 'NOW PLAYING',
+      paused: 'PAUSED',
+      play: 'Play Ambient',
+      pause: 'Pause Audio',
+      next: 'Next Track',
+      prev: 'Previous Track',
+      volume: 'Audio Volume',
+      mute: 'Mute Sound',
+      unmute: 'Unmute Sound',
+      selectTrack: 'Ambient Track List',
+      ambientBeats: 'Node Infrastructure Frequency'
     },
     experience: {
       badge: 'Validator & Indexer Experience',
@@ -829,6 +887,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       greeting: '你好，我是',
       name: 'Uray Fazli Alman',
       bio: '运营高性能验证者节点、全节点以及去中心化多链索引基础设施，秉持零罚没（Zero-Slashing）记录、哨兵防护架构与全天候 24/7 实时监控。',
+      jobTitles: [
+        'Web3 基础设施专家',
+        '节点与验证者运营者',
+        'RPC 与哨兵节点架构师',
+        '去中心化索引节点运营者'
+      ],
       operatingNetworksTitle: '运营网络与区块链生态：',
       viewExperienceBtn: '查看节点经验',
       contactBtn: '联系我',
@@ -854,6 +918,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       copied: '已复制！',
       openProfile: '打开主页',
       statsHeading: '运营核心指标'
+    },
+    musicPlayer: {
+      title: 'Node 氛围电台',
+      subtitle: 'Lo-Fi 轻松音效 & Web3 节点合成器',
+      nowPlaying: '正在播放',
+      paused: '已暂停',
+      play: '播放氛围音',
+      pause: '暂停音频',
+      next: '下一曲',
+      prev: '上一曲',
+      volume: '音量调节',
+      mute: '静音',
+      unmute: '取消静音',
+      selectTrack: '曲目列表',
+      ambientBeats: '节点基础设施频率'
     },
     experience: {
       badge: '验证者与索引器运营经验',
@@ -1172,6 +1251,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       greeting: 'Привет, я',
       name: 'Uray Fazli Alman',
       bio: 'Управление высокопроизводительными валидаторами, полными нодами и децентрализованной инфраструктурой индексации с абсолютным отсутствием слэшинга (Zero-Slashing), архитектурой Sentry и круглосуточным мониторингом 24/7.',
+      jobTitles: [
+        'Специалист по Web3 инфраструктуре',
+        'Оператор нод и валидаторов',
+        'Архитектор RPC и Sentry нод',
+        'Оператор децентрализованных индексаторов'
+      ],
       operatingNetworksTitle: 'Оператор нод в сетях:',
       viewExperienceBtn: 'Смотреть опыт нод',
       contactBtn: 'Связаться со мной',
@@ -1197,6 +1282,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       copied: 'Скопировано!',
       openProfile: 'Открыть профиль',
       statsHeading: 'Операционные метрики'
+    },
+    musicPlayer: {
+      title: 'Node Ambient Radio',
+      subtitle: 'Lo-Fi Chill & Web3 Node Synth Beats',
+      nowPlaying: 'СЕЙЧАС ИГРАЕТ',
+      paused: 'ПАУЗА',
+      play: 'Воспроизвести',
+      pause: 'Пауза',
+      next: 'Следующий трек',
+      prev: 'Предыдущий трек',
+      volume: 'Громкость',
+      mute: 'Выключить звук',
+      unmute: 'Включить звук',
+      selectTrack: 'Список треков',
+      ambientBeats: 'Частота инфраструктуры нод'
     },
     experience: {
       badge: 'Опыт валидатора и индексатора',

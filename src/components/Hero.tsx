@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Github, Twitter, ArrowRight, Server, ShieldCheck, Zap } from 'lucide-react';
+import { Github, Twitter, ArrowRight, Server, ShieldCheck, Zap, Terminal } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
 import { ProfileCard } from './ProfileCard';
@@ -11,8 +11,58 @@ interface HeroProps {
   onContactClick: () => void;
 }
 
+const defaultRoles = [
+  'Web3 Infrastructure Specialist',
+  'Node Operator & Validator',
+  'RPC & Sentry Node Architect',
+  'Decentralized Indexer Operator'
+];
+
 export const Hero: React.FC<HeroProps> = ({ onExploreClick, onContactClick }) => {
   const { t } = useLanguage();
+  const roles = t.hero.jobTitles || defaultRoles;
+
+  // Custom Typewriter Animation Effect
+  const [roleIndex, setRoleIndex] = useState(0);
+  const [currentTypedText, setCurrentTypedText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const targetRoles = roles.length > 0 ? roles : defaultRoles;
+    const currentFullRole = targetRoles[roleIndex % targetRoles.length];
+
+    let timer: NodeJS.Timeout;
+
+    if (isDeleting) {
+      if (currentTypedText.length > 0) {
+        timer = setTimeout(() => {
+          setCurrentTypedText(currentFullRole.substring(0, currentTypedText.length - 1));
+        }, 30);
+      } else {
+        setIsDeleting(false);
+        setRoleIndex((prev) => (prev + 1) % targetRoles.length);
+      }
+    } else {
+      if (currentTypedText.length < currentFullRole.length) {
+        timer = setTimeout(() => {
+          setCurrentTypedText(currentFullRole.substring(0, currentTypedText.length + 1));
+        }, 55);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2200);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [currentTypedText, isDeleting, roleIndex, roles]);
+
+  // Reset typewriter when language or roles change
+  useEffect(() => {
+    setCurrentTypedText('');
+    setIsDeleting(false);
+    setRoleIndex(0);
+  }, [roles]);
 
   return (
     <section id="tentang" className="relative pt-12 pb-16 md:pt-16 md:pb-24 overflow-hidden scroll-mt-16">
@@ -48,7 +98,20 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick, onContactClick }) =>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading text-[#1A202C] tracking-tight leading-tight">
                 {t.hero.greeting} <span className="text-[#2B6CB0]">{personalInfo.name}</span>
               </h1>
-              <p className="text-base sm:text-lg text-[#718096] leading-relaxed max-w-2xl">
+
+              {/* Subtle Typing Animation for Web3 Node Operator & Infrastructure Roles */}
+              <div className="pt-1 pb-1">
+                <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-[#E2E8F0] rounded-lg shadow-2xs font-mono text-sm sm:text-base font-semibold text-[#1A202C] max-w-full overflow-hidden">
+                  <Terminal className="w-4 h-4 text-[#2B6CB0] shrink-0" />
+                  <span className="text-[#718096] select-none">&gt;</span>
+                  <span className="text-[#2B6CB0] font-bold tracking-tight truncate min-h-[24px] flex items-center">
+                    {currentTypedText}
+                  </span>
+                  <span className="w-2 h-4 sm:h-5 bg-[#2B6CB0] inline-block animate-pulse rounded-xs shrink-0" />
+                </div>
+              </div>
+
+              <p className="text-base sm:text-lg text-[#718096] leading-relaxed max-w-2xl pt-1">
                 {t.hero.bio}
               </p>
             </motion.div>

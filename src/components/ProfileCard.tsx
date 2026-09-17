@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Github, Twitter, Mail, ShieldCheck, Server, Copy, Check, ExternalLink, MapPin, CheckCircle2, Terminal } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 import { useLanguage } from '../context/LanguageContext';
+import { MusicPlayerCard } from './MusicPlayerCard';
 import profileAvatarImg from '../assets/images/uray_fazli_portrait.png';
 
 interface ProfileCardProps {
@@ -116,6 +117,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ customClass = '' }) =>
               <span>SubQuery Network</span>
             </span>
           </div>
+        </div>
+
+        {/* Ambient Web3 Music Player Card */}
+        <div className="my-4">
+          <MusicPlayerCard />
         </div>
 
         {/* Social & Contact Bar */}
