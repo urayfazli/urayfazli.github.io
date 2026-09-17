@@ -207,7 +207,10 @@ export const MusicPlayerCard: React.FC<MusicPlayerCardProps> = ({ compact = fals
       };
 
       const handleError = () => {
-        // Switch to procedural synth if audio file is not present in /public/audio/ or invalid
+        // Switch to procedural synth if audio file is not present in /public/audio/ or invalid (e.g. 0 bytes)
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         setUsingSynthFallback(true);
       };
 
@@ -249,11 +252,14 @@ export const MusicPlayerCard: React.FC<MusicPlayerCardProps> = ({ compact = fals
   useEffect(() => {
     if (isPlaying) {
       if (currentTrack.audioUrl && audioRef.current && !usingSynthFallback) {
+        stopSynth();
         audioRef.current.play().catch(() => {
+          if (audioRef.current) audioRef.current.pause();
           setUsingSynthFallback(true);
           startSynth();
         });
       } else {
+        if (audioRef.current) audioRef.current.pause();
         startSynth();
       }
 
@@ -288,6 +294,9 @@ export const MusicPlayerCard: React.FC<MusicPlayerCardProps> = ({ compact = fals
   }, [isPlaying, usingSynthFallback, currentTrackIndex, volume, isMuted]);
 
   const togglePlay = () => {
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().catch(() => {});
+    }
     setIsPlaying(!isPlaying);
   };
 
