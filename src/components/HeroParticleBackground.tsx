@@ -24,7 +24,6 @@ export const HeroParticleBackground: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Check for reduced motion preference
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const isReducedMotion = mediaQuery.matches;
 
@@ -33,12 +32,11 @@ export const HeroParticleBackground: React.FC = () => {
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
 
-    // Palette matching the Web3 Node infrastructure theme
     const nodeColors = [
-      '#2B6CB0', // Primary Sei / Web3 Blue
-      '#2B6CB0', // Repeated for majority weight
-      '#38A169', // Aptos Green
-      '#DD6B20', // SubQuery Orange
+      '#2B6CB0',
+      '#2B6CB0',
+      '#38A169',
+      '#DD6B20',
     ];
 
     let particles: Particle[] = [];
@@ -56,12 +54,10 @@ export const HeroParticleBackground: React.FC = () => {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      // Scale context for retina screens
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // Reinitialize particle density based on screen area
       const particleCount = Math.min(Math.floor((width * height) / 18000), 42);
-      
+
       particles = [];
       for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -78,10 +74,22 @@ export const HeroParticleBackground: React.FC = () => {
       }
     };
 
-    const resizeObserver = new ResizeObserver(() => {
-      handleResize();
-    });
-    resizeObserver.observe(container);
+    const resizeListener = () => handleResize();
+
+    const startResizeObserver = () => {
+      if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+          handleResize();
+        });
+        resizeObserver.observe(container);
+        return resizeObserver;
+      }
+
+      window.addEventListener('resize', resizeListener);
+      return null;
+    };
+
+    const resizeObserver = startResizeObserver();
     handleResize();
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -104,10 +112,8 @@ export const HeroParticleBackground: React.FC = () => {
       time += 0.02;
       ctx.clearRect(0, 0, width, height);
 
-      // Max distance for drawing connecting network lines
       const maxConnectDistance = Math.min(width * 0.22, 115);
 
-      // Draw connecting lines between adjacent nodes
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
@@ -126,7 +132,6 @@ export const HeroParticleBackground: React.FC = () => {
         }
       }
 
-      // Draw mouse interaction connections
       if (mouse.x > 0 && mouse.y > 0) {
         for (let i = 0; i < particles.length; i++) {
           const dx = mouse.x - particles[i].x;
@@ -142,7 +147,6 @@ export const HeroParticleBackground: React.FC = () => {
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            // Subtle gentle pull towards cursor
             if (!isReducedMotion && dist > 20) {
               particles[i].x += (dx / dist) * 0.25;
               particles[i].y += (dy / dist) * 0.25;
@@ -151,7 +155,6 @@ export const HeroParticleBackground: React.FC = () => {
         }
       }
 
-      // Draw & update individual particles (Web3 nodes)
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
 
@@ -159,7 +162,6 @@ export const HeroParticleBackground: React.FC = () => {
           p.x += p.vx;
           p.y += p.vy;
 
-          // Bounce off boundary walls gently
           if (p.x < 0) {
             p.x = 0;
             p.vx *= -1;
@@ -177,7 +179,6 @@ export const HeroParticleBackground: React.FC = () => {
           }
         }
 
-        // Calculate pulsing opacity
         const pulse = Math.sin(time * p.pulseSpeed * 60 + p.pulseOffset);
         const currentAlpha = Math.max(0.08, p.baseAlpha + pulse * 0.08);
 
@@ -187,7 +188,6 @@ export const HeroParticleBackground: React.FC = () => {
         ctx.globalAlpha = currentAlpha;
         ctx.fill();
 
-        // Subtle outer node halo ring
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius * 2.2, 0, Math.PI * 2);
         ctx.strokeStyle = p.color;
@@ -205,7 +205,8 @@ export const HeroParticleBackground: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', resizeListener);
       container.removeEventListener('mousemove', handleMouseMove);
       container.removeEventListener('mouseleave', handleMouseLeave);
     };

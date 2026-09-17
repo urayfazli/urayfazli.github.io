@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { ScrollProgressBar } from './components/ScrollProgressBar';
@@ -14,6 +9,48 @@ import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
 import { useDynamicSEO } from './hooks/useDynamicSEO';
+
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Portfolio render error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC] px-6">
+          <div className="max-w-md rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center shadow-sm">
+            <h1 className="font-heading text-2xl font-bold text-[#1A202C]">Something went wrong</h1>
+            <p className="mt-3 text-sm text-[#718096]">
+              The portfolio is temporarily unavailable. Please refresh the page or try again later.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-5 btn-primary"
+            >
+              Refresh page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function PortfolioApp() {
   const [activeSection, setActiveSection] = useState<string>('tentang');
@@ -89,10 +126,10 @@ function PortfolioApp() {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <PortfolioApp />
-    </LanguageProvider>
+    <AppErrorBoundary>
+      <LanguageProvider>
+        <PortfolioApp />
+      </LanguageProvider>
+    </AppErrorBoundary>
   );
 }
-
-
