@@ -122,3 +122,107 @@ html {
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
 }
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+ * HAND-DRAWN DOODLE SKETCHBOOK CARD SYSTEM
+ * ============================================================================ */
+.doodle-card {
+  position: relative;
+  background-color: #141c28;
+  background-image: radial-gradient(rgba(251, 238, 224, 0.065) 1px, transparent 1px);
+  background-size: 16px 16px;
+  border: 2.5px solid #fbeee0;
+  border-radius: 26px 18px 28px 20px / 20px 28px 18px 26px;
+  box-shadow:
+    6px 6px 0px #9d613c,
+    6px 6px 0px 2px rgba(251, 238, 224, 0.35);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+
+.doodle-card::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1.5px dashed rgba(251, 238, 224, 0.16);
+  border-radius: 21px 14px 23px 16px / 16px 23px 14px 21px;
+  pointer-events: none;
+}
+
+.doodle-card:hover {
+  transform: translate(-2px, -3px);
+  border-color: #ffffff;
+  box-shadow:
+    8px 8px 0px #e59b63,
+    8px 8px 0px 2px rgba(251, 238, 224, 0.55);
+}
+
+.doodle-card-alt {
+  border-radius: 20px 28px 18px 26px / 26px 18px 28px 20px;
+}
+
+.doodle-card-alt::before {
+  border-radius: 16px 23px 14px 21px / 21px 14px 23px 16px;
+}
+
+.doodle-subcard {
+  position: relative;
+  background-color: #0e1520;
+  border: 2px solid rgba(251, 238, 224, 0.85);
+  border-radius: 18px 13px 20px 14px / 14px 19px 13px 18px;
+  box-shadow: 4px 4px 0px #9d613c;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.2s ease;
+}
+
+.doodle-subcard:hover {
+  transform: translate(-2px, -2.5px);
+  border-color: #fbeee0;
+  box-shadow: 6px 6px 0px #e59b63;
+}
+
+.doodle-tag {
+  border: 1.8px solid rgba(251, 238, 224, 0.75);
+  border-radius: 13px 9px 14px 10px / 10px 14px 9px 12px;
+  box-shadow: 2.5px 2.5px 0px #9d613c;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.doodle-tag:hover {
+  transform: translate(-1px, -1.5px);
+  border-color: #fbeee0;
+  box-shadow: 3.5px 3.5px 0px #e59b63;
+}
+

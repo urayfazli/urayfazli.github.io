@@ -15,9 +15,11 @@ import { Footer } from './components/Footer';
 import { RevealOnScroll } from './components/RevealOnScroll';
 import { NETWORKS_DATA } from './data/portfolioData';
 import { NetworkInfo } from './types';
-import { DoodleStar } from './components/Doodles';
+import { DoodleStar, DoodleTape, DoodleCornerHatch } from './components/Doodles';
 import { BackgroundLayer } from './components/BackgroundLayer';
 import { RetroAudioPlayer } from './components/RetroAudioPlayer';
+import { RunningTextMarquee } from './components/RunningTextMarquee';
+import { NodeSentryCharacter } from './components/CardCharacters';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -112,6 +114,9 @@ export default function App() {
         onOpenContact={() => setContactModalOpen(true)}
       />
 
+      {/* Running Text Marquee Banner */}
+      <RunningTextMarquee />
+
       {/* Main Content Area */}
       <main className="flex-grow relative z-10">
         
@@ -144,67 +149,87 @@ export default function App() {
               {/* Infrastructure Philosophy & Stats Side Card */}
               <div className="lg:col-span-5 flex flex-col">
                 <RevealOnScroll delay={150} className="h-full flex flex-col">
-                  <div className="relative rounded-3xl bg-[#141c28] border border-[#232f42] p-6 sm:p-8 flex flex-col justify-between shadow-xl transition-all duration-300 hover:border-[#9d613c]/50 h-full">
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[#fbeee0] text-xl font-fredoka">〔</span>
-                        <h3 className="font-fredoka text-2xl font-medium text-[#fbeee0]">
-                          Node Operations
-                        </h3>
-                        <DoodleStar className="w-5 h-5 text-[#9d613c] animate-twinkle" />
+                  <div className="doodle-card doodle-card-alt p-6 sm:p-8 flex flex-col justify-between h-full">
+                    {/* Top Sketchbook Tape */}
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rotate-[2deg] pointer-events-none z-20">
+                      <DoodleTape className="w-24 sm:w-28 h-6" />
+                    </div>
+
+                    {/* Top-Left Corner Sketch Hatch Marks */}
+                    <DoodleCornerHatch className="absolute top-2.5 left-2.5 w-6 h-6 text-[#9d613c]/45 pointer-events-none" />
+
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="text-[#e59b63] text-2xl font-hand font-bold">〔</span>
+                            <h3 className="font-fredoka text-2xl font-medium text-[#fbeee0]">
+                              Node Operations
+                            </h3>
+                            <DoodleStar className="w-5 h-5 text-[#e59b63] animate-twinkle" />
+                          </div>
+                          <span className="font-hand text-sm text-[#e59b63] ml-6 -mt-1">
+                            ~ 24/7 sentry & telemetry ~
+                          </span>
+                        </div>
+
+                        {/* Animated Hovering Validator Sentry Mech */}
+                        <div className="-mt-2 -mr-1 shrink-0">
+                          <NodeSentryCharacter />
+                        </div>
                       </div>
                       
-                      <p className="text-sm text-[#d8c7b6] leading-relaxed mb-6">
+                      <p className="text-sm text-[#f0e4d6] leading-relaxed mb-6 pl-3 border-l-2 border-dashed border-[#9d613c]/70">
                         Dedicated to high-availability validator architecture with 24/7 automated telemetry, zero-downtime key rotation, and strict security hardening.
                       </p>
 
-                      {/* Stat Grid */}
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
-                        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#232f42]/80">
+                      {/* Sketchbook Doodle Stat Grid */}
+                      <div className="grid grid-cols-2 gap-3.5 sm:gap-4 mb-6">
+                        <div className="doodle-subcard p-4">
                           <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
                             99.9%
                           </span>
-                          <span className="text-xs font-mono text-[#bba998]">
+                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
                             Historical Uptime
                           </span>
                         </div>
-                        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#232f42]/80">
+                        <div className="doodle-subcard p-4">
                           <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
                             3+
                           </span>
-                          <span className="text-xs font-mono text-[#bba998]">
+                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
                             Active Networks
                           </span>
                         </div>
-                        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#232f42]/80">
+                        <div className="doodle-subcard p-4">
                           <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
                             24/7
                           </span>
-                          <span className="text-xs font-mono text-[#bba998]">
+                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
                             Alerts & Sentry
                           </span>
                         </div>
-                        <div className="p-4 rounded-2xl bg-[#0f1520] border border-[#232f42]/80">
+                        <div className="doodle-subcard p-4">
                           <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
                             100%
                           </span>
-                          <span className="text-xs font-mono text-[#bba998]">
-                            Slashing Protection
+                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
+                            Slashing Guard
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Footer badge */}
-                    <div className="pt-4 border-t border-white/5 flex items-center justify-between text-xs text-[#bba998]">
+                    <div className="relative z-10 pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex items-center justify-between text-xs text-[#d6c4b2]">
                       <span className="flex items-center gap-1.5 font-mono">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                         Production Grade
                       </span>
                       <button
                         type="button"
                         onClick={() => handleNavigate('experience')}
-                        className="text-[#9d613c] hover:text-[#fbeee0] font-medium cursor-pointer transition-colors"
+                        className="font-hand text-base text-[#e59b63] hover:text-[#fbeee0] font-medium cursor-pointer transition-colors"
                       >
                         View Networks ↓
                       </button>

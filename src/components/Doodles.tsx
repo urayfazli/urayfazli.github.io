@@ -304,4 +304,70 @@ export const RetroSpeakerDoodle: React.FC<{ className?: string; isMuted?: boolea
   </svg>
 );
 
+// Hand-drawn sketchbook masking / washi tape strip for card top edge
+export const DoodleTape: React.FC<{ className?: string }> = ({
+  className = 'w-24 h-6',
+}) => (
+  <svg
+    viewBox="0 0 110 26"
+    fill="none"
+    className={className}
+    aria-hidden="true"
+  >
+    <path
+      d="M6 4L3 9L7 14L4 19L8 23L103 21L107 16L103 11L106 6L101 2L6 4Z"
+      fill="#9d613c"
+      fillOpacity="0.35"
+      stroke="#fbeee0"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <line x1="20" y1="6" x2="16" y2="19" stroke="#fbeee0" strokeOpacity="0.35" strokeWidth="1.4" strokeLinecap="round" />
+    <line x1="32" y1="6" x2="28" y2="19" stroke="#fbeee0" strokeOpacity="0.35" strokeWidth="1.4" strokeLinecap="round" />
+    <line x1="78" y1="5" x2="74" y2="18" stroke="#fbeee0" strokeOpacity="0.35" strokeWidth="1.4" strokeLinecap="round" />
+    <line x1="90" y1="5" x2="86" y2="18" stroke="#fbeee0" strokeOpacity="0.35" strokeWidth="1.4" strokeLinecap="round" />
+  </svg>
+);
+
+// Hand-drawn corner hatch shading lines for doodle cards
+export const DoodleCornerHatch: React.FC<{ className?: string }> = ({
+  className = 'w-7 h-7 text-[#9d613c]/60',
+}) => (
+  <svg
+    viewBox="0 0 28 28"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M4 14L14 4" />
+    <path d="M4 21L21 4" />
+    <path d="M10 24L24 10" />
+  </svg>
+);
+
+// Hand-drawn notebook binder / pin spiral accent
+export const DoodleSpiral: React.FC<{ className?: string }> = ({
+  className = 'w-14 h-5 text-[#fbeee0]',
+}) => (
+  <svg
+    viewBox="0 0 64 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M8 16C6 10 8 3 12 3C16 3 16 14 13 16" />
+    <path d="M24 16C22 10 24 3 28 3C32 3 32 14 29 16" />
+    <path d="M40 16C38 10 40 3 44 3C48 3 48 14 45 16" />
+    <path d="M56 16C54 10 56 3 60 3" />
+  </svg>
+);
+
+
 
