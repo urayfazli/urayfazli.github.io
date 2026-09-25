@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { retroAudio } from '../utils/retroAudioEngine';
 import { RetroCassetteDoodle, RetroSpeakerDoodle, DoodleTape } from './Doodles';
@@ -532,9 +532,34 @@ export const RetroAudioPlayer: React.FC = () => {
   const [typedText, setTypedText] = useState('');
   const [npcTalkBounce, setNpcTalkBounce] = useState(false);
 
-  // Full-viewport constraint ref so the user can drag the widget anywhere on screen
-  const viewportConstraintsRef = useRef<HTMLDivElement>(null);
-  const didDragRef = useRef(false);
+  // Scroll-independent viewport offset (dx, dy from initial bottom-left anchor)
+  const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [viewportInfo, setViewportInfo] = useState<{
+    openDownward: boolean;
+    bubbleOnLeft: boolean;
+  }>({
+    openDownward: false,
+    bubbleOnLeft: false,
+  });
+
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const dragSessionRef = useRef<{
+    active: boolean;
+    pointerId: number | null;
+    startClientX: number;
+    startClientY: number;
+    startOffsetX: number;
+    startOffsetY: number;
+    movedBeyondThreshold: boolean;
+  }>({
+    active: false,
+    pointerId: null,
+    startClientX: 0,
+    startClientY: 0,
+    startOffsetX: 0,
+    startOffsetY: 0,
+    movedBeyondThreshold: false,
+  });
 
   useEffect(() => {
     const unsubscribe = retroAudio.subscribe(() => {
@@ -546,6 +571,130 @@ export const RetroAudioPlayer: React.FC = () => {
     });
     return unsubscribe;
   }, []);
+
+  /**
+   * Clamp widget offset so it never escapes the visible viewport,
+   * and compute whether it is near the top or right edge so the popup & speech bubble auto-flip.
+   */
+  const clampAndInspectBounds = useCallback(
+    (rawX: number, rawY: number) => {
+      const el = widgetRef.current;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const margin = 12;
+
+      const width = el ? el.offsetWidth : 280;
+      const height = el ? el.offsetHeight : 110;
+
+      // Base anchor is bottom: 16px (or 20px), left: 16px (or 20px)
+      const baseLeft = vw >= 640 ? 20 : 16;
+      const baseBottom = vw >= 640 ? 20 : 16;
+
+      // Minimum & maximum allowed X translation relative to baseLeft
+      const minX = -(baseLeft - margin);
+      const maxX = Math.max(minX, vw - width - baseLeft - margin);
+
+      // Minimum & maximum allowed Y translation relative to baseBottom (negative Y moves upward)
+      const minY = -(vh - height - baseBottom - margin);
+      const maxY = baseBottom - margin;
+
+      const clampedX = Math.min(Math.max(rawX, minX), maxX);
+      const clampedY = Math.min(Math.max(rawY, minY), maxY);
+
+      const currentLeft = baseLeft + clampedX;
+      const currentTop = vh - baseBottom - height + clampedY;
+
+      // If dragged into the top 270px of screen, open player card downward so it never clips top edge
+      const openDownward = currentTop < 260;
+      // If dragged to the right half of screen, place speech bubble on left of character if needed
+      const bubbleOnLeft = currentLeft > vw * 0.52;
+
+      setViewportInfo({ openDownward, bubbleOnLeft });
+      return { x: clampedX, y: clampedY };
+    },
+    []
+  );
+
+  // Re-clamp on window resize or when widget expands/hides so it never gets stuck off-screen
+  useEffect(() => {
+    const handleResize = () => {
+      setOffset((prev) => clampAndInspectBounds(prev.x, prev.y));
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [clampAndInspectBounds, isExpanded, isWidgetVisible]);
+
+  // Pointer-capture omnidirectional drag handlers (immune to page scroll & layout shifts)
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Allow normal interaction on range slider inputs
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT') return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+    dragSessionRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startOffsetX: offset.x,
+      startOffsetY: offset.y,
+      movedBeyondThreshold: false,
+    };
+
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore if pointer capture unsupported
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const session = dragSessionRef.current;
+    if (!session.active || session.pointerId !== e.pointerId) return;
+
+    const dx = e.clientX - session.startClientX;
+    const dy = e.clientY - session.startClientY;
+    const distance = Math.hypot(dx, dy);
+
+    // 6px threshold cleanly separates an intentional drag from a tap/click
+    if (!session.movedBeyondThreshold && distance > 6) {
+      session.movedBeyondThreshold = true;
+      setIsDragging(true);
+    }
+
+    if (session.movedBeyondThreshold) {
+      const next = clampAndInspectBounds(
+        session.startOffsetX + dx,
+        session.startOffsetY + dy
+      );
+      setOffset(next);
+    }
+  };
+
+  const endPointerSession = (e: React.PointerEvent<HTMLDivElement>) => {
+    const session = dragSessionRef.current;
+    if (!session.active) return;
+
+    try {
+      if (session.pointerId !== null && e.currentTarget.hasPointerCapture(session.pointerId)) {
+        e.currentTarget.releasePointerCapture(session.pointerId);
+      }
+    } catch {
+      // Ignore release errors
+    }
+
+    session.active = false;
+    session.pointerId = null;
+
+    if (session.movedBeyondThreshold) {
+      setIsDragging(false);
+      // Keep movedBeyondThreshold true briefly so the synthetic click event after pointerup is ignored
+      setTimeout(() => {
+        dragSessionRef.current.movedBeyondThreshold = false;
+      }, 80);
+    }
+  };
 
   // Reset dialogue index to 0 when switching between Play and Idle or changing track
   useEffect(() => {
@@ -590,13 +739,14 @@ export const RetroAudioPlayer: React.FC = () => {
 
   const handleNextNpcDialogue = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (didDragRef.current) return;
+    if (dragSessionRef.current.movedBeyondThreshold) return;
     setNpcTalkBounce(true);
     setTimeout(() => setNpcTalkBounce(false), 260);
     setDialogueIndex((prev) => prev + 1);
   };
 
   const handleToggle = () => {
+    if (dragSessionRef.current.movedBeyondThreshold) return;
     retroAudio.toggle();
   };
 
@@ -607,6 +757,7 @@ export const RetroAudioPlayer: React.FC = () => {
   };
 
   const handleMuteToggle = () => {
+    if (dragSessionRef.current.movedBeyondThreshold) return;
     if (volume > 0) {
       retroAudio.setVolume(0);
     } else {
@@ -616,18 +767,19 @@ export const RetroAudioPlayer: React.FC = () => {
 
   const handleHideWidget = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    if (dragSessionRef.current.movedBeyondThreshold) return;
     setIsExpanded(false);
     retroAudio.setWidgetVisible(false);
   };
 
   const handleShowWidget = () => {
-    if (didDragRef.current) return;
+    if (dragSessionRef.current.movedBeyondThreshold) return;
     retroAudio.setWidgetVisible(true);
   };
 
   const handleCharacterClick = () => {
     // Ignore click if user was just dragging the character around
-    if (didDragRef.current) return;
+    if (dragSessionRef.current.movedBeyondThreshold) return;
 
     if (!isPlaying && !isExpanded) {
       retroAudio.start();
@@ -636,383 +788,349 @@ export const RetroAudioPlayer: React.FC = () => {
   };
 
   return (
-    <>
-      {/* Full-Viewport Invisible Bounding Box for Omnidirectional Dragging */}
-      <div
-        ref={viewportConstraintsRef}
-        className="fixed inset-2 sm:inset-3 pointer-events-none z-40"
-        aria-hidden="true"
-      />
-
-      {/* Freely Draggable Widget Container (All Directions X & Y) */}
-      <motion.div
-        drag
-        dragConstraints={viewportConstraintsRef}
-        dragElastic={0.08}
-        dragMomentum={false}
-        onDragStart={() => {
-          didDragRef.current = true;
-          setIsDragging(true);
-        }}
-        onDragEnd={() => {
-          setIsDragging(false);
-          setTimeout(() => {
-            didDragRef.current = false;
-          }, 120);
-        }}
-        whileDrag={{ scale: 1.05 }}
-        className={`fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-40 select-none touch-none ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
-      >
-        <AnimatePresence mode="wait">
-          {isWidgetVisible ? (
-            <motion.div
-              key="visible-widget"
-              initial={{ opacity: 0, y: 16, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.9 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-              className="flex flex-col items-start"
-            >
-              {/* 1. Expanded Retro Cassette Player Doodle Card */}
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 14, scale: 0.94, rotate: -1 }}
-                    animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-                    exit={{ opacity: 0, y: 14, scale: 0.94 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                    className="doodle-card mb-3 p-3.5 sm:p-4 w-[285px] sm:w-[315px] text-[#fbeee0] relative"
-                  >
-                    {/* Top Masking Tape (also works as a visual drag handle) */}
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
-                      <DoodleTape className="w-20 h-5" />
-                    </div>
-
-                    {/* Header: Title bar, Drag Hint, Minimize & Hide actions */}
-                    <div className="flex items-center justify-between border-b border-dashed border-[#fbeee0]/20 pb-2 mb-2.5">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            isPlaying ? 'bg-emerald-400 animate-ping' : 'bg-[#e59b63]'
-                          }`}
-                        />
-                        <span className="font-fredoka text-xs font-semibold tracking-wider text-[#fbeee0] uppercase">
-                          DJ BEAT-BOT 8-BIT
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setIsExpanded(false)}
-                          className="text-[#d6c4b2] hover:text-[#fbeee0] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
-                          title="Minimize player"
-                          aria-label="Minimize"
-                        >
-                          ▼
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleHideWidget}
-                          className="text-[#d6c4b2] hover:text-[#ef4444] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
-                          title="Minimize DJ character"
-                          aria-label="Hide widget"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Track Info Display */}
-                    <div className="px-3 py-2 rounded-xl bg-[#090d14] border-[1.5px] border-dashed border-[#fbeee0]/30 mb-3 flex items-center justify-between">
-                      <div className="overflow-hidden">
-                        <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5">
-                          <span>{currentTrack.title}</span>
-                        </div>
-                        <div className="font-mono text-[10px] text-[#e59b63] truncate">
-                          {currentTrack.genre} · {currentTrack.bpm} BPM
-                        </div>
-                      </div>
-
-                      {/* Dynamic Equalizer Bars */}
-                      <div className="flex items-end gap-1 h-5 w-8 shrink-0 justify-end pl-2">
-                        {[0, 1, 2, 3].map((barIdx) => {
-                          const barHeights = isPlaying
-                            ? [
-                                ((step + barIdx * 2) % 4) * 25 + 25,
-                                ((step + barIdx * 3) % 4) * 25 + 25,
-                                ((step + barIdx) % 4) * 25 + 25,
-                                ((step + barIdx * 4) % 4) * 25 + 25,
-                              ]
-                            : [20, 20, 20, 20];
-                          return (
-                            <span
-                              key={barIdx}
-                              style={{
-                                height: `${barHeights[barIdx]}%`,
-                                transition: 'height 0.12s ease-out',
-                              }}
-                              className="w-1 bg-gradient-to-t from-[#9d613c] to-[#22c55e] rounded-t-sm"
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Playback Controls */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <button
-                        type="button"
-                        onClick={() => retroAudio.prevTrack()}
-                        className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
-                        title="Previous Track"
-                        aria-label="Previous track"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
-                        </svg>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleToggle}
-                        className="flex-1 py-2 px-3 rounded-[14px_10px_15px_11px] bg-[#9d613c] hover:bg-[#b06f44] border-2 border-[#fbeee0] shadow-[3px_3px_0px_#0b1018] active:scale-95 text-[#fbeee0] font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-                        title={isPlaying ? 'Pause retro music' : 'Play retro music'}
-                        aria-label={isPlaying ? 'Pause' : 'Play'}
-                      >
-                        {isPlaying ? (
-                          <>
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                            </svg>
-                            <span>PAUSE BGM</span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                            <span>PLAY RETRO BGM</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => retroAudio.nextTrack()}
-                        className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
-                        title="Next Track"
-                        aria-label="Next track"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Volume Slider Bar (isolated pointer so dragging slider doesn't move widget) */}
-                    <div
-                      onPointerDown={(e) => e.stopPropagation()}
-                      className="flex items-center gap-2 pt-1 border-t border-dashed border-[#fbeee0]/15"
-                    >
-                      <button
-                        type="button"
-                        onClick={handleMuteToggle}
-                        className="text-[#d6c4b2] hover:text-white cursor-pointer shrink-0"
-                        title={volume === 0 ? 'Unmute' : 'Mute'}
-                        aria-label="Toggle mute"
-                      >
-                        <RetroSpeakerDoodle className="w-3.5 h-3.5" isMuted={volume === 0} />
-                      </button>
-                      <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.02"
-                        value={volume}
-                        onChange={handleVolumeChange}
-                        aria-label="Volume slider"
-                        className="w-full h-1.5 bg-[#090d14] rounded-lg appearance-none cursor-pointer accent-[#e59b63]"
-                      />
-                      <span className="font-mono text-[10px] text-[#d6c4b2] w-7 text-right">
-                        {Math.round(volume * 100)}%
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* 2. Draggable Animated DJ Character + Interactive NPC Dialogue Box */}
-              <div className="relative flex items-end gap-1.5 group">
-                <motion.button
-                  type="button"
-                  onClick={handleCharacterClick}
-                  animate={npcTalkBounce ? { y: -6, scale: 1.06 } : { y: 0, scale: 1 }}
-                  whileHover={isDragging ? undefined : { scale: 1.05, y: -2 }}
-                  whileTap={isDragging ? undefined : { scale: 0.96 }}
-                  className={`relative flex items-center focus:outline-none ${
-                    isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                  }`}
-                  title="Click DJ Bot to open BGM deck or drag anywhere!"
-                  aria-label="Toggle or drag Retro Backsound Player"
-                >
-                  <BGMCharacterAvatar
-                    isPlaying={isPlaying}
-                    isExpanded={isExpanded}
-                    isDragging={isDragging}
-                    step={step}
-                  />
-                </motion.button>
-
-                {/* Interactive RPG NPC Speech Bubble (Click to cycle NPC dialogue) */}
+    <div
+      ref={widgetRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endPointerSession}
+      onPointerCancel={endPointerSession}
+      style={{
+        transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+      }}
+      className={`fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-40 select-none touch-none transition-shadow ${
+        isDragging ? 'cursor-grabbing z-50' : 'cursor-grab'
+      }`}
+    >
+      <AnimatePresence mode="wait">
+        {isWidgetVisible ? (
+          <motion.div
+            key="visible-widget"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: isDragging ? 1.04 : 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+            className={`flex ${
+              viewportInfo.openDownward ? 'flex-col-reverse' : 'flex-col'
+            } ${viewportInfo.bubbleOnLeft ? 'items-end' : 'items-start'}`}
+          >
+            {/* 1. Expanded Retro Cassette Player Doodle Card (Auto-flips below character if dragged near top of screen) */}
+            <AnimatePresence>
+              {isExpanded && (
                 <motion.div
-                  role="button"
-                  tabIndex={0}
-                  onClick={handleNextNpcDialogue}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleNextNpcDialogue(e as unknown as React.MouseEvent);
-                    }
+                  initial={{
+                    opacity: 0,
+                    y: viewportInfo.openDownward ? -14 : 14,
+                    scale: 0.94,
                   }}
-                  initial={{ opacity: 0, x: -6, scale: 0.9 }}
-                  animate={
-                    npcTalkBounce
-                      ? { opacity: 1, x: 0, scale: 1.04, y: -2 }
-                      : { opacity: 1, x: 0, scale: 1, y: 0 }
-                  }
-                  whileHover={isDragging ? undefined : { scale: 1.02 }}
-                  title="Klik balon chat untuk dialog NPC berikutnya! 💬"
-                  className={`mb-4 px-3 py-2 rounded-[16px_12px_18px_4px] border-2 text-left shadow-[4px_4px_0px_#0b1018] transition-colors duration-300 max-w-[185px] sm:max-w-[225px] cursor-pointer select-none ${
-                    isDragging
-                      ? 'bg-[#101824]/95 border-[#e59b63] text-[#fbeee0]'
-                      : isPlaying
-                      ? 'bg-[#101824]/95 border-emerald-400 text-[#fbeee0]'
-                      : 'bg-[#101824]/95 border-[#fbeee0] text-[#fbeee0] hover:border-[#e59b63]'
-                  }`}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    y: viewportInfo.openDownward ? -14 : 14,
+                    scale: 0.94,
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+                  className={`doodle-card ${
+                    viewportInfo.openDownward ? 'mt-3' : 'mb-3'
+                  } p-3.5 sm:p-4 w-[280px] sm:w-[310px] text-[#fbeee0] relative`}
                 >
-                  {/* Top NPC Header Tag */}
-                  <div className="flex items-center justify-between gap-2 mb-0.5 border-b border-dashed border-[#fbeee0]/15 pb-0.5">
-                    <div className="flex items-center gap-1.5">
+                  {/* Top Masking Tape */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
+                    <DoodleTape className="w-20 h-5" />
+                  </div>
+
+                  {/* Header: Title bar, Minimize & Hide actions */}
+                  <div className="flex items-center justify-between border-b border-dashed border-[#fbeee0]/20 pb-2 mb-2.5">
+                    <div className="flex items-center gap-2">
                       <span
-                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          isDragging
-                            ? 'bg-[#e59b63] animate-ping'
-                            : isPlaying
-                            ? 'bg-emerald-400 animate-ping'
-                            : 'bg-[#e59b63]'
+                        className={`w-2 h-2 rounded-full ${
+                          isPlaying ? 'bg-emerald-400 animate-ping' : 'bg-[#e59b63]'
                         }`}
                       />
-                      <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#e59b63]">
-                        NPC • DJ BOT
-                      </span>
-                      <span
-                        className={`font-mono text-[8px] px-1 py-0.2 rounded ${
-                          isPlaying
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-white/10 text-[#d6c4b2]'
-                        }`}
-                      >
-                        {isPlaying ? 'PLAY' : 'IDLE'}
+                      <span className="font-fredoka text-xs font-semibold tracking-wider text-[#fbeee0] uppercase">
+                        DJ BEAT-BOT 8-BIT
                       </span>
                     </div>
 
-                    <span className="font-mono text-[9px] text-[#a39483] hover:text-[#fbeee0] flex items-center gap-0.5">
-                      <span>💬</span>
-                      <span>▸</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!dragSessionRef.current.movedBeyondThreshold) {
+                            setIsExpanded(false);
+                          }
+                        }}
+                        className="text-[#d6c4b2] hover:text-[#fbeee0] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
+                        title="Minimize player"
+                        aria-label="Minimize"
+                      >
+                        {viewportInfo.openDownward ? '▲' : '▼'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleHideWidget}
+                        className="text-[#d6c4b2] hover:text-[#ef4444] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
+                        title="Hide DJ character"
+                        aria-label="Hide widget"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Track Info Display */}
+                  <div className="px-3 py-2 rounded-xl bg-[#090d14] border-[1.5px] border-dashed border-[#fbeee0]/30 mb-3 flex items-center justify-between">
+                    <div className="overflow-hidden">
+                      <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5">
+                        <span>{currentTrack.title}</span>
+                      </div>
+                      <div className="font-mono text-[10px] text-[#e59b63] truncate">
+                        {currentTrack.genre} · {currentTrack.bpm} BPM
+                      </div>
+                    </div>
+
+                    {/* Dynamic Equalizer Bars */}
+                    <div className="flex items-end gap-1 h-5 w-8 shrink-0 justify-end pl-2">
+                      {[0, 1, 2, 3].map((barIdx) => {
+                        const barHeights = isPlaying
+                          ? [
+                              ((step + barIdx * 2) % 4) * 25 + 25,
+                              ((step + barIdx * 3) % 4) * 25 + 25,
+                              ((step + barIdx) % 4) * 25 + 25,
+                              ((step + barIdx * 4) % 4) * 25 + 25,
+                            ]
+                          : [20, 20, 20, 20];
+                        return (
+                          <span
+                            key={barIdx}
+                            style={{
+                              height: `${barHeights[barIdx]}%`,
+                              transition: 'height 0.12s ease-out',
+                            }}
+                            className="w-1 bg-gradient-to-t from-[#9d613c] to-[#22c55e] rounded-t-sm"
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Playback Controls */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!dragSessionRef.current.movedBeyondThreshold) {
+                          retroAudio.prevTrack();
+                        }
+                      }}
+                      className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
+                      title="Previous Track"
+                      aria-label="Previous track"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                      </svg>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleToggle}
+                      className="flex-1 py-2 px-3 rounded-[14px_10px_15px_11px] bg-[#9d613c] hover:bg-[#b06f44] border-2 border-[#fbeee0] shadow-[3px_3px_0px_#0b1018] active:scale-95 text-[#fbeee0] font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                      title={isPlaying ? 'Pause retro music' : 'Play retro music'}
+                      aria-label={isPlaying ? 'Pause' : 'Play'}
+                    >
+                      {isPlaying ? (
+                        <>
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                          </svg>
+                          <span>PAUSE BGM</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          <span>PLAY RETRO BGM</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!dragSessionRef.current.movedBeyondThreshold) {
+                          retroAudio.nextTrack();
+                        }
+                      }}
+                      className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
+                      title="Next Track"
+                      aria-label="Next track"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Volume Slider Bar */}
+                  <div
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className="flex items-center gap-2 pt-1 border-t border-dashed border-[#fbeee0]/15"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleMuteToggle}
+                      className="text-[#d6c4b2] hover:text-white cursor-pointer shrink-0"
+                      title={volume === 0 ? 'Unmute' : 'Mute'}
+                      aria-label="Toggle mute"
+                    >
+                      <RetroSpeakerDoodle className="w-3.5 h-3.5" isMuted={volume === 0} />
+                    </button>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.02"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      aria-label="Volume slider"
+                      className="w-full h-1.5 bg-[#090d14] rounded-lg appearance-none cursor-pointer accent-[#e59b63]"
+                    />
+                    <span className="font-mono text-[10px] text-[#d6c4b2] w-7 text-right">
+                      {Math.round(volume * 100)}%
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 2. Draggable Animated DJ Character + Interactive NPC Dialogue Box */}
+            <div
+              className={`relative flex items-end gap-1.5 group ${
+                viewportInfo.bubbleOnLeft ? 'flex-row-reverse' : 'flex-row'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={handleCharacterClick}
+                className={`relative flex items-center focus:outline-none transition-transform duration-200 ${
+                  npcTalkBounce ? '-translate-y-1.5 scale-105' : 'hover:-translate-y-0.5'
+                } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                title="Click DJ Bot to open BGM deck or drag anywhere!"
+                aria-label="Toggle or drag Retro Backsound Player"
+              >
+                <BGMCharacterAvatar
+                  isPlaying={isPlaying}
+                  isExpanded={isExpanded}
+                  isDragging={isDragging}
+                  step={step}
+                />
+              </button>
+
+              {/* Interactive RPG NPC Speech Bubble (Click to cycle NPC dialogue) */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={handleNextNpcDialogue}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleNextNpcDialogue(e as unknown as React.MouseEvent);
+                  }
+                }}
+                title={
+                  lang === 'id'
+                    ? 'Klik balon chat untuk dialog NPC berikutnya! 💬'
+                    : 'Click speech bubble for next NPC dialogue! 💬'
+                }
+                className={`mb-4 px-3 py-2 rounded-[16px_12px_18px_4px] border-2 text-left shadow-[4px_4px_0px_#0b1018] transition-all duration-200 max-w-[185px] sm:max-w-[225px] select-none ${
+                  npcTalkBounce ? 'scale-105 -translate-y-0.5' : ''
+                } ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'} ${
+                  isDragging
+                    ? 'bg-[#101824]/95 border-[#e59b63] text-[#fbeee0]'
+                    : isPlaying
+                    ? 'bg-[#101824]/95 border-emerald-400 text-[#fbeee0]'
+                    : 'bg-[#101824]/95 border-[#fbeee0] text-[#fbeee0] hover:border-[#e59b63]'
+                }`}
+              >
+                {/* Top NPC Header Tag */}
+                <div className="flex items-center justify-between gap-2 mb-0.5 border-b border-dashed border-[#fbeee0]/15 pb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                        isDragging
+                          ? 'bg-[#e59b63] animate-ping'
+                          : isPlaying
+                          ? 'bg-emerald-400 animate-ping'
+                          : 'bg-[#e59b63]'
+                      }`}
+                    />
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#e59b63]">
+                      NPC • DJ BOT
+                    </span>
+                    <span
+                      className={`font-mono text-[8px] px-1 py-0.2 rounded ${
+                        isPlaying
+                          ? 'bg-emerald-500/20 text-emerald-300'
+                          : 'bg-white/10 text-[#d6c4b2]'
+                      }`}
+                    >
+                      {isPlaying ? 'PLAY' : 'IDLE'}
                     </span>
                   </div>
 
-                  {/* Typewriter NPC Dialogue Line */}
-                  <p className="font-hand text-xs sm:text-sm leading-snug text-[#fbeee0] min-h-[2.2rem] flex items-center">
-                    <span>
-                      {typedText}
-                      {typedText.length < fullDialogueText.length && (
-                        <span className="inline-block w-1 h-3 ml-0.5 bg-[#e59b63] animate-pulse align-middle" />
-                      )}
-                    </span>
-                  </p>
-                </motion.div>
+                  <span className="font-mono text-[9px] text-[#a39483] hover:text-[#fbeee0] flex items-center gap-0.5">
+                    <span>💬</span>
+                    <span>▸</span>
+                  </span>
+                </div>
+
+                {/* Typewriter NPC Dialogue Line */}
+                <p className="font-hand text-xs sm:text-sm leading-snug text-[#fbeee0] min-h-[2.2rem] flex items-center">
+                  <span>
+                    {typedText}
+                    {typedText.length < fullDialogueText.length && (
+                      <span className="inline-block w-1 h-3 ml-0.5 bg-[#e59b63] animate-pulse align-middle" />
+                    )}
+                  </span>
+                </p>
               </div>
-            </motion.div>
-          ) : (
-            /* 3. Round & Transparent Restore Button when widget is hidden (also draggable) */
-            <motion.button
-              key="hidden-restore-badge"
-              type="button"
-              onClick={handleShowWidget}
-              initial={{ opacity: 0, scale: 0.6 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.6 }}
-              whileHover={{ scale: 1.12 }}
-              whileTap={{ scale: 0.92 }}
-              className={`relative w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 cursor-grab active:cursor-grabbing ${
-                isPlaying
-                  ? 'bg-[#101723]/35 border border-emerald-400/50 text-[#fbeee0] hover:bg-[#101723]/65 hover:border-emerald-400 shadow-[0_4px_16px_rgba(34,197,94,0.2)]'
-                  : 'bg-[#101723]/25 border border-[#fbeee0]/25 text-[#fbeee0]/75 hover:text-[#fbeee0] hover:bg-[#101723]/55 hover:border-[#e59b63]/70 shadow-lg'
+            </div>
+          </motion.div>
+        ) : (
+          /* 3. Round & Transparent Restore Button when widget is hidden (also draggable) */
+          <motion.button
+            key="hidden-restore-badge"
+            type="button"
+            onClick={handleShowWidget}
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.6 }}
+            className={`relative w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 ${
+              isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-110 active:scale-95'
+            } ${
+              isPlaying
+                ? 'bg-[#101723]/35 border border-emerald-400/50 text-[#fbeee0] hover:bg-[#101723]/65 hover:border-emerald-400 shadow-[0_4px_16px_rgba(34,197,94,0.2)]'
+                : 'bg-[#101723]/25 border border-[#fbeee0]/25 text-[#fbeee0]/75 hover:text-[#fbeee0] hover:bg-[#101723]/55 hover:border-[#e59b63]/70 shadow-lg'
+            }`}
+            title={isPlaying ? 'BGM Playing — Click to show DJ Bot' : 'Click to show DJ Bot BGM Player'}
+            aria-label="Restore BGM Player Widget"
+          >
+            <RetroCassetteDoodle
+              className={`w-5 h-5 transition-colors ${
+                isPlaying ? 'text-emerald-400' : 'text-[#e59b63]/85'
               }`}
-              title={isPlaying ? 'BGM Playing — Click to show DJ Bot' : 'Click to show DJ Bot BGM Player'}
-              aria-label="Restore BGM Player Widget"
-            >
-              <RetroCassetteDoodle
-                className={`w-5 h-5 transition-colors ${
-                  isPlaying ? 'text-emerald-400' : 'text-[#e59b63]/85'
-                }`}
-              />
-              {isPlaying && (
-                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
-                </span>
-              )}
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </>
-  );
-};
-
-// Compact Toggle Button for the Navbar (also unhides widget if clicked)
-export const RetroNavbarButton: React.FC = () => {
-  const [isPlaying, setIsPlaying] = useState(retroAudio.getIsPlaying());
-
-  useEffect(() => {
-    const unsubscribe = retroAudio.subscribe(() => {
-      setIsPlaying(retroAudio.getIsPlaying());
-    });
-    return unsubscribe;
-  }, []);
-
-  const handleClick = () => {
-    if (!retroAudio.getIsWidgetVisible()) {
-      retroAudio.setWidgetVisible(true);
-    }
-    retroAudio.toggle();
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs font-mono transition-all duration-200 cursor-pointer ${
-        isPlaying
-          ? 'bg-[#9d613c]/20 border-[#9d613c] text-[#fbeee0] shadow-xs'
-          : 'bg-[#141b25]/80 border-white/10 text-[#d7c6b5] hover:border-[#9d613c]/40 hover:text-white'
-      }`}
-      title={isPlaying ? 'Pause Retro Music' : 'Play Retro Music'}
-      aria-label={isPlaying ? 'Pause Retro Music' : 'Play Retro Music'}
-    >
-      <RetroCassetteDoodle className="w-3.5 h-3.5 text-[#9d613c]" />
-      <span className="hidden sm:inline">
-        {isPlaying ? 'BGM ON' : 'BGM'}
-      </span>
-      {isPlaying && (
-        <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-ping" />
-      )}
-    </button>
+            />
+            {isPlaying && (
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
+            )}
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
