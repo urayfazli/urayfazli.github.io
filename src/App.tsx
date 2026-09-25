@@ -361,8 +361,8 @@ export default function App() {
         <Footer onScrollToTop={() => handleNavigate('home')} />
       </motion.div>
 
-      {/* Retro 8-bit Backsound Player Widget */}
-      <RetroAudioPlayer />
+      {/* Retro 8-bit Backsound Player Widget (Synced with Post-Loading Reveal) */}
+      <RetroAudioPlayer isReady={isRevealed} />
 
       {/* Modals */}
       <NetworkDetailModal

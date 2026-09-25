@@ -4,22 +4,80 @@ import { retroAudio } from '../utils/retroAudioEngine';
 import { RetroCassetteDoodle, RetroSpeakerDoodle, DoodleTape } from './Doodles';
 import { useLanguage } from '../context/LanguageContext';
 
+export type DjBotMood = 'greeting' | 'normal' | 'angry';
+
 /**
  * Rigged Multi-Part Animated DJ Character for the BGM Widget Button
- * Grooves, bobs head, spins turntable, and emits floating musical notes when playing;
- * reacts playfully when dragged across the screen.
+ * Grooves, bobs head, waves hello on initial visit, gets hilariously angry when user stays too long,
+ * and reacts playfully when dragged across the screen.
  */
 const BGMCharacterAvatar: React.FC<{
   isPlaying: boolean;
   isExpanded: boolean;
   isDragging: boolean;
+  mood: DjBotMood;
   step: number;
-}> = ({ isPlaying, isExpanded, isDragging, step }) => {
+}> = ({ isPlaying, isExpanded, isDragging, mood, step }) => {
+  const isAngry = mood === 'angry' && !isDragging;
+  const isGreeting = mood === 'greeting' && !isDragging;
+
   return (
-    <div className="relative w-20 h-22 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
-      {/* Floating Musical Notes when Playing */}
+    <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
+      {/* Floating Emotes: Greeting Wave 👋, Angry Steam 💢, or Musical Notes ♫ */}
       <AnimatePresence>
-        {isPlaying && (
+        {isGreeting && (
+          <motion.span
+            key="greeting-wave-badge"
+            initial={{ opacity: 0, scale: 0.5, y: 6 }}
+            animate={{
+              opacity: 1,
+              scale: [1, 1.2, 1],
+              rotate: [-12, 18, -12],
+              y: [-2, -8, -2],
+            }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute -top-1 right-0 text-sm sm:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20"
+          >
+            👋
+          </motion.span>
+        )}
+
+        {isAngry && (
+          <>
+            <motion.span
+              key="angry-vein"
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{
+                opacity: 1,
+                scale: [1, 1.3, 1],
+                rotate: [-8, 8, -8],
+              }}
+              exit={{ opacity: 0, scale: 0.4 }}
+              transition={{ duration: 0.45, repeat: Infinity }}
+              className="absolute -top-1 right-0.5 text-sm sm:text-lg drop-shadow-[0_2px_6px_rgba(239,68,68,0.8)] z-20"
+            >
+              💢
+            </motion.span>
+            <motion.span
+              key="angry-steam"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{
+                opacity: [0, 0.95, 0],
+                y: [-2, -20],
+                x: [-8, -16],
+                scale: [0.7, 1.15],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
+              className="absolute top-0 left-1 text-xs sm:text-sm z-20"
+            >
+              💨
+            </motion.span>
+          </>
+        )}
+
+        {isPlaying && !isAngry && (
           <>
             <motion.span
               key="note-1"
@@ -81,17 +139,17 @@ const BGMCharacterAvatar: React.FC<{
           }
         />
 
-        {/* Ambient Pulse Ring on Ground when Playing */}
-        {isPlaying && (
+        {/* Ambient Pulse Ring on Ground when Playing or Angry */}
+        {(isPlaying || isAngry) && (
           <motion.ellipse
             cx="55"
             cy="108"
             rx="34"
             ry="5"
-            stroke="#22C55E"
+            stroke={isAngry ? '#EF4444' : '#22C55E'}
             strokeWidth="1.5"
-            animate={{ scaleX: [0.9, 1.25, 0.9], opacity: [0.7, 0, 0.7] }}
-            transition={{ duration: 0.9, repeat: Infinity }}
+            animate={{ scaleX: [0.9, 1.25, 0.9], opacity: [0.75, 0, 0.75] }}
+            transition={{ duration: isAngry ? 0.55 : 0.9, repeat: Infinity }}
           />
         )}
 
@@ -100,28 +158,38 @@ const BGMCharacterAvatar: React.FC<{
           animate={
             isDragging
               ? { y: -6, rotate: -4 }
+              : isAngry
+              ? { x: [-1.5, 1.5, -1.5], y: [0, -3, 0] }
+              : isGreeting
+              ? { y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }
               : isPlaying
               ? { y: [0, -2.5, 0], rotate: 0 }
               : { y: [0, -1, 0], rotate: 0 }
           }
           transition={{
-            duration: isPlaying ? 0.45 : 2,
+            duration: isAngry ? 0.25 : isGreeting ? 0.6 : isPlaying ? 0.45 : 2,
             repeat: isDragging ? 0 : Infinity,
             ease: 'easeInOut',
           }}
         >
-          {/* Cute Chibi Feet (dangle when dragged!) */}
+          {/* Cute Chibi Feet (dangle when dragged, stomp when angry!) */}
           <motion.rect
             x="36"
             y="96"
             width="12"
             height="9"
             rx="4.5"
-            fill="#9D613C"
+            fill={isAngry ? '#B91C1C' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="1.8"
-            animate={isDragging ? { y: [-2, 3, -2], rotate: [-8, 8, -8] } : { y: 0, rotate: 0 }}
-            transition={{ duration: 0.35, repeat: isDragging ? Infinity : 0 }}
+            animate={
+              isDragging
+                ? { y: [-2, 3, -2], rotate: [-8, 8, -8] }
+                : isAngry
+                ? { y: [0, -4, 0] }
+                : { y: 0, rotate: 0 }
+            }
+            transition={{ duration: isAngry ? 0.28 : 0.35, repeat: isDragging || isAngry ? Infinity : 0 }}
           />
           <motion.rect
             x="62"
@@ -129,17 +197,23 @@ const BGMCharacterAvatar: React.FC<{
             width="12"
             height="9"
             rx="4.5"
-            fill="#9D613C"
+            fill={isAngry ? '#B91C1C' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="1.8"
-            animate={isDragging ? { y: [3, -2, 3], rotate: [8, -8, 8] } : { y: 0, rotate: 0 }}
-            transition={{ duration: 0.35, repeat: isDragging ? Infinity : 0 }}
+            animate={
+              isDragging
+                ? { y: [3, -2, 3], rotate: [8, -8, 8] }
+                : isAngry
+                ? { y: [-4, 0, -4] }
+                : { y: 0, rotate: 0 }
+            }
+            transition={{ duration: isAngry ? 0.28 : 0.35, repeat: isDragging || isAngry ? Infinity : 0 }}
           />
 
           {/* Hoodie Body */}
           <path
             d="M30 66C30 60 35 56 41 56H69C75 56 80 60 80 66L83 96H27L30 66Z"
-            fill="#162233"
+            fill={isAngry ? '#2A1215' : '#162233'}
             stroke="#FBEEE0"
             strokeWidth="2"
           />
@@ -152,7 +226,7 @@ const BGMCharacterAvatar: React.FC<{
             height="22"
             rx="5"
             fill="#0B1018"
-            stroke="#E59B63"
+            stroke={isAngry ? '#EF4444' : '#E59B63'}
             strokeWidth="1.8"
           />
 
@@ -164,10 +238,10 @@ const BGMCharacterAvatar: React.FC<{
             fill="#141C28"
             stroke="#FBEEE0"
             strokeWidth="1.5"
-            animate={isPlaying ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: 0.35, repeat: Infinity }}
+            animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
+            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: Infinity }}
           />
-          <circle cx="41" cy="83" r="2" fill="#E59B63" />
+          <circle cx="41" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
 
           {/* Center Mini Equalizer / Cassette Window */}
           <rect
@@ -177,15 +251,15 @@ const BGMCharacterAvatar: React.FC<{
             height="10"
             rx="2"
             fill="#101824"
-            stroke="#9D613C"
+            stroke={isAngry ? '#EF4444' : '#9D613C'}
             strokeWidth="1.2"
           />
           <line
             x1="52.5"
             y1="86"
             x2="52.5"
-            y2={isPlaying ? (step % 2 === 0 ? '80' : '84') : '84'}
-            stroke="#22C55E"
+            y2={isPlaying || isAngry ? (step % 2 === 0 ? '80' : '84') : '84'}
+            stroke={isAngry ? '#EF4444' : '#22C55E'}
             strokeWidth="1.6"
             strokeLinecap="round"
           />
@@ -193,7 +267,7 @@ const BGMCharacterAvatar: React.FC<{
             x1="55"
             y1="86"
             x2="55"
-            y2={isPlaying ? (step % 3 === 0 ? '79' : '83') : '84'}
+            y2={isPlaying || isAngry ? (step % 3 === 0 ? '79' : '83') : '84'}
             stroke="#E59B63"
             strokeWidth="1.6"
             strokeLinecap="round"
@@ -202,8 +276,8 @@ const BGMCharacterAvatar: React.FC<{
             x1="57.5"
             y1="86"
             x2="57.5"
-            y2={isPlaying ? (step % 2 === 1 ? '80' : '84') : '84'}
-            stroke="#22C55E"
+            y2={isPlaying || isAngry ? (step % 2 === 1 ? '80' : '84') : '84'}
+            stroke={isAngry ? '#EF4444' : '#22C55E'}
             strokeWidth="1.6"
             strokeLinecap="round"
           />
@@ -216,10 +290,10 @@ const BGMCharacterAvatar: React.FC<{
             fill="#141C28"
             stroke="#FBEEE0"
             strokeWidth="1.5"
-            animate={isPlaying ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: 0.35, repeat: Infinity }}
+            animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
+            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: Infinity }}
           />
-          <circle cx="69" cy="83" r="2" fill="#E59B63" />
+          <circle cx="69" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
         </motion.g>
 
         {/* Animated Head + Giant DJ Headphones */}
@@ -227,6 +301,16 @@ const BGMCharacterAvatar: React.FC<{
           animate={
             isDragging
               ? { y: -7, rotate: [-5, 5, -5] }
+              : isAngry
+              ? {
+                  y: [0, -3.5, 0],
+                  rotate: [-3.5, 3.5, -3.5],
+                }
+              : isGreeting
+              ? {
+                  y: [0, -4, 0],
+                  rotate: [-5, 5, -5],
+                }
               : isPlaying
               ? {
                   y: [0, -5, 0],
@@ -238,7 +322,15 @@ const BGMCharacterAvatar: React.FC<{
                 }
           }
           transition={{
-            duration: isDragging ? 0.35 : isPlaying ? 0.55 : 2.2,
+            duration: isDragging
+              ? 0.35
+              : isAngry
+              ? 0.28
+              : isGreeting
+              ? 0.65
+              : isPlaying
+              ? 0.55
+              : 2.2,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
@@ -247,7 +339,7 @@ const BGMCharacterAvatar: React.FC<{
           {/* Thick Caramel Headphone Band */}
           <path
             d="M19 39C19 17 34 7 55 7C76 7 91 17 91 39"
-            stroke="#E59B63"
+            stroke={isAngry ? '#EF4444' : '#E59B63'}
             strokeWidth="5.5"
             strokeLinecap="round"
           />
@@ -266,13 +358,15 @@ const BGMCharacterAvatar: React.FC<{
             cx="55"
             cy="-2"
             r="3.8"
-            fill={isPlaying ? '#22C55E' : '#E59B63'}
+            fill={isAngry ? '#EF4444' : isPlaying ? '#22C55E' : '#E59B63'}
             animate={
-              isPlaying
+              isAngry
+                ? { scale: [1, 1.55, 1], opacity: [1, 0.6, 1] }
+                : isPlaying
                 ? { scale: [1, 1.4, 1], opacity: [1, 0.7, 1] }
                 : { scale: [1, 1.1, 1] }
             }
-            transition={{ duration: 0.7, repeat: Infinity }}
+            transition={{ duration: isAngry ? 0.35 : 0.7, repeat: Infinity }}
           />
 
           {/* Left & Right Cushioned DJ Earcups */}
@@ -282,7 +376,7 @@ const BGMCharacterAvatar: React.FC<{
             width="11"
             height="24"
             rx="5.5"
-            fill="#9D613C"
+            fill={isAngry ? '#991B1B' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="2"
           />
@@ -292,7 +386,7 @@ const BGMCharacterAvatar: React.FC<{
             width="11"
             height="24"
             rx="5.5"
-            fill="#9D613C"
+            fill={isAngry ? '#991B1B' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="2"
           />
@@ -315,7 +409,7 @@ const BGMCharacterAvatar: React.FC<{
             height="42"
             rx="12"
             fill="none"
-            stroke="#9D613C"
+            stroke={isAngry ? '#EF4444' : '#9D613C'}
             strokeWidth="1.5"
           />
 
@@ -327,7 +421,7 @@ const BGMCharacterAvatar: React.FC<{
             height="32"
             rx="8"
             fill="#090E16"
-            stroke="#26364D"
+            stroke={isAngry ? '#7F1D1D' : '#26364D'}
             strokeWidth="1.6"
           />
 
@@ -338,7 +432,7 @@ const BGMCharacterAvatar: React.FC<{
             fillOpacity="0.12"
           />
 
-          {/* Dynamic Visor Face: Surprised/Excited when Dragged vs Jamming vs Idle */}
+          {/* Dynamic Visor Face: Dragged vs Angry vs Greeting vs Jamming vs Idle */}
           {isDragging ? (
             <g>
               {/* Excited Starry/Wide Eyes > < when being dragged */}
@@ -357,6 +451,69 @@ const BGMCharacterAvatar: React.FC<{
                 strokeLinejoin="round"
               />
               <circle cx="55" cy="43" r="3.2" fill="#E59B63" />
+            </g>
+          ) : isAngry ? (
+            <g>
+              {/* Fierce Slanted Angry Eyebrows \ / */}
+              <line
+                x1="36"
+                y1="28"
+                x2="48"
+                y2="33"
+                stroke="#EF4444"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+              <line
+                x1="74"
+                y1="28"
+                x2="62"
+                y2="33"
+                stroke="#EF4444"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+              {/* Glowing Red Angry Eyes */}
+              <rect x="39" y="33" width="7" height="6" rx="2" fill="#EF4444" />
+              <rect x="64" y="33" width="7" height="6" rx="2" fill="#EF4444" />
+              {/* Angry Red Blush */}
+              <rect x="33" y="40" width="5.5" height="2.5" rx="1.2" fill="#EF4444" />
+              <rect x="71.5" y="40" width="5.5" height="2.5" rx="1.2" fill="#EF4444" />
+              {/* Grumpy Jagged Mouth */}
+              <path
+                d="M46 46L50.5 42.5L55 46L59.5 42.5L64 46"
+                stroke="#FBEEE0"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          ) : isGreeting ? (
+            <g>
+              {/* Welcoming Cheerful Arcs ^ ^ */}
+              <path
+                d="M37 35C39.5 29.5 45 29.5 47.5 35"
+                stroke="#E59B63"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+              <path
+                d="M62.5 35C65 29.5 70.5 29.5 73 35"
+                stroke="#E59B63"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+              {/* Warm Cheeks */}
+              <rect x="33" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
+              <rect x="71.5" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
+              {/* Big Open Welcoming Smile */}
+              <path
+                d="M48 41C50.5 47 59.5 47 62 41Z"
+                fill="#E59B63"
+                stroke="#FBEEE0"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
             </g>
           ) : isPlaying ? (
             <g>
@@ -426,38 +583,70 @@ const BGMCharacterAvatar: React.FC<{
           )}
         </motion.g>
 
-        {/* Animated Chibi Hands */}
+        {/* Animated Chibi Hands (Waves on Greeting, Shakes Fists on Angry!) */}
         <motion.circle
-          cx={isPlaying ? 18 : 26}
-          cy={isPlaying ? 44 : 78}
+          cx={isAngry ? 19 : isPlaying ? 18 : 26}
+          cy={isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
-          stroke="#9D613C"
+          stroke={isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
           animate={
             isDragging
-              ? { y: [-8, -2, -8] }
+              ? { x: 0, y: [-8, -2, -8] }
+              : isAngry
+              ? { y: [-6, 4, -6], x: [-2, 2, -2] }
               : isPlaying
               ? { y: [0, -5, 0], x: [0, 2, 0] }
-              : { y: [0, -2, 0] }
+              : { x: 0, y: [0, -2, 0] }
           }
-          transition={{ duration: isPlaying ? 0.45 : 1.8, repeat: Infinity }}
+          transition={{ duration: isAngry ? 0.24 : isPlaying ? 0.45 : 1.8, repeat: Infinity }}
         />
+
+        {/* Waving Motion Lines when Greeting */}
+        {isGreeting && (
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.3, 0.95, 0.3] }}
+            transition={{ duration: 0.45, repeat: Infinity }}
+          >
+            <path
+              d="M99 20C103 23 104 28 102 33"
+              stroke="#E59B63"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+            <path
+              d="M103 17C108 21 109 28 106 35"
+              stroke="#FBEEE0"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </motion.g>
+        )}
+
         <motion.circle
-          cx={isPlaying ? 92 : 84}
-          cy={isPlaying ? 44 : 78}
+          cx={isGreeting ? 95 : isAngry ? 91 : isPlaying ? 92 : 84}
+          cy={isGreeting ? 30 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
-          stroke="#9D613C"
+          stroke={isGreeting ? '#E59B63' : isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
           animate={
             isDragging
-              ? { y: [-2, -8, -2] }
+              ? { x: 0, y: [-2, -8, -2] }
+              : isGreeting
+              ? { x: [-4, 5, -4], y: [-4, 2, -4] }
+              : isAngry
+              ? { y: [4, -6, 4], x: [2, -2, 2] }
               : isPlaying
               ? { y: [-4, 1, -4], x: [0, -2, 0] }
-              : { y: [0, -2, 0] }
+              : { x: 0, y: [0, -2, 0] }
           }
-          transition={{ duration: isPlaying ? 0.45 : 1.8, repeat: Infinity }}
+          transition={{
+            duration: isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
+            repeat: Infinity,
+          }}
         />
 
         {/* Small Indicator Badge on Corner */}
@@ -476,48 +665,88 @@ const BGMCharacterAvatar: React.FC<{
   );
 };
 
+const NPC_GREETING_DIALOGUE_ID =
+  'Halo ser! 👋 Selamat datang di web Uray! Yuk nyalain BGM sambil berburu airdrop & testnet! 🎧✨';
+
+const NPC_GREETING_DIALOGUE_EN =
+  "Hello ser! 👋 Welcome to Uray's web! Turn on the BGM while hunting airdrops & testnets! 🎧✨";
+
+const NPC_ANGRY_DIALOGUES_ID = [
+  '😤 Woi ser! Betah amat bengong di web ini lama-lama?! Jangan cuma rebahan, sana upgrade skill atau garap testnet dulu! 💢',
+  '💢 Udah lama banget mantengin layar! Kalau lagi nganggur jangan pasrah aja, ayo gerak cari peluang & klaim airdrop! 😤🪂',
+  '🔥 CPU aku sampe ngebul liat kamu diem bae! Yuk produktif—klik kontak Uray atau nyalain musik biar semangat! 💢🎧',
+];
+
+const NPC_ANGRY_DIALOGUES_EN = [
+  '😤 Hey ser! Why are you spacing out on this page so long?! Stop slacking—go upgrade your skills or grind testnets! 💢',
+  '💢 Staring at the screen forever?! If you are between jobs, do not just sit there—go hunt opportunities & airdrops! 😤🪂',
+  '🔥 My CPU is overheating watching you idle! Get productive—collab with Uray or play a track to boost your energy! 💢🎧',
+];
+
 const NPC_IDLE_DIALOGUES_ID = [
   'gm ser! Sudah klaim faucet & garap testnet hari ini belum? 💧⛓️',
+  'Ngaku pemburu cuan, tapi tiap hari cuma scroll layar sambil rebahan? Bangun woi, nasib gak berubah kalau cuma bengong! 🛋️⚡',
+  'Lagi nganggur bukan berarti gagal ser! Gunakan waktu luangmu buat upgrade skill, riset Web3, dan bangun portofolio! 💪🚀',
   'Dompet siap, node validator nyala... tinggal tunggu snapshot airdrop! 🪂✨',
+  'Pengangguran elit: sibuk ngetawain meme coin orang, giliran disuruh belajar skill baru & kirim CV malah alasan besok aja! 📉😤',
+  'Semua builder hebat pernah mulai dari nol! Hari ini belum dapet kerja? Tetap konsisten belajar & garap peluang, rejeki gak kemana! 🌱✨',
   'Psst... klik aku buat nyalain BGM sambil hunting meme coin 100x! 🐸🚀',
+  'Rebahan terus sampe bantal gepeng gak bakal bikin dompet tebal ser! Kurangin ngeluh, tambahin eksekusi! 🛑🔥',
+  'Jangan minder status pengangguran! Satu skill baru yang kamu pelajari hari ini bisa jadi tiket menuju kebebasan finansial besok! 🎯💎',
   'Lagi pantau floor price NFT atau sibuk nge-bridge ke testnet baru? 🖼️🌉',
+  'Jangan cuma nunggu keajaiban atau airdrop jatuh dari langit kalau usaha aja masih setengah-setengah! 🤨⏳',
+  'Capek ditolak kerja? Istirahat sebentar sambil dengerin beat 8-bit, lalu bangkit lagi lebih kuat! Kamu pasti tembus! 🎧🔥',
   'Jangan lupa interaksi on-chain biar gak kena filter sybil pas airdrop! 🛡️🪂',
   'Market crypto lagi sideways? Santai, nyalain musik 8-bit dulu ser! 🎧📈',
-  'HODL keras atau minting NFT gratis nih? Klik aku buat drop the beat! 💎🙌',
 ];
 
 const NPC_IDLE_DIALOGUES_EN = [
   'gm ser! Have you claimed your faucet & farmed testnets today? 💧⛓️',
+  'Calling yourself a profit hunter while just doomscrolling in bed all day? Wake up ser, nothing changes if you do nothing! 🛋️⚡',
+  'Being unemployed right now does not mean you failed! Use your free time to upgrade skills, research Web3, and build a portfolio! 💪🚀',
   'Wallet ready, validator node synced... just waiting for the airdrop snapshot! 🪂✨',
+  'Unemployed habit: laughing at meme coins all day, but when it is time to learn a new skill or send CVs, "maybe tomorrow"! 📉😤',
+  'Every great builder started from zero! No job offer yet? Stay consistent learning & grinding opportunities—your breakthrough is coming! 🌱✨',
   'Psst... click me to play 8-bit BGM while hunting 100x meme coins! 🐸🚀',
+  'Flattening your pillow all day will not fatten your wallet ser! Less complaining, more executing! 🛑🔥',
+  'Do not feel down about being between jobs! One new skill learned today could be your ticket to financial freedom tomorrow! 🎯💎',
   'Watching NFT floor prices or bridging to a new incentivized testnet? 🖼️🌉',
+  'Stop waiting for miracles or airdrops to fall from the sky if you barely put in half the effort! 🤨⏳',
+  'Tired of job rejections? Rest a bit to this 8-bit beat, then rise back stronger! Your time to shine will come! 🎧🔥',
   'Keep those on-chain txns active so you never miss the next big airdrop! 🛡️🪂',
   'Crypto market crabbing? Chill out and turn on some chiptune beats! 🎧📈',
-  'Diamond-handing or free-minting NFTs today? Click me to drop the beat! 💎🙌',
 ];
 
 const getNpcPlayDialogues = (trackTitle: string, bpm: number, lang: 'id' | 'en') =>
   lang === 'id'
     ? [
-        `🎵 Spin: ${trackTitle} (${bpm} BPM) — musik wajib para pemburu airdrop! 🪂`,
-        'Vibes 8-bit bikin garap task testnet & klaim faucet makin anti-ngantuk! 💧⚡',
-        'Meme coin boleh pump & dump, tapi uptime node validator tetap 99.9%! 🐸🔥',
-        'Sambil dengerin beat ini, semoga wallet kamu JP airdrop tier S+! 🪂💰',
-        'Gas fee lagi murah nih ser, waktunya mint NFT & push transaksi testnet! 🖼️⛽',
-        'WAGMI! Mau market bullish atau bearish, chiptune harus tetap jalan! 🚀🎶',
-        'Klik aku kalau mau ganti lagu buat nemenin analisa chart crypto kamu! 📊🎹',
+        `🎵 Spin: ${trackTitle} (${bpm} BPM) — musik wajib para pemburu airdrop & pejuang karir! 🪂`,
+        'Masih nganggur tapi cuma rebahan? Ayo bangun ser, jadikan beat 8-bit ini bensin buat belajar skill baru hari ini! 🔥💻',
+        'Vibes 8-bit bikin garap task testnet, klaim faucet & poles portofolio makin anti-ngantuk! 💧⚡',
+        'Jangan biarin status pengangguran bikin mental drop! Terus asah skill, bangun karya, dan buktikan kamu bisa sukses! 💪🚀',
+        'Meme coin boleh pump & dump, tapi semangat cari cuan & uptime node validator harus tetap 99.9%! 🐸🔥',
+        'Sindiran buat yang suka nunda-nunda: kapan mau finansial freedom kalau buka laptop aja males-malesan?! 😤📈',
+        'Sambil dengerin beat ini, semoga lamaran kerjamu tembus & wallet kamu JP airdrop tier S+! 🪂💰',
+        'Gas fee lagi murah nih ser, waktunya mint NFT, push transaksi testnet, dan tetap produktif! 🖼️⛽',
+        'WAGMI! Mau market bearish atau lagi berjuang cari kerja, kita pasti bakal sampai di puncak! 🚀🎶',
       ]
     : [
-        `🎵 Spinning: ${trackTitle} (${bpm} BPM) — official soundtrack for airdrop hunters! 🪂`,
-        '8-bit synth vibes make grinding testnet tasks & faucets 10x faster! 💧⚡',
-        'Meme coins may pump & dump, but validator uptime stays locked at 99.9%! 🐸🔥',
-        'Manifesting an S-tier airdrop allocation for your wallet while this beat plays! 🪂💰',
-        'Gas fees are low ser—perfect time to mint NFTs & push testnet txns! 🖼️⛽',
-        'WAGMI! Bull market or bear market, the 8-bit chiptune never stops! 🚀🎶',
-        'Click me anytime to switch tracks while watching your crypto charts! 📊🎹',
+        `🎵 Spinning: ${trackTitle} (${bpm} BPM) — official soundtrack for airdrop hunters & career grinders! 🪂`,
+        'Unemployed and still just lying in bed? Get up ser, let this 8-bit beat fuel you to learn a high-income skill today! 🔥💻',
+        '8-bit synth vibes make grinding testnet tasks, faucets & polishing your portfolio 10x faster! 💧⚡',
+        'Do not let unemployment break your spirit! Keep sharpening your skills, ship projects, and prove them all wrong! 💪🚀',
+        'Meme coins may pump & dump, but your hustle & validator uptime stay locked at 99.9%! 🐸🔥',
+        'Friendly roast: how do you expect financial freedom if you keep procrastinating every single day?! 😤📈',
+        'Manifesting a dream job offer and an S-tier airdrop allocation for you while this beat plays! 🪂💰',
+        'Gas fees are low ser—perfect time to mint NFTs, push testnet txns, and stay productive! 🖼️⛽',
+        'WAGMI! Bear market or job hunting season, keep grinding and we are all gonna make it! 🚀🎶',
       ];
 
-export const RetroAudioPlayer: React.FC = () => {
+interface RetroAudioPlayerProps {
+  isReady?: boolean;
+}
+
+export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = true }) => {
   const { lang } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(retroAudio.getIsPlaying());
   const [currentTrack, setCurrentTrack] = useState(retroAudio.getCurrentTrack());
@@ -527,9 +756,13 @@ export const RetroAudioPlayer: React.FC = () => {
   const [step, setStep] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Interactive NPC Dialogue State (Idle vs Play modes + Typewriter effect)
+  // Interactive NPC Dialogue State (Sedang Mengetik -> Typewriter -> Reading) + Mood ('greeting' | 'normal' | 'angry')
+  const [hasBootSynced, setHasBootSynced] = useState(false);
+  const [mood, setMood] = useState<DjBotMood>('greeting');
   const [dialogueIndex, setDialogueIndex] = useState(0);
+  const [angryDialogueIndex, setAngryDialogueIndex] = useState(0);
   const [typedText, setTypedText] = useState('');
+  const [npcPhase, setNpcPhase] = useState<'composing' | 'typing' | 'reading'>('composing');
   const [npcTalkBounce, setNpcTalkBounce] = useState(false);
 
   // Scroll-independent viewport offset (dx, dy from initial bottom-left anchor)
@@ -537,15 +770,21 @@ export const RetroAudioPlayer: React.FC = () => {
   const [viewportInfo, setViewportInfo] = useState<{
     openDownward: boolean;
     bubbleOnLeft: boolean;
+    cardShiftX: number;
   }>({
     openDownward: false,
     bubbleOnLeft: false,
+    cardShiftX: 0,
   });
 
   const widgetRef = useRef<HTMLDivElement>(null);
+  const botButtonRef = useRef<HTMLButtonElement>(null);
+  const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const clearThresholdTimerRef = useRef<number | null>(null);
   const dragSessionRef = useRef<{
     active: boolean;
-    pointerId: number | null;
+    mode: 'mouse' | 'touch' | 'pointer' | null;
+    touchId: number | null;
     startClientX: number;
     startClientY: number;
     startOffsetX: number;
@@ -553,13 +792,18 @@ export const RetroAudioPlayer: React.FC = () => {
     movedBeyondThreshold: boolean;
   }>({
     active: false,
-    pointerId: null,
+    mode: null,
+    touchId: null,
     startClientX: 0,
     startClientY: 0,
     startOffsetX: 0,
     startOffsetY: 0,
     movedBeyondThreshold: false,
   });
+
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
 
   useEffect(() => {
     const unsubscribe = retroAudio.subscribe(() => {
@@ -573,18 +817,20 @@ export const RetroAudioPlayer: React.FC = () => {
   }, []);
 
   /**
-   * Clamp widget offset so it never escapes the visible viewport,
-   * and compute whether it is near the top or right edge so the popup & speech bubble auto-flip.
+   * Clamp DJ Bot offset so the character can be dragged freely across 100% of the screen
+   * (left, right, top, bottom) while auto-flipping the cloud bubble and keeping the cassette card inside the viewport.
    */
   const clampAndInspectBounds = useCallback(
     (rawX: number, rawY: number) => {
-      const el = widgetRef.current;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
-      const margin = 12;
+      const margin = 8;
 
-      const width = el ? el.offsetWidth : 280;
-      const height = el ? el.offsetHeight : 110;
+      const botEl = botButtonRef.current || widgetRef.current;
+      const defaultBotW = isWidgetVisible ? (vw >= 640 ? 96 : 64) : 44;
+      const defaultBotH = isWidgetVisible ? (vw >= 640 ? 100 : 72) : 44;
+      const botWidth = botEl ? botEl.offsetWidth || defaultBotW : defaultBotW;
+      const botHeight = botEl ? botEl.offsetHeight || defaultBotH : defaultBotH;
 
       // Base anchor is bottom: 16px (or 20px), left: 16px (or 20px)
       const baseLeft = vw >= 640 ? 20 : 16;
@@ -592,157 +838,422 @@ export const RetroAudioPlayer: React.FC = () => {
 
       // Minimum & maximum allowed X translation relative to baseLeft
       const minX = -(baseLeft - margin);
-      const maxX = Math.max(minX, vw - width - baseLeft - margin);
+      const maxX = Math.max(minX, vw - botWidth - baseLeft - margin);
 
       // Minimum & maximum allowed Y translation relative to baseBottom (negative Y moves upward)
-      const minY = -(vh - height - baseBottom - margin);
       const maxY = baseBottom - margin;
+      const minY = Math.min(maxY, -(vh - botHeight - baseBottom - margin));
 
       const clampedX = Math.min(Math.max(rawX, minX), maxX);
       const clampedY = Math.min(Math.max(rawY, minY), maxY);
 
       const currentLeft = baseLeft + clampedX;
-      const currentTop = vh - baseBottom - height + clampedY;
+      const currentTop = vh - baseBottom - botHeight + clampedY;
+      const botCenterX = currentLeft + botWidth / 2;
 
-      // If dragged into the top 270px of screen, open player card downward so it never clips top edge
-      const openDownward = currentTop < 260;
-      // If dragged to the right half of screen, place speech bubble on left of character if needed
-      const bubbleOnLeft = currentLeft > vw * 0.52;
+      // Ensure Expanded Cassette Card (280px on mobile, 310px on desktop) never clips left or right screen edges
+      const cardWidth = vw >= 640 ? 310 : 280;
+      let cardShiftX = 0;
+      if (currentLeft + cardWidth > vw - margin) {
+        cardShiftX = vw - margin - (currentLeft + cardWidth);
+      }
+      if (currentLeft + cardShiftX < margin) {
+        cardShiftX = margin - currentLeft;
+      }
 
-      setViewportInfo({ openDownward, bubbleOnLeft });
+      setViewportInfo((prev) => {
+        const openDownward = prev.openDownward ? currentTop < 280 : currentTop < 245;
+        const bubbleOnLeft = prev.bubbleOnLeft
+          ? botCenterX > vw * 0.46
+          : botCenterX > vw * 0.54;
+
+        if (
+          prev.openDownward === openDownward &&
+          prev.bubbleOnLeft === bubbleOnLeft &&
+          Math.abs(prev.cardShiftX - cardShiftX) < 1
+        ) {
+          return prev;
+        }
+        return { openDownward, bubbleOnLeft, cardShiftX };
+      });
+
       return { x: clampedX, y: clampedY };
     },
-    []
+    [isWidgetVisible]
   );
 
-  // Re-clamp on window resize or when widget expands/hides so it never gets stuck off-screen
+  // Re-clamp on window resize or when widget expands/hides
   useEffect(() => {
-    const handleResize = () => {
-      setOffset((prev) => clampAndInspectBounds(prev.x, prev.y));
+    const syncBounds = () => {
+      setOffset((prev) => {
+        const next = clampAndInspectBounds(prev.x, prev.y);
+        offsetRef.current = next;
+        return next;
+      });
     };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    syncBounds();
+    window.addEventListener('resize', syncBounds);
+    return () => window.removeEventListener('resize', syncBounds);
   }, [clampAndInspectBounds, isExpanded, isWidgetVisible]);
 
-  // Pointer-capture omnidirectional drag handlers (immune to page scroll & layout shifts)
-  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Allow normal interaction on range slider inputs
+  // Global window-level Mouse & Touch drag listeners (immune to child button focus, fast cursor motion, and mobile scroll cancellation)
+  useEffect(() => {
+    const updateDragPosition = (clientX: number, clientY: number, originalEvent?: Event) => {
+      const session = dragSessionRef.current;
+      if (!session.active) return;
+
+      const dx = clientX - session.startClientX;
+      const dy = clientY - session.startClientY;
+      const distance = Math.hypot(dx, dy);
+
+      // 5px threshold cleanly separates an intentional drag from a tap/click on buttons
+      if (!session.movedBeyondThreshold && distance > 5) {
+        session.movedBeyondThreshold = true;
+        setIsDragging(true);
+      }
+
+      if (session.movedBeyondThreshold) {
+        if (originalEvent && originalEvent.cancelable) {
+          originalEvent.preventDefault();
+        }
+        const next = clampAndInspectBounds(
+          session.startOffsetX + dx,
+          session.startOffsetY + dy
+        );
+        offsetRef.current = next;
+        if (widgetRef.current) {
+          widgetRef.current.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
+        }
+        setOffset(next);
+      }
+    };
+
+    const finishDragSession = () => {
+      const session = dragSessionRef.current;
+      if (!session.active) return;
+
+      const wasDragging = session.movedBeyondThreshold;
+      session.active = false;
+      session.mode = null;
+      session.touchId = null;
+
+      if (wasDragging) {
+        setIsDragging(false);
+        const clamped = clampAndInspectBounds(offsetRef.current.x, offsetRef.current.y);
+        offsetRef.current = clamped;
+        setOffset(clamped);
+
+        if (clearThresholdTimerRef.current !== null) {
+          window.clearTimeout(clearThresholdTimerRef.current);
+        }
+        clearThresholdTimerRef.current = window.setTimeout(() => {
+          dragSessionRef.current.movedBeyondThreshold = false;
+          clearThresholdTimerRef.current = null;
+        }, 140);
+      }
+    };
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      const session = dragSessionRef.current;
+      if (!session.active || session.mode !== 'mouse') return;
+      // If mouse button was released outside window, end session cleanly
+      if (e.buttons === 0) {
+        finishDragSession();
+        return;
+      }
+      updateDragPosition(e.clientX, e.clientY, e);
+    };
+
+    const handleWindowMouseUp = () => {
+      const session = dragSessionRef.current;
+      if (!session.active || session.mode !== 'mouse') return;
+      finishDragSession();
+    };
+
+    const handleWindowTouchMove = (e: TouchEvent) => {
+      const session = dragSessionRef.current;
+      if (!session.active || session.mode !== 'touch') return;
+      let matchedTouch: Touch | null = null;
+      for (let i = 0; i < e.touches.length; i += 1) {
+        if (e.touches[i].identifier === session.touchId) {
+          matchedTouch = e.touches[i];
+          break;
+        }
+      }
+      if (!matchedTouch && e.touches.length > 0) {
+        matchedTouch = e.touches[0];
+      }
+      if (!matchedTouch) return;
+      updateDragPosition(matchedTouch.clientX, matchedTouch.clientY, e);
+    };
+
+    const handleWindowTouchEnd = (e: TouchEvent) => {
+      const session = dragSessionRef.current;
+      if (!session.active || session.mode !== 'touch') return;
+      if (session.touchId !== null) {
+        for (let i = 0; i < e.touches.length; i += 1) {
+          if (e.touches[i].identifier === session.touchId) {
+            return; // Tracked finger is still on screen
+          }
+        }
+      }
+      finishDragSession();
+    };
+
+    window.addEventListener('mousemove', handleWindowMouseMove, { passive: false });
+    window.addEventListener('mouseup', handleWindowMouseUp);
+    window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
+    window.addEventListener('touchend', handleWindowTouchEnd);
+    window.addEventListener('touchcancel', handleWindowTouchEnd);
+    window.addEventListener('blur', finishDragSession);
+
+    return () => {
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+      window.removeEventListener('touchmove', handleWindowTouchMove);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
+      window.removeEventListener('touchcancel', handleWindowTouchEnd);
+      window.removeEventListener('blur', finishDragSession);
+    };
+  }, [clampAndInspectBounds]);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'INPUT') return;
-    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (target.closest('input[type="range"]')) return;
+    if (e.button !== 0) return;
+
+    if (clearThresholdTimerRef.current !== null) {
+      window.clearTimeout(clearThresholdTimerRef.current);
+      clearThresholdTimerRef.current = null;
+    }
 
     dragSessionRef.current = {
       active: true,
-      pointerId: e.pointerId,
+      mode: 'mouse',
+      touchId: null,
       startClientX: e.clientX,
       startClientY: e.clientY,
-      startOffsetX: offset.x,
-      startOffsetY: offset.y,
+      startOffsetX: offsetRef.current.x,
+      startOffsetY: offsetRef.current.y,
       movedBeyondThreshold: false,
     };
+  };
 
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // Ignore if pointer capture unsupported
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="range"]')) return;
+    if (e.touches.length === 0) return;
+
+    if (clearThresholdTimerRef.current !== null) {
+      window.clearTimeout(clearThresholdTimerRef.current);
+      clearThresholdTimerRef.current = null;
+    }
+
+    const touch = e.touches[0];
+    dragSessionRef.current = {
+      active: true,
+      mode: 'touch',
+      touchId: touch.identifier,
+      startClientX: touch.clientX,
+      startClientY: touch.clientY,
+      startOffsetX: offsetRef.current.x,
+      startOffsetY: offsetRef.current.y,
+      movedBeyondThreshold: false,
+    };
+  };
+
+  // Block synthetic button clicks immediately after releasing a drag gesture
+  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragSessionRef.current.movedBeyondThreshold) {
+      e.stopPropagation();
+      e.preventDefault();
     }
   };
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const session = dragSessionRef.current;
-    if (!session.active || session.pointerId !== e.pointerId) return;
-
-    const dx = e.clientX - session.startClientX;
-    const dy = e.clientY - session.startClientY;
-    const distance = Math.hypot(dx, dy);
-
-    // 6px threshold cleanly separates an intentional drag from a tap/click
-    if (!session.movedBeyondThreshold && distance > 6) {
-      session.movedBeyondThreshold = true;
-      setIsDragging(true);
-    }
-
-    if (session.movedBeyondThreshold) {
-      const next = clampAndInspectBounds(
-        session.startOffsetX + dx,
-        session.startOffsetY + dy
-      );
-      setOffset(next);
-    }
-  };
-
-  const endPointerSession = (e: React.PointerEvent<HTMLDivElement>) => {
-    const session = dragSessionRef.current;
-    if (!session.active) return;
-
-    try {
-      if (session.pointerId !== null && e.currentTarget.hasPointerCapture(session.pointerId)) {
-        e.currentTarget.releasePointerCapture(session.pointerId);
-      }
-    } catch {
-      // Ignore release errors
-    }
-
-    session.active = false;
-    session.pointerId = null;
-
-    if (session.movedBeyondThreshold) {
-      setIsDragging(false);
-      // Keep movedBeyondThreshold true briefly so the synthetic click event after pointerup is ignored
-      setTimeout(() => {
-        dragSessionRef.current.movedBeyondThreshold = false;
-      }, 80);
-    }
-  };
-
-  // Reset dialogue index to 0 when switching between Play and Idle or changing track
+  // 1. Synchronize Greeting Action AFTER Loading Screen finishes (when isReady becomes true)
   useEffect(() => {
+    if (!isReady) return;
+
+    // Slight 350ms post-reveal delay so DJ Bot pops in & waves right as the loading screen curtain clears
+    const bootGreetingSyncTimer = setTimeout(() => {
+      setHasBootSynced(true);
+      setMood('greeting');
+      setDialogueIndex(0);
+      setTypedText('');
+      setNpcPhase('composing');
+      setNpcTalkBounce(true);
+      setTimeout(() => setNpcTalkBounce(false), 320);
+    }, 350);
+
+    return () => {
+      clearTimeout(bootGreetingSyncTimer);
+    };
+  }, [isReady]);
+
+  // 2. Trigger a brief Angry burst when staying on the website for a long time (every 65s in normal mode),
+  // and enforce a hard safety cap (8.5s max) so DJ Bot never stays angry for too long
+  useEffect(() => {
+    if (!hasBootSynced) return;
+
+    if (mood === 'normal') {
+      const longStayAngryTimer = setTimeout(() => {
+        setMood('angry');
+        setTypedText('');
+        setNpcPhase('composing');
+        setNpcTalkBounce(true);
+        setTimeout(() => setNpcTalkBounce(false), 320);
+      }, 65000);
+
+      return () => clearTimeout(longStayAngryTimer);
+    }
+
+    if (mood === 'angry') {
+      const maxAngryDurationTimer = setTimeout(() => {
+        setMood('normal');
+        setAngryDialogueIndex((prev) => prev + 1);
+        setDialogueIndex((prev) => prev + 1);
+        setNpcPhase('composing');
+      }, 8500);
+
+      return () => clearTimeout(maxAngryDurationTimer);
+    }
+  }, [hasBootSynced, mood]);
+
+  // Reset dialogue index to 0 and trigger "Sedang mengetik..." when switching Play/Idle, track, or language
+  useEffect(() => {
+    if (!hasBootSynced) return;
+    // If user starts playing music while DJ Bot is greeting or angry, switch to normal play mode
+    if (isPlaying) {
+      setMood((prev) => (prev === 'greeting' || prev === 'angry' ? 'normal' : prev));
+    }
     setDialogueIndex(0);
-  }, [isPlaying, currentTrack.title]);
+    setNpcPhase('composing');
+  }, [isPlaying, currentTrack.title, lang, hasBootSynced]);
 
-  // Auto-cycle NPC dialogue every 6.5 seconds
-  useEffect(() => {
-    if (isDragging) return;
-    const timer = setInterval(() => {
-      setDialogueIndex((prev) => prev + 1);
-    }, 6500);
-    return () => clearInterval(timer);
-  }, [isDragging, isPlaying]);
+  const activeDialogues =
+    mood === 'greeting'
+      ? [lang === 'id' ? NPC_GREETING_DIALOGUE_ID : NPC_GREETING_DIALOGUE_EN]
+      : mood === 'angry'
+      ? lang === 'id'
+        ? NPC_ANGRY_DIALOGUES_ID
+        : NPC_ANGRY_DIALOGUES_EN
+      : isPlaying
+      ? getNpcPlayDialogues(currentTrack.title, currentTrack.bpm, lang)
+      : lang === 'id'
+      ? NPC_IDLE_DIALOGUES_ID
+      : NPC_IDLE_DIALOGUES_EN;
 
-  const activeDialogues = isPlaying
-    ? getNpcPlayDialogues(currentTrack.title, currentTrack.bpm, lang)
-    : lang === 'id'
-    ? NPC_IDLE_DIALOGUES_ID
-    : NPC_IDLE_DIALOGUES_EN;
+  const activeIndex = mood === 'angry' ? angryDialogueIndex : dialogueIndex;
 
   const fullDialogueText = isDragging
     ? lang === 'id'
       ? 'Wheee~ terbang keliling jaringan! Lepas di mana aja 🛸✨'
       : 'Wheee~ flying across the network! Drop me anywhere 🛸✨'
-    : activeDialogues[dialogueIndex % activeDialogues.length];
+    : activeDialogues[activeIndex % activeDialogues.length];
 
-  // Classic RPG NPC Typewriter animation
+  // State machine for every interactive text (only runs after loading screen has synced):
+  // 'composing' (Sedang mengetik... •••) -> 'typing' (Typewriter) -> 'reading' -> next 'composing'
   useEffect(() => {
-    let charIndex = 0;
-    setTypedText('');
-    const typeInterval = setInterval(() => {
-      charIndex += 1;
-      setTypedText(fullDialogueText.slice(0, charIndex));
-      if (charIndex >= fullDialogueText.length) {
-        clearInterval(typeInterval);
-      }
-    }, 24);
+    if (!hasBootSynced) return;
 
-    return () => clearInterval(typeInterval);
-  }, [fullDialogueText]);
+    if (isDragging) {
+      setTypedText(fullDialogueText);
+      return;
+    }
+
+    if (npcPhase === 'composing') {
+      setTypedText('');
+      const composeTimer = setTimeout(
+        () => {
+          setNpcPhase('typing');
+        },
+        mood === 'greeting' ? 750 : mood === 'angry' ? 650 : 1100
+      );
+      return () => clearTimeout(composeTimer);
+    }
+
+    if (npcPhase === 'typing') {
+      let charIndex = 0;
+      setTypedText('');
+      const typeInterval = setInterval(
+        () => {
+          charIndex += 1;
+          setTypedText(fullDialogueText.slice(0, charIndex));
+          if (charIndex >= fullDialogueText.length) {
+            clearInterval(typeInterval);
+            setNpcPhase('reading');
+          }
+        },
+        mood === 'angry' ? 20 : 24
+      );
+      return () => clearInterval(typeInterval);
+    }
+
+    if (npcPhase === 'reading') {
+      const readTimer = setTimeout(
+        () => {
+          // Once the initial greeting has been read completely, transition cleanly to normal mode
+          if (mood === 'greeting') {
+            setMood('normal');
+            setDialogueIndex(0);
+            setNpcPhase('composing');
+          } else if (mood === 'angry') {
+            // Calm down automatically after 1 angry message so DJ Bot doesn't stay angry too long
+            setMood('normal');
+            setAngryDialogueIndex((prev) => prev + 1);
+            setDialogueIndex((prev) => prev + 1);
+            setNpcPhase('composing');
+          } else {
+            setDialogueIndex((prev) => prev + 1);
+            setNpcPhase('composing');
+          }
+        },
+        mood === 'greeting' ? 6200 : mood === 'angry' ? 3800 : 5000
+      );
+      return () => clearTimeout(readTimer);
+    }
+  }, [npcPhase, fullDialogueText, isDragging, hasBootSynced, mood]);
 
   const handleNextNpcDialogue = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (dragSessionRef.current.movedBeyondThreshold) return;
     setNpcTalkBounce(true);
     setTimeout(() => setNpcTalkBounce(false), 260);
-    setDialogueIndex((prev) => prev + 1);
+
+    // If currently in greeting mode and user clicks while composing, skip straight to typing the greeting;
+    // if greeting is already typed/reading, advance smoothly to normal dialogues
+    if (mood === 'greeting') {
+      if (npcPhase === 'composing') {
+        setNpcPhase('typing');
+      } else {
+        setMood('normal');
+        setDialogueIndex(0);
+        setNpcPhase('composing');
+      }
+      return;
+    }
+
+    // If currently in angry mode, clicking after composing immediately calms DJ Bot down to normal mode
+    if (mood === 'angry') {
+      if (npcPhase === 'composing') {
+        setNpcPhase('typing');
+      } else {
+        setMood('normal');
+        setAngryDialogueIndex((prev) => prev + 1);
+        setDialogueIndex((prev) => prev + 1);
+        setNpcPhase('composing');
+      }
+      return;
+    }
+
+    // If currently showing "Sedang mengetik...", skip straight to typing the message;
+    // otherwise advance to the next dialogue with "Sedang mengetik..."
+    if (npcPhase === 'composing') {
+      setNpcPhase('typing');
+    } else {
+      setDialogueIndex((prev) => prev + 1);
+      setNpcPhase('composing');
+    }
   };
 
   const handleToggle = () => {
@@ -781,6 +1292,13 @@ export const RetroAudioPlayer: React.FC = () => {
     // Ignore click if user was just dragging the character around
     if (dragSessionRef.current.movedBeyondThreshold) return;
 
+    if (mood === 'angry') {
+      setMood('normal');
+      setAngryDialogueIndex((prev) => prev + 1);
+      setDialogueIndex((prev) => prev + 1);
+      setNpcPhase('composing');
+    }
+
     if (!isPlaying && !isExpanded) {
       retroAudio.start();
     }
@@ -790,16 +1308,19 @@ export const RetroAudioPlayer: React.FC = () => {
   return (
     <div
       ref={widgetRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={endPointerSession}
-      onPointerCancel={endPointerSession}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onClickCapture={handleClickCapture}
+      onDragStart={(e) => e.preventDefault()}
       style={{
         transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+        touchAction: 'none',
       }}
-      className={`fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-40 select-none touch-none transition-shadow ${
-        isDragging ? 'cursor-grabbing z-50' : 'cursor-grab'
-      }`}
+      className={`fixed bottom-4 left-4 sm:bottom-5 sm:left-5 select-none touch-none will-change-transform ${
+        isDragging
+          ? 'transition-none cursor-grabbing z-[70]'
+          : 'transition-opacity duration-500 cursor-grab z-[60]'
+      } ${!hasBootSynced ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
     >
       <AnimatePresence mode="wait">
         {isWidgetVisible ? (
@@ -809,9 +1330,7 @@ export const RetroAudioPlayer: React.FC = () => {
             animate={{ opacity: 1, scale: isDragging ? 1.04 : 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-            className={`flex ${
-              viewportInfo.openDownward ? 'flex-col-reverse' : 'flex-col'
-            } ${viewportInfo.bubbleOnLeft ? 'items-end' : 'items-start'}`}
+            className="relative flex items-end"
           >
             {/* 1. Expanded Retro Cassette Player Doodle Card (Auto-flips below character if dragged near top of screen) */}
             <AnimatePresence>
@@ -829,9 +1348,10 @@ export const RetroAudioPlayer: React.FC = () => {
                     scale: 0.94,
                   }}
                   transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-                  className={`doodle-card ${
-                    viewportInfo.openDownward ? 'mt-3' : 'mb-3'
-                  } p-3.5 sm:p-4 w-[280px] sm:w-[310px] text-[#fbeee0] relative`}
+                  style={{ left: `${viewportInfo.cardShiftX}px` }}
+                  className={`doodle-card absolute z-30 ${
+                    viewportInfo.openDownward ? 'top-full mt-3' : 'bottom-full mb-3'
+                  } p-3.5 sm:p-4 w-[280px] sm:w-[310px] text-[#fbeee0]`}
                 >
                   {/* Top Masking Tape */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
@@ -975,7 +1495,8 @@ export const RetroAudioPlayer: React.FC = () => {
 
                   {/* Volume Slider Bar */}
                   <div
-                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     className="flex items-center gap-2 pt-1 border-t border-dashed border-[#fbeee0]/15"
                   >
                     <button
@@ -1006,15 +1527,13 @@ export const RetroAudioPlayer: React.FC = () => {
             </AnimatePresence>
 
             {/* 2. Draggable Animated DJ Character + Interactive NPC Dialogue Box */}
-            <div
-              className={`relative flex items-end gap-1.5 group ${
-                viewportInfo.bubbleOnLeft ? 'flex-row-reverse' : 'flex-row'
-              }`}
-            >
+            <div className="relative flex items-end group">
               <button
+                ref={botButtonRef}
                 type="button"
                 onClick={handleCharacterClick}
-                className={`relative flex items-center focus:outline-none transition-transform duration-200 ${
+                style={{ touchAction: 'none' }}
+                className={`relative flex items-center focus:outline-none touch-none transition-transform duration-200 ${
                   npcTalkBounce ? '-translate-y-1.5 scale-105' : 'hover:-translate-y-0.5'
                 } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                 title="Click DJ Bot to open BGM deck or drag anywhere!"
@@ -1024,11 +1543,12 @@ export const RetroAudioPlayer: React.FC = () => {
                   isPlaying={isPlaying}
                   isExpanded={isExpanded}
                   isDragging={isDragging}
+                  mood={mood}
                   step={step}
                 />
               </button>
 
-              {/* Interactive RPG NPC Speech Bubble (Click to cycle NPC dialogue) */}
+              {/* Interactive RPG NPC Cloud Dialog Bubble ("Style Awan" - Compact on Mobile, Auto-Flips Left/Right without moving DJ Bot) */}
               <div
                 role="button"
                 tabIndex={0}
@@ -1039,62 +1559,208 @@ export const RetroAudioPlayer: React.FC = () => {
                     handleNextNpcDialogue(e as unknown as React.MouseEvent);
                   }
                 }}
+                style={{ touchAction: 'none' }}
                 title={
                   lang === 'id'
-                    ? 'Klik balon chat untuk dialog NPC berikutnya! 💬'
-                    : 'Click speech bubble for next NPC dialogue! 💬'
+                    ? 'Klik awan dialog untuk pesan NPC berikutnya! ☁️'
+                    : 'Click cloud bubble for next NPC dialogue! ☁️'
                 }
-                className={`mb-4 px-3 py-2 rounded-[16px_12px_18px_4px] border-2 text-left shadow-[4px_4px_0px_#0b1018] transition-all duration-200 max-w-[185px] sm:max-w-[225px] select-none ${
-                  npcTalkBounce ? 'scale-105 -translate-y-0.5' : ''
-                } ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'} ${
-                  isDragging
-                    ? 'bg-[#101824]/95 border-[#e59b63] text-[#fbeee0]'
-                    : isPlaying
-                    ? 'bg-[#101824]/95 border-emerald-400 text-[#fbeee0]'
-                    : 'bg-[#101824]/95 border-[#fbeee0] text-[#fbeee0] hover:border-[#e59b63]'
-                }`}
+                className={`absolute bottom-3 sm:bottom-5 z-20 flex items-center touch-none ${
+                  viewportInfo.bubbleOnLeft
+                    ? 'right-full mr-1 flex-row-reverse'
+                    : 'left-full ml-1 flex-row'
+                } ${npcTalkBounce ? 'scale-105 -translate-y-1' : ''} ${
+                  isDragging ? 'cursor-grabbing' : 'cursor-pointer'
+                } transition-transform duration-200 select-none group/cloud`}
               >
-                {/* Top NPC Header Tag */}
-                <div className="flex items-center justify-between gap-2 mb-0.5 border-b border-dashed border-[#fbeee0]/15 pb-0.5">
-                  <div className="flex items-center gap-1.5">
+                {/* Trailing Little Cloud Puffs connecting DJ Bot to the Main Cloud */}
+                <div
+                  className={`flex items-end gap-0.5 sm:gap-1 ${
+                    viewportInfo.bubbleOnLeft ? 'flex-row-reverse -ml-0.5 mr-0.5' : '-mr-0.5 ml-0.5'
+                  } pointer-events-none z-20`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full border-[1.5px] sm:border-2 shadow-[1px_1px_0px_#0b1018] sm:shadow-[2px_2px_0px_#0b1018] transition-colors duration-200 ${
+                      !isDragging && mood === 'angry'
+                        ? 'bg-[#1a0f14] border-red-400'
+                        : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                        ? 'bg-[#101824] border-[#e59b63]'
+                        : isPlaying
+                        ? 'bg-[#101824] border-emerald-400'
+                        : 'bg-[#101824] border-[#fbeee0] group-hover/cloud:border-[#e59b63]'
+                    }`}
+                  />
+                  <span
+                    className={`w-2 h-2 sm:w-3 sm:h-3 -translate-y-1 sm:-translate-y-1.5 rounded-full border-[1.5px] sm:border-2 shadow-[1px_1px_0px_#0b1018] sm:shadow-[2px_2px_0px_#0b1018] transition-colors duration-200 ${
+                      !isDragging && mood === 'angry'
+                        ? 'bg-[#1a0f14] border-red-400'
+                        : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                        ? 'bg-[#101824] border-[#e59b63]'
+                        : isPlaying
+                        ? 'bg-[#101824] border-emerald-400'
+                        : 'bg-[#101824] border-[#fbeee0] group-hover/cloud:border-[#e59b63]'
+                    }`}
+                  />
+                </div>
+
+                {/* Main Fluffy Cloud Container (Compact on Mobile, Full on Desktop) */}
+                <div
+                  className={`relative px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-[20px_24px_18px_22px] sm:rounded-[30px_34px_28px_32px] border-[1.5px] sm:border-2 text-left shadow-[3px_3px_0px_#0b1018] sm:shadow-[4px_5px_0px_#0b1018] transition-all duration-200 ${
+                    !isDragging && npcPhase === 'composing'
+                      ? 'w-fit max-w-[140px] sm:max-w-[205px]'
+                      : 'w-[148px] sm:w-[235px]'
+                  } ${
+                    !isDragging && mood === 'angry'
+                      ? 'bg-[#1a0f14]/95 border-red-400 text-[#fbeee0]'
+                      : isDragging || mood === 'greeting'
+                      ? 'bg-[#101824]/95 border-[#e59b63] text-[#fbeee0]'
+                      : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                      ? 'bg-[#101824]/95 border-[#e59b63] text-[#fbeee0]'
+                      : isPlaying
+                      ? 'bg-[#101824]/95 border-emerald-400 text-[#fbeee0]'
+                      : 'bg-[#101824]/95 border-[#fbeee0] text-[#fbeee0] group-hover/cloud:border-[#e59b63]'
+                  }`}
+                >
+                  {/* Decorative Top Cloud Puffs (Scalloped Cloud Bumps) */}
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute -top-1.5 sm:-top-2 left-3.5 sm:left-5 w-4 sm:w-7 h-2 sm:h-3.5 rounded-t-full border-t-[1.5px] border-x-[1.5px] sm:border-t-2 sm:border-x-2 transition-colors duration-200 ${
+                      !isDragging && mood === 'angry'
+                        ? 'bg-[#1a0f14] border-red-400'
+                        : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                        ? 'bg-[#101824] border-[#e59b63]'
+                        : isPlaying
+                        ? 'bg-[#101824] border-emerald-400'
+                        : 'bg-[#101824] border-[#fbeee0] group-hover/cloud:border-[#e59b63]'
+                    }`}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none absolute -top-2 sm:-top-2.5 left-7 sm:left-11 w-6 sm:w-9 h-2.5 sm:h-4 rounded-t-full border-t-[1.5px] border-x-[1.5px] sm:border-t-2 sm:border-x-2 transition-colors duration-200 ${
+                      !isDragging && mood === 'angry'
+                        ? 'bg-[#1a0f14] border-red-400'
+                        : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                        ? 'bg-[#101824] border-[#e59b63]'
+                        : isPlaying
+                        ? 'bg-[#101824] border-emerald-400'
+                        : 'bg-[#101824] border-[#fbeee0] group-hover/cloud:border-[#e59b63]'
+                    }`}
+                  />
+                  {(!(!isDragging && npcPhase === 'composing')) && (
                     <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                        isDragging
-                          ? 'bg-[#e59b63] animate-ping'
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute -top-1.5 sm:-top-2 right-4 sm:right-6 w-4 sm:w-7 h-2 sm:h-3.5 rounded-t-full border-t-[1.5px] border-x-[1.5px] sm:border-t-2 sm:border-x-2 transition-colors duration-200 ${
+                        !isDragging && mood === 'angry'
+                          ? 'bg-[#1a0f14] border-red-400'
+                          : isDragging || mood === 'greeting' || npcPhase === 'typing'
+                          ? 'bg-[#101824] border-[#e59b63]'
                           : isPlaying
-                          ? 'bg-emerald-400 animate-ping'
-                          : 'bg-[#e59b63]'
+                          ? 'bg-[#101824] border-emerald-400'
+                          : 'bg-[#101824] border-[#fbeee0] group-hover/cloud:border-[#e59b63]'
                       }`}
                     />
-                    <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#e59b63]">
-                      NPC • DJ BOT
-                    </span>
-                    <span
-                      className={`font-mono text-[8px] px-1 py-0.2 rounded ${
-                        isPlaying
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-white/10 text-[#d6c4b2]'
-                      }`}
-                    >
-                      {isPlaying ? 'PLAY' : 'IDLE'}
+                  )}
+
+                  {/* Top NPC Header Tag inside Cloud */}
+                  <div className="relative z-10 flex items-center justify-between gap-1 sm:gap-2 mb-0.5 sm:mb-1 border-b border-dashed border-[#fbeee0]/15 pb-0.5">
+                    <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                          !isDragging && mood === 'angry'
+                            ? 'bg-red-400 animate-ping'
+                            : isDragging || npcPhase === 'composing' || npcPhase === 'typing'
+                            ? 'bg-[#e59b63] animate-ping'
+                            : isPlaying
+                            ? 'bg-emerald-400 animate-ping'
+                            : 'bg-[#e59b63]'
+                        }`}
+                      />
+                      <span
+                        className={`font-mono text-[7.5px] sm:text-[9px] font-bold uppercase tracking-wider shrink-0 ${
+                          !isDragging && mood === 'angry' ? 'text-red-400' : 'text-[#e59b63]'
+                        }`}
+                      >
+                        DJ BOT
+                      </span>
+                      <span
+                        className={`font-mono text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.2 rounded-full truncate ${
+                          !isDragging && mood === 'greeting'
+                            ? 'bg-[#e59b63]/25 text-[#fbeee0] border border-[#e59b63]/50'
+                            : !isDragging && mood === 'angry'
+                            ? 'bg-red-500/25 text-red-300 border border-red-400/40'
+                            : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                            ? 'bg-[#9d613c]/35 text-[#fbeee0] border border-[#e59b63]/40'
+                            : isPlaying
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : 'bg-white/10 text-[#d6c4b2]'
+                        }`}
+                      >
+                        {!isDragging && mood === 'greeting'
+                          ? npcPhase === 'composing' || npcPhase === 'typing'
+                            ? lang === 'id'
+                              ? '👋 MENYAPA...'
+                              : '👋 GREETING...'
+                            : lang === 'id'
+                            ? '👋 HALO!'
+                            : '👋 HI!'
+                          : !isDragging && mood === 'angry'
+                          ? npcPhase === 'composing' || npcPhase === 'typing'
+                            ? lang === 'id'
+                              ? '💢 NGAMBEK...'
+                              : '💢 FUMING...'
+                            : lang === 'id'
+                            ? '💢 MARAH!'
+                            : '💢 ANGRY!'
+                          : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                          ? lang === 'id'
+                            ? 'MENGETIK...'
+                            : 'TYPING...'
+                          : isPlaying
+                          ? 'PLAY'
+                          : 'IDLE'}
+                      </span>
+                    </div>
+
+                    <span className="font-mono text-[8px] sm:text-[9px] text-[#a39483] group-hover/cloud:text-[#fbeee0] flex items-center gap-0.5 shrink-0">
+                      <span>☁️</span>
+                      <span>▸</span>
                     </span>
                   </div>
 
-                  <span className="font-mono text-[9px] text-[#a39483] hover:text-[#fbeee0] flex items-center gap-0.5">
-                    <span>💬</span>
-                    <span>▸</span>
-                  </span>
-                </div>
-
-                {/* Typewriter NPC Dialogue Line */}
-                <p className="font-hand text-xs sm:text-sm leading-snug text-[#fbeee0] min-h-[2.2rem] flex items-center">
-                  <span>
-                    {typedText}
-                    {typedText.length < fullDialogueText.length && (
-                      <span className="inline-block w-1 h-3 ml-0.5 bg-[#e59b63] animate-pulse align-middle" />
+                  {/* NPC Cloud Dialogue Body: Compact "Sedang mengetik..." Bubble vs Typewriter Text */}
+                  <div className="relative z-10">
+                    {!isDragging && npcPhase === 'composing' ? (
+                      <div className="flex items-center gap-1.5 sm:gap-2 py-0.5 sm:py-1">
+                        <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full bg-[#090d14] border border-[#e59b63]/40 shadow-inner shrink-0">
+                          <span
+                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
+                            style={{ animationDelay: '0ms' }}
+                          />
+                          <span
+                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
+                            style={{ animationDelay: '150ms' }}
+                          />
+                          <span
+                            className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
+                            style={{ animationDelay: '300ms' }}
+                          />
+                        </span>
+                        <span className="font-hand text-[10.5px] sm:text-sm text-[#e59b63] tracking-wide whitespace-nowrap">
+                          {lang === 'id' ? 'Mengetik...' : 'Typing...'}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="font-hand text-[11px] sm:text-sm leading-tight sm:leading-snug text-[#fbeee0] min-h-[1.65rem] sm:min-h-[2.25rem] flex items-center">
+                        <span>
+                          {typedText}
+                          {npcPhase === 'typing' && typedText.length < fullDialogueText.length && (
+                            <span className="inline-block w-1 h-2.5 sm:h-3 ml-0.5 bg-[#e59b63] animate-pulse align-middle" />
+                          )}
+                        </span>
+                      </p>
                     )}
-                  </span>
-                </p>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
