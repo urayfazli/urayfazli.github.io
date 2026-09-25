@@ -20,8 +20,10 @@ import { BackgroundLayer } from './components/BackgroundLayer';
 import { RetroAudioPlayer } from './components/RetroAudioPlayer';
 import { RunningTextMarquee } from './components/RunningTextMarquee';
 import { NodeSentryCharacter } from './components/CardCharacters';
+import { LoadingScreen } from './components/LoadingScreen';
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkInfo | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -103,7 +105,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative">
-      
+      {/* Initial Boot Loading Screen with Animated Character */}
+      {isLoading && <LoadingScreen onFinish={() => setIsLoading(false)} />}
+
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
