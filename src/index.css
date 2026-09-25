@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-fredoka: 'Fredoka', cursive, sans-serif;
-  --font-hand: 'Patrick Hand', cursive, sans-serif;
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-fredoka: 'Shantell Sans', 'Patrick Hand', cursive, sans-serif;
+  --font-hand: 'Gochi Hand', 'Patrick Hand', cursive, sans-serif;
+  --font-sans: 'Patrick Hand', 'Shantell Sans', cursive, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --color-warm-caramel: #9e643c;
   --color-warm-light: #fbeee0;
@@ -19,17 +19,21 @@ html {
 }
 
 :root {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Patrick Hand', 'Shantell Sans', cursive, sans-serif;
+  letter-spacing: 0.02em;
   color-scheme: dark;
 }
 
-/* Custom rounded header font class */
+/* Custom hand-drawn doodle header font class */
 .font-fredoka {
-  font-family: 'Fredoka', cursive, sans-serif;
+  font-family: 'Shantell Sans', 'Patrick Hand', cursive, sans-serif;
+  letter-spacing: 0.01em;
 }
 
+/* Expressive sketchbook doodle script font class */
 .font-hand {
-  font-family: 'Patrick Hand', cursive, sans-serif;
+  font-family: 'Gochi Hand', 'Patrick Hand', cursive, sans-serif;
+  letter-spacing: 0.025em;
 }
 
 /* Custom subtle animations */

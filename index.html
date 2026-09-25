@@ -2,6 +2,72 @@
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var walletProps = {
+            ethereum: true,
+            web3: true,
+            solana: true,
+            aptos: true,
+            petra: true,
+            martian: true,
+            pontem: true,
+            sei: true,
+            compass: true,
+            leap: true,
+            keplr: true,
+            phantom: true
+          };
+
+          var origDefineProperty = Object.defineProperty;
+          Object.defineProperty = function (target, prop, descriptor) {
+            if (target === window && walletProps[String(prop)]) {
+              try {
+                var existing = Object.getOwnPropertyDescriptor(window, prop);
+                if (existing && existing.configurable === false) {
+                  return target;
+                }
+                var safeDescriptor = Object.assign({}, descriptor, {
+                  configurable: true
+                });
+                return origDefineProperty.call(Object, target, prop, safeDescriptor);
+              } catch (_err) {
+                return target;
+              }
+            }
+            try {
+              return origDefineProperty.call(Object, target, prop, descriptor);
+            } catch (err) {
+              if (
+                err instanceof TypeError &&
+                String(err.message || '').indexOf('Cannot redefine property') !== -1
+              ) {
+                return target;
+              }
+              throw err;
+            }
+          };
+
+          window.addEventListener(
+            'error',
+            function (event) {
+              var msg = String((event && event.message) || '');
+              if (
+                msg.indexOf('Cannot redefine property: ethereum') !== -1 ||
+                msg.indexOf('Cannot redefine property') !== -1 ||
+                msg.indexOf('Cannot set property ethereum') !== -1
+              ) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                return false;
+              }
+            },
+            true
+          );
+        } catch (_e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Web Title Tags -->
@@ -66,10 +132,10 @@
     }
     </script>
 
-    <!-- Google Web Fonts -->
+    <!-- Google Web Fonts (Hand-Drawn Doodle & Sketchbook Typography) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=JetBrains+Mono:wght@400;500&family=Patrick+Hand&family=Shantell+Sans:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet" />
   </head>
   <body class="bg-[#0f141d] text-[#fbeee0] selection:bg-[#9d603b] selection:text-white antialiased min-h-screen">
     <div id="root"></div>
