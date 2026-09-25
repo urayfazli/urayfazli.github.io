@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@theme {
+  --font-fredoka: 'Fredoka', cursive, sans-serif;
+  --font-hand: 'Patrick Hand', cursive, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --color-warm-caramel: #9e643c;
+  --color-warm-light: #fbeee0;
+  --color-warm-amber: #b97746;
+  --color-navy-dark: #0f141d;
+  --color-card-bg: #141c27;
+  --color-card-border: #222d3d;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+:root {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+/* Custom rounded header font class */
+.font-fredoka {
+  font-family: 'Fredoka', cursive, sans-serif;
+}
+
+.font-hand {
+  font-family: 'Patrick Hand', cursive, sans-serif;
+}
+
+/* Custom subtle animations */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes slide-down-nav {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(157, 97, 60, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(157, 97, 60, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(157, 97, 60, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+.animate-slide-down-nav {
+  animation: slide-down-nav 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.5s infinite;
+}
+
+.shimmer-bg {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+}
