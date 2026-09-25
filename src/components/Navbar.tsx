@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { GitHubIcon, XIcon } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { ASSET_IMAGES } from '../assets/images';
@@ -15,6 +15,14 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+
+  // Real-time scroll progress for slim navbar indicator
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  });
 
   // Monitor scroll state for dynamic floating navbar animation
   useEffect(() => {
@@ -76,11 +84,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           : 'py-4 backdrop-blur-md bg-[#0f141d]/80 border-b border-white/5'
       }`}
     >
+      {/* Slim, elegant scroll progress indicator bar */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/5 overflow-hidden pointer-events-none z-50"
+        role="progressbar"
+        aria-label="Page scroll progress"
+      >
+        <motion.div
+          style={{ scaleX, transformOrigin: '0%' }}
+          className="h-full bg-gradient-to-r from-[#9d613c] via-[#e59b63] to-[#fbeee0] shadow-[0_0_10px_rgba(229,155,99,0.7)]"
+        />
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
         {/* Brand Zone: Mini Chibi Avatar + Name with Micro-Animations */}
         <a
           href="#home"
+          title="Uray Fazli Alman - Blockchain Node Operator Portfolio"
+          aria-label="Uray Fazli Alman Homepage & Brand Logo"
           onClick={(e) => {
             e.preventDefault();
             setMobileMenuOpen(false);
