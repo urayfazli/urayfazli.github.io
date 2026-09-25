@@ -1,6 +1,15 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { DoodleRays, DoodleStar, SpeechBubble, GitHubIcon, XIcon, DoodleTape } from './Doodles';
+import {
+  DoodleRays,
+  DoodleStar,
+  SpeechBubble,
+  GitHubIcon,
+  XIcon,
+  DoodleTape,
+  SketchbookPaperPlaneDoodle,
+  SketchbookOrbitRocketDoodle,
+} from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { TypingText } from './TypingText';
 import { ASSET_IMAGES } from '../assets/images';
@@ -251,32 +260,156 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Soft warm aura backdrop behind character */}
               <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#9d613c]/25 via-[#402d23]/40 to-transparent blur-2xl" />
 
-              {/* Character Illustration Doodle Frame */}
-              <div className="doodle-card relative w-[280px] xs:w-[320px] sm:w-[380px] lg:w-[440px] h-[280px] xs:h-[320px] sm:h-[380px] lg:h-[440px] overflow-hidden group">
-                {/* Top Sketchbook Tape on Avatar Frame */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
-                  <DoodleTape className="w-24 h-5" />
+              {/* Photo Profile Card Wrapper + Perimeter Looping Paper Plane & Rocket System */}
+              <div className="relative w-[276px] xs:w-[312px] sm:w-[380px] lg:w-[440px] h-[276px] xs:h-[312px] sm:h-[380px] lg:h-[440px] flex items-center justify-center">
+                {/* Character Illustration Doodle Frame */}
+                <div className="doodle-card relative z-10 w-full h-full overflow-hidden group">
+                  {/* Top Sketchbook Tape on Avatar Frame */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
+                    <DoodleTape className="w-24 h-5" />
+                  </div>
+
+                  <img
+                    src={ASSET_IMAGES.avatar}
+                    alt="Uray Fazli Alman - Cute Chibi Illustration"
+                    className="w-full h-full object-cover object-center scale-105 group-hover:scale-108 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+
+                  {/* Subtle vignette border gradient overlay */}
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0f141d]/75 via-transparent to-transparent" />
+
+                  {/* In-corner subtle aesthetic doodle badge */}
+                  <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="truncate">
+                      {lang === 'id'
+                        ? 'Node Aktif Aptos · Sei · SubQuery'
+                        : 'Aptos · Sei · SubQuery Active Nodes'}
+                    </span>
+                  </div>
                 </div>
 
-                <img
-                  src={ASSET_IMAGES.avatar}
-                  alt="Uray Fazli Alman - Cute Chibi Illustration"
-                  className="w-full h-full object-cover object-center scale-105 group-hover:scale-108 transition-transform duration-500"
-                  referrerPolicy="no-referrer"
-                />
+                {/* =====================================================================
+                    PERIMETER LOOPING FLIGHT SYSTEM (ANTI-AI-SLOP PAPER PLANE & ROCKET)
+                    Continuous C² tangent-smooth orbital & gliding paths around the
+                    Photo Profile Card with hand-drafted sketchbook telemetry trails
+                   ===================================================================== */}
+                <svg
+                  viewBox="0 0 560 560"
+                  fill="none"
+                  aria-hidden="true"
+                  className="absolute -inset-5 xs:-inset-6 sm:-inset-8 lg:-inset-10 w-[calc(100%+2.5rem)] xs:w-[calc(100%+3rem)] sm:w-[calc(100%+4rem)] lg:w-[calc(100%+5rem)] h-[calc(100%+2.5rem)] xs:h-[calc(100%+3rem)] sm:h-[calc(100%+4rem)] lg:h-[calc(100%+5rem)] pointer-events-none overflow-visible z-20 select-none"
+                >
+                  {/* Hand-Drafted Corner Registration Crosshairs & Telemetry Notes */}
+                  <g opacity="0.55" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round">
+                    {/* Top-Left Crosshair */}
+                    <line x1="34" y1="40" x2="46" y2="40" />
+                    <line x1="40" y1="34" x2="40" y2="46" />
+                    {/* Bottom-Right Crosshair */}
+                    <line x1="514" y1="520" x2="526" y2="520" />
+                    <line x1="520" y1="514" x2="520" y2="526" />
+                    {/* Bottom-Left Waypoint Ring */}
+                    <circle cx="44" cy="516" r="3.5" stroke="#FBEEE0" strokeDasharray="2 2" />
+                  </g>
 
-                {/* Subtle vignette border gradient overlay */}
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0f141d]/75 via-transparent to-transparent" />
+                  {/* -------------------------------------------------------------------
+                      ORBIT 1 (+4° TILT): VALIDATOR ROCKET CLOCKWISE PERIMETER LOOP
+                     ------------------------------------------------------------------- */}
+                  <g transform="rotate(4 280 280)">
+                    {/* Hand-Drawn Dashed Orbital Track */}
+                    <path
+                      d="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
+                      stroke="#9D613C"
+                      strokeWidth="1.6"
+                      strokeDasharray="6 8"
+                      strokeLinecap="round"
+                      opacity="0.5"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        values="0;-56"
+                        dur="2.8s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
 
-                {/* In-corner subtle aesthetic doodle badge */}
-                <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="truncate">
-                    {lang === 'id'
-                      ? 'Node Aktif Aptos · Sei · SubQuery'
-                      : 'Aptos · Sei · SubQuery Active Nodes'}
-                  </span>
-                </div>
+                    {/* Trailing Orbital Telemetry Beacon Dot (Opposite Phase) */}
+                    <g>
+                      <circle r="2.4" fill="#22C55E" stroke="#0B1018" strokeWidth="1.2" />
+                      <circle r="4.5" stroke="#22C55E" strokeWidth="0.9" opacity="0.45">
+                        <animate
+                          attributeName="r"
+                          values="2.6;6.2;2.6"
+                          dur="1.8s"
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0.6;0;0.6"
+                          dur="1.8s"
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                      <animateMotion
+                        path="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
+                        dur="13.5s"
+                        begin="-6.75s"
+                        repeatCount="indefinite"
+                        rotate="auto"
+                      />
+                    </g>
+
+                    {/* Bespoke Anti-AI-Slop Validator Rocket Riding Orbit 1 (Compact Scale) */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
+                      <g transform="scale(0.52) translate(-39, -22)">
+                        <SketchbookOrbitRocketDoodle />
+                      </g>
+                      <animateMotion
+                        path="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
+                        dur="13.5s"
+                        repeatCount="indefinite"
+                        rotate="auto"
+                      />
+                    </g>
+                  </g>
+
+                  {/* -------------------------------------------------------------------
+                      ORBIT 2 (-6° TILT): ORIGAMI PAPER PLANE COUNTER-CLOCKWISE GLIDE LOOP
+                     ------------------------------------------------------------------- */}
+                  <g transform="rotate(-6 280 280)">
+                    {/* Fine Sketchbook Wind-Current Dotted Trail */}
+                    <path
+                      d="M 280,32 C 94,32 32,94 32,280 C 32,466 94,528 280,528 C 466,528 528,466 528,280 C 528,94 466,32 280,32 Z"
+                      stroke="#FBEEE0"
+                      strokeWidth="1.2"
+                      strokeDasharray="3 7"
+                      strokeLinecap="round"
+                      opacity="0.35"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        values="0;-40"
+                        dur="2.4s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+
+                    {/* Bespoke Anti-AI-Slop Origami Paper Plane Gliding on Orbit 2 (Compact Scale) */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
+                      <g transform="scale(0.48) translate(-46, -26)">
+                        <SketchbookPaperPlaneDoodle />
+                      </g>
+                      <animateMotion
+                        path="M 280,32 C 94,32 32,94 32,280 C 32,466 94,528 280,528 C 466,528 528,466 528,280 C 528,94 466,32 280,32 Z"
+                        dur="16s"
+                        begin="-4s"
+                        repeatCount="indefinite"
+                        rotate="auto"
+                      />
+                    </g>
+                  </g>
+                </svg>
               </div>
             </motion.div>
 

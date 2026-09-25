@@ -369,5 +369,252 @@ export const DoodleSpiral: React.FC<{ className?: string }> = ({
   </svg>
 );
 
+/**
+ * Bespoke Anti-AI-Slop Sketchbook Origami Paper Plane Doodle
+ * Hand-drafted dimensional origami dart glider with layered parchment cream wings (#FBEEE0 & #F3DFC8),
+ * recessed center fold valley (#B89F86 & #9D613C), terracotta-amber wingtip technical markings (#E59B63),
+ * dark ink drafting outlines (#0B1018), and looping dashed slipstream wind contrails.
+ * Pointing right (+X) in a 76x52 local coordinate space (airframe center at 46, 26) so it banks
+ * naturally along any 360-degree looping trajectory without nested-SVG viewport inflation.
+ */
+export const SketchbookPaperPlaneDoodle: React.FC<{ className?: string }> = ({
+  className = '',
+}) => (
+  <g className={className} aria-hidden="true">
+    {/* Looping Hand-Drawn Slipstream Wind Contrails Behind Wingtips & Tail */}
+    <path
+      d="M4 16C10 15 16 17 22 17"
+      stroke="#FBEEE0"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeDasharray="2.5 4"
+      opacity="0.65"
+    >
+      <animate
+        attributeName="stroke-dashoffset"
+        values="0;13"
+        dur="0.85s"
+        repeatCount="indefinite"
+      />
+    </path>
+    <path
+      d="M2 26C9 26 16 26 23 26"
+      stroke="#E59B63"
+      strokeWidth="2.1"
+      strokeLinecap="round"
+      strokeDasharray="3.5 4.5"
+      opacity="0.9"
+    >
+      <animate
+        attributeName="stroke-dashoffset"
+        values="0;16"
+        dur="0.7s"
+        repeatCount="indefinite"
+      />
+    </path>
+    <path
+      d="M4 36C10 37 16 35 22 35"
+      stroke="#FBEEE0"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeDasharray="2.5 4"
+      opacity="0.65"
+    >
+      <animate
+        attributeName="stroke-dashoffset"
+        values="0;13"
+        dur="0.95s"
+        repeatCount="indefinite"
+      />
+    </path>
+
+    {/* Gently Banking Origami Airframe Group */}
+    <g>
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        values="-3.5 46 26; 3.5 46 26; -3.5 46 26"
+        dur="2.4s"
+        repeatCount="indefinite"
+      />
+
+      {/* Upper Swept Origami Wing (Warm Parchment Cream) */}
+      <path
+        d="M72 26L22 7L31 22.5L72 26Z"
+        fill="#FBEEE0"
+        stroke="#0B1018"
+        strokeWidth="2.3"
+        strokeLinejoin="round"
+      />
+
+      {/* Lower Swept Origami Wing (Tinted Sketchbook Cream) */}
+      <path
+        d="M72 26L31 29.5L22 45L72 26Z"
+        fill="#F3DFC8"
+        stroke="#0B1018"
+        strokeWidth="2.3"
+        strokeLinejoin="round"
+      />
+
+      {/* Upper Inner Fold Crease Facet */}
+      <path
+        d="M72 26L31 22.5L26 26L72 26Z"
+        fill="#C7B299"
+        stroke="#0B1018"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+
+      {/* Lower Inner Fold Crease Facet (Terracotta Shadow Valley) */}
+      <path
+        d="M72 26L26 26L31 29.5L72 26Z"
+        fill="#9D613C"
+        stroke="#0B1018"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+
+      {/* Central Origami Spine Line */}
+      <line
+        x1="25"
+        y1="26"
+        x2="72"
+        y2="26"
+        stroke="#0B1018"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+      />
+
+      {/* Hand-Drafted Wingtip Terracotta Trim Stripes & Registration Dots */}
+      <path
+        d="M27 11.5L35 14.5"
+        stroke="#9D613C"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M27 40.5L35 37.5"
+        stroke="#E59B63"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <circle cx="41" cy="17" r="1.5" fill="#9D613C" />
+      <circle cx="41" cy="35" r="1.5" fill="#9D613C" />
+    </g>
+  </g>
+);
+
+/**
+ * Bespoke Anti-AI-Slop Sketchbook Validator Orbit Rocket Doodle
+ * Hand-drafted technical spacecraft (#FBEEE0 riveted fuselage, #9D613C terracotta delta fins,
+ * #E59B63 nosecone & plasma plume, #22C55E live validator avionics porthole, #0B1018 ink lines).
+ * Pointing right (+X) in a 68x44 local coordinate space (fuselage center at 39, 22).
+ */
+export const SketchbookOrbitRocketDoodle: React.FC<{ className?: string }> = ({
+  className = '',
+}) => (
+  <g className={className} aria-hidden="true">
+    {/* Looping Exhaust Smoke Rings & Plasma Sparks */}
+    <circle cx="6" cy="19" r="2" fill="#E59B63" opacity="0.85">
+      <animate attributeName="cx" values="15;2" dur="0.5s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.95;0" dur="0.5s" repeatCount="indefinite" />
+      <animate attributeName="r" values="1.4;3.1" dur="0.5s" repeatCount="indefinite" />
+    </circle>
+    <circle cx="9" cy="25" r="1.5" fill="#FBEEE0" opacity="0.8">
+      <animate attributeName="cx" values="16;4" dur="0.42s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.9;0" dur="0.42s" repeatCount="indefinite" />
+      <animate attributeName="r" values="1.2;2.5" dur="0.42s" repeatCount="indefinite" />
+    </circle>
+
+    {/* Outer Thruster Plasma Plume (Looping Pulse) */}
+    <path
+      d="M22 15.5L4 22L22 28.5V15.5Z"
+      fill="#E59B63"
+      stroke="#0B1018"
+      strokeWidth="1.7"
+      strokeLinejoin="round"
+    >
+      <animate
+        attributeName="d"
+        values="M22 15.5L5 22L22 28.5V15.5Z;M22 14.2L1 22L22 29.8V14.2Z;M22 15.5L5 22L22 28.5V15.5Z"
+        dur="0.26s"
+        repeatCount="indefinite"
+      />
+    </path>
+
+    {/* Inner White-Hot Core Plume */}
+    <path d="M22 18L11 22L22 26V18Z" fill="#FBEEE0">
+      <animate
+        attributeName="d"
+        values="M22 18L12 22L22 26V18Z;M22 17.2L8 22L22 26.8V17.2Z;M22 18L12 22L22 26V18Z"
+        dur="0.2s"
+        repeatCount="indefinite"
+      />
+    </path>
+
+    {/* Swept Delta Stabilizer Fins (Terracotta Copper) */}
+    <path
+      d="M32 13L23 5L19.5 6.8L23.5 14.8H32V13Z"
+      fill="#9D613C"
+      stroke="#0B1018"
+      strokeWidth="2.1"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M32 31L23 39L19.5 37.2L23.5 29.2H32V31Z"
+      fill="#9D613C"
+      stroke="#0B1018"
+      strokeWidth="2.1"
+      strokeLinejoin="round"
+    />
+
+    {/* Stepped Engine Nozzle Bell */}
+    <path
+      d="M25.5 15V29L21 30.5V13.5L25.5 15Z"
+      fill="#9D613C"
+      stroke="#0B1018"
+      strokeWidth="2.1"
+      strokeLinejoin="round"
+    />
+
+    {/* Main Fuselage Body (Warm Sketchbook Cream) */}
+    <path
+      d="M63 22C55.5 14.8 45.5 12.5 33 12.5H25.5V31.5H33C45.5 31.5 55.5 29.2 63 22Z"
+      fill="#FBEEE0"
+      stroke="#0B1018"
+      strokeWidth="2.3"
+      strokeLinejoin="round"
+    />
+
+    {/* Terracotta-Amber Nosecone & Rivet Seam */}
+    <path
+      d="M63 22C58.2 17.5 52.8 15 48 13.8V30.2C52.8 29 58.2 26.5 63 22Z"
+      fill="#E59B63"
+    />
+    <line x1="48" y1="13.5" x2="48" y2="30.5" stroke="#0B1018" strokeWidth="2" />
+
+    {/* Center Dorsal Stabilizer Spine */}
+    <line
+      x1="24"
+      y1="22"
+      x2="33"
+      y2="22"
+      stroke="#0B1018"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+    />
+
+    {/* Hull Rivet Dots */}
+    <circle cx="44" cy="17" r="1.3" fill="#9D613C" />
+    <circle cx="44" cy="27" r="1.3" fill="#9D613C" />
+
+    {/* Validator Telemetry Avionics Porthole (Live Emerald LED) */}
+    <circle cx="38.5" cy="22" r="5.4" fill="#0B1018" />
+    <circle cx="38.5" cy="22" r="3.5" fill="#22C55E" />
+    <circle cx="37.5" cy="21" r="1.4" fill="#DCFCE7" />
+  </g>
+);
+
+
 
 

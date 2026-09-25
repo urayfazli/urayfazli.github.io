@@ -122,7 +122,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative overflow-x-clip">
       {/* Initial Boot Loading Screen with Smooth Cross-Dissolve */}
       {isLoading && (
         <LoadingScreen
@@ -160,32 +160,38 @@ export default function App() {
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
+      {/* Sticky Top Bar Navigation with Scroll Progress Indicator & Animated Rocket */}
+      <div
+        className={`sticky top-0 z-50 transition-opacity duration-500 ${
+          isRevealed ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <Navbar
+          activeSection={activeSection}
+          onNavigate={handleNavigate}
+          onOpenContact={() => setContactModalOpen(true)}
+        />
+      </div>
+
       {/* Smooth Whole-Page Camera Dolly-In & Unblur Wrapper */}
       <motion.div
         initial={{ opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }}
         animate={
           isRevealed
-            ? { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
+            ? {
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                filter: isLoading ? 'blur(0px)' : 'none',
+              }
             : { opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }
         }
         transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformOrigin: '50% 35vh' }}
-        className="flex flex-col flex-grow relative z-10 will-change-transform"
+        className={`flex flex-col flex-grow relative z-10 ${
+          isLoading ? 'will-change-transform' : ''
+        }`}
       >
-        {/* Top Bar Navigation with Post-Boot Slide-In */}
-        <motion.div
-          initial={{ opacity: 0, y: -28 }}
-          animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: -28 }}
-          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-          className="sticky top-0 z-40"
-        >
-          <Navbar
-            activeSection={activeSection}
-            onNavigate={handleNavigate}
-            onOpenContact={() => setContactModalOpen(true)}
-          />
-        </motion.div>
-
         {/* Running Text Marquee Banner with Unfurl Entrance */}
         <motion.div
           initial={{ opacity: 0, y: -14 }}

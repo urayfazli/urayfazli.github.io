@@ -1,9 +1,158 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GitHubIcon, XIcon } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { ASSET_IMAGES } from '../assets/images';
 import { useLanguage } from '../context/LanguageContext';
+
+/**
+ * Bespoke Anti-AI-Slop Aerospace Validator Rocket SVG
+ * Driven by a 120fps requestAnimationFrame spring-physics engine for ultra-smooth
+ * sub-pixel GPU movement, velocity-proportional plasma thrust, and fluid banking turnaround.
+ */
+interface ValidatorScrollRocketProps {
+  rocketBodyRef: React.RefObject<HTMLDivElement | null>;
+  outerFlameRef: React.RefObject<SVGPathElement | null>;
+  innerFlameRef: React.RefObject<SVGPathElement | null>;
+  afterburnerGlowRef: React.RefObject<SVGCircleElement | null>;
+  spark1Ref: React.RefObject<SVGCircleElement | null>;
+  spark2Ref: React.RefObject<SVGCircleElement | null>;
+  portholeLedRef: React.RefObject<SVGCircleElement | null>;
+}
+
+const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
+  rocketBodyRef,
+  outerFlameRef,
+  innerFlameRef,
+  afterburnerGlowRef,
+  spark1Ref,
+  spark2Ref,
+  portholeLedRef,
+}) => {
+  return (
+    <div
+      ref={rocketBodyRef}
+      style={{
+        transform: 'translate3d(0px, 0px, 0) scaleX(1) rotate(0deg)',
+        willChange: 'transform',
+      }}
+      className="relative flex items-center justify-center select-none pointer-events-none"
+    >
+      <svg
+        viewBox="0 0 48 24"
+        className="w-8 h-[17px] sm:w-9 sm:h-[19px] overflow-visible drop-shadow-[0_2px_6px_rgba(11,15,23,0.95)]"
+        fill="none"
+      >
+        {/* Soft Afterburner Radial Glow Behind Nozzle */}
+        <circle
+          ref={afterburnerGlowRef}
+          cx="14"
+          cy="12"
+          r="5.5"
+          fill="#E59B63"
+          opacity="0.25"
+        />
+
+        {/* Trailing Plasma Exhaust Sparks (Driven smoothly at 120fps) */}
+        <circle
+          ref={spark1Ref}
+          cx="6"
+          cy="10"
+          r="1.25"
+          fill="#FBEEE0"
+          opacity="0"
+        />
+        <circle
+          ref={spark2Ref}
+          cx="7"
+          cy="14"
+          r="1.05"
+          fill="#E59B63"
+          opacity="0"
+        />
+
+        {/* Outer Thruster Plasma Plume */}
+        <path
+          ref={outerFlameRef}
+          d="M16 8.2L1.5 12L16 15.8V8.2Z"
+          fill="#E59B63"
+          style={{ transformOrigin: '16px 12px', willChange: 'transform, opacity' }}
+        />
+
+        {/* Inner White-Hot Core Flame */}
+        <path
+          ref={innerFlameRef}
+          d="M16 9.8L7 12L16 14.2V9.8Z"
+          fill="#FBEEE0"
+          style={{ transformOrigin: '16px 12px', willChange: 'transform' }}
+        />
+
+        {/* Upper & Lower Swept Delta Stabilizer Fins (Terracotta Copper) */}
+        <path
+          d="M23 7.5L17 2.5L15 3.5L17.5 8.5H23V7.5Z"
+          fill="#9D613C"
+          stroke="#0B0F17"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M23 16.5L17 21.5L15 20.5L17.5 15.5H23V16.5Z"
+          fill="#9D613C"
+          stroke="#0B0F17"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+
+        {/* Stepped Engine Nozzle Bell */}
+        <path
+          d="M18.5 8.5V15.5L15.5 16.5V7.5L18.5 8.5Z"
+          fill="#9D613C"
+          stroke="#0B0F17"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+
+        {/* Main Fuselage Hull (Warm Sketchbook Cream) */}
+        <path
+          d="M43.5 12C38.5 7.8 32 6.5 23.5 6.5H18.5V17.5H23.5C32 17.5 38.5 16.2 43.5 12Z"
+          fill="#FBEEE0"
+          stroke="#0B0F17"
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+        />
+
+        {/* Terracotta Nosecone Cap & Structural Seam */}
+        <path
+          d="M43.5 12C40.4 9.4 36.8 7.9 33.5 7.2V16.8C36.8 16.1 40.4 14.6 43.5 12Z"
+          fill="#E59B63"
+        />
+        <line x1="33.5" y1="7" x2="33.5" y2="17" stroke="#0B0F17" strokeWidth="1.4" />
+
+        {/* Center Dorsal Wing Fin */}
+        <line
+          x1="17.5"
+          y1="12"
+          x2="23.5"
+          y2="12"
+          stroke="#0B0F17"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+
+        {/* Validator Telemetry Avionics Porthole (Live Emerald LED) */}
+        <circle cx="27.5" cy="12" r="3.4" fill="#0B0F17" />
+        <circle
+          ref={portholeLedRef}
+          cx="27.5"
+          cy="12"
+          r="2.2"
+          fill="#22C55E"
+        />
+        <circle cx="26.8" cy="11.3" r="0.75" fill="#DCFCE7" />
+      </svg>
+    </div>
+  );
+};
 
 interface NavbarProps {
   activeSection: string;
@@ -17,24 +166,250 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
   const [scrolled, setScrolled] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
-  // Real-time scroll progress for slim navbar indicator
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  // Refs for 120fps GPU-accelerated Scroll Progress Rail & Rocket Physics Engine
+  const railRef = useRef<HTMLDivElement>(null);
+  const fillBarRef = useRef<HTMLDivElement>(null);
+  const rocketCarriageRef = useRef<HTMLDivElement>(null);
+  const rocketBodyRef = useRef<HTMLDivElement>(null);
+  const outerFlameRef = useRef<SVGPathElement>(null);
+  const innerFlameRef = useRef<SVGPathElement>(null);
+  const afterburnerGlowRef = useRef<SVGCircleElement>(null);
+  const spark1Ref = useRef<SVGCircleElement>(null);
+  const spark2Ref = useRef<SVGCircleElement>(null);
+  const portholeLedRef = useRef<SVGCircleElement>(null);
+  const percentTextRef = useRef<HTMLSpanElement>(null);
 
-  // Monitor scroll state for dynamic floating navbar animation
+  const scrolledRef = useRef(false);
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    let railWidth = railRef.current ? railRef.current.clientWidth : window.innerWidth;
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let velocity = 0;
+    let targetDirection = 1; // +1 = scrolling down (right), -1 = scrolling up (left)
+    let smoothDirection = 1;
+    let smoothSpeed = 0;
+    let lastScrollY = 0;
+    let lastFrameTime = performance.now();
+    let rafId = 0;
+
+    const readRawScrollMetrics = (isScrollEvent = false) => {
+      const currentScroll = Math.max(
+        0,
+        window.scrollY ||
+          window.pageYOffset ||
+          document.documentElement.scrollTop ||
+          document.body.scrollTop ||
+          0
+      );
+
+      const docHeight = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        document.documentElement.offsetHeight,
+        document.body.offsetHeight
+      );
+      const winHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+      const maxScroll = Math.max(0, docHeight - winHeight);
+
+      targetProgress = maxScroll > 2 ? Math.min(1, Math.max(0, currentScroll / maxScroll)) : 0;
+
+      const isNowScrolled = currentScroll > 20;
+      if (isNowScrolled !== scrolledRef.current) {
+        scrolledRef.current = isNowScrolled;
+        setScrolled(isNowScrolled);
+      }
+
+      if (isScrollEvent) {
+        const delta = currentScroll - lastScrollY;
+        if (Math.abs(delta) > 0.8) {
+          targetDirection = delta > 0 ? 1 : -1;
+          lastScrollY = currentScroll;
+        }
+      } else {
+        lastScrollY = currentScroll;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    const stepPhysics = (now: number) => {
+      // Frame-rate independent delta time (clamped to avoid huge jumps on tab switch)
+      const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
+      lastFrameTime = now;
+
+      // Critically damped spring physics for silky-smooth position tracking
+      const stiffness = 190;
+      const damping = 26;
+      const force = (targetProgress - currentProgress) * stiffness;
+      velocity = (velocity + force * dt) * Math.exp(-damping * dt);
+      currentProgress += velocity * dt;
+
+      // Snap micro-epsilon when settled at boundaries
+      if (Math.abs(targetProgress - currentProgress) < 0.00015 && Math.abs(velocity) < 0.0005) {
+        currentProgress = targetProgress;
+        velocity = 0;
+      }
+
+      const clampedProgress = Math.min(1, Math.max(0, currentProgress));
+
+      // Normalized instantaneous speed (0..1) with smooth exponential decay
+      const rawSpeed = Math.min(1, Math.abs(velocity) * 2.4 + Math.abs(targetProgress - currentProgress) * 6);
+      const speedLerp = 1 - Math.exp(-14 * dt);
+      smoothSpeed += (rawSpeed - smoothSpeed) * speedLerp;
+
+      // Smoothly interpolate rocket facing direction (-1..+1) so turnaround banks fluidly
+      const dirLerp = 1 - Math.exp(-16 * dt);
+      smoothDirection += (targetDirection - smoothDirection) * dirLerp;
+      const effectiveScaleX =
+        Math.abs(smoothDirection) < 0.18
+          ? smoothDirection < 0
+            ? -0.18
+            : 0.18
+          : smoothDirection;
+
+      // 1. Update Progress Fill Bar on GPU via scaleX
+      if (fillBarRef.current) {
+        fillBarRef.current.style.transform = `scaleX(${clampedProgress.toFixed(5)})`;
+      }
+
+      // 2. Update Rocket Carriage X Position on GPU via translate3d
+      if (rocketCarriageRef.current) {
+        const w = railWidth || window.innerWidth;
+        const minX = 18;
+        const maxX = Math.max(minX, w - 24);
+        const rawX = clampedProgress * w;
+        const clampedX = Math.min(Math.max(rawX, minX), maxX);
+        rocketCarriageRef.current.style.transform = `translate3d(${clampedX.toFixed(2)}px, -50%, 0)`;
+      }
+
+      // 3. Update Rocket Body Hover Bob, Banking Pitch & Smooth Turnaround
+      if (rocketBodyRef.current) {
+        const idleBobY = Math.sin(now * 0.0042) * (0.9 + smoothSpeed * 0.7);
+        const pitchDeg = -smoothSpeed * 4.5 * Math.sign(smoothDirection);
+        const boostScale = 1 + smoothSpeed * 0.07;
+        rocketBodyRef.current.style.transform = `translate3d(0px, ${idleBobY.toFixed(2)}px, 0) scale(${(
+          effectiveScaleX * boostScale
+        ).toFixed(3)}, ${boostScale.toFixed(3)}) rotate(${pitchDeg.toFixed(2)}deg)`;
+      }
+
+      // 4. Update Multi-Stage Thruster Plume & Afterburner Glow
+      const flameOsc = Math.sin(now * 0.032) * 0.14 + Math.cos(now * 0.051) * 0.08;
+      const outerScaleX = Math.max(0.45, 0.62 + smoothSpeed * 1.05 + flameOsc * (0.35 + smoothSpeed));
+      const innerScaleX = Math.max(0.4, 0.54 + smoothSpeed * 0.92 + flameOsc * 0.4);
+      const outerOpacity = Math.min(1, 0.72 + smoothSpeed * 0.28);
+
+      if (outerFlameRef.current) {
+        outerFlameRef.current.style.transform = `scaleX(${outerScaleX.toFixed(3)})`;
+        outerFlameRef.current.style.opacity = outerOpacity.toFixed(2);
+      }
+      if (innerFlameRef.current) {
+        innerFlameRef.current.style.transform = `scaleX(${innerScaleX.toFixed(3)})`;
+      }
+      if (afterburnerGlowRef.current) {
+        const glowOpacity = 0.18 + smoothSpeed * 0.48 + Math.max(0, flameOsc * 0.2);
+        afterburnerGlowRef.current.setAttribute('opacity', glowOpacity.toFixed(2));
+        afterburnerGlowRef.current.setAttribute('r', (4.8 + smoothSpeed * 2.8).toFixed(2));
+      }
+
+      // 5. Smooth Continuous Exhaust Sparks
+      const isAtEnd = clampedProgress >= 0.985;
+      const sparkIntensity = isAtEnd ? 0.95 : Math.min(1, smoothSpeed * 1.5);
+      if (spark1Ref.current) {
+        const phase1 = ((now * 0.0038) % 1);
+        const sx1 = 10 - phase1 * (12 + smoothSpeed * 8);
+        const sy1 = 10.2 + Math.sin(phase1 * Math.PI * 2) * 1.4;
+        const op1 = (1 - phase1) * sparkIntensity;
+        spark1Ref.current.setAttribute('cx', sx1.toFixed(2));
+        spark1Ref.current.setAttribute('cy', sy1.toFixed(2));
+        spark1Ref.current.setAttribute('opacity', op1.toFixed(2));
+      }
+      if (spark2Ref.current) {
+        const phase2 = (((now * 0.0038) + 0.5) % 1);
+        const sx2 = 10 - phase2 * (11 + smoothSpeed * 7);
+        const sy2 = 13.8 - Math.sin(phase2 * Math.PI * 2) * 1.4;
+        const op2 = (1 - phase2) * sparkIntensity;
+        spark2Ref.current.setAttribute('cx', sx2.toFixed(2));
+        spark2Ref.current.setAttribute('cy', sy2.toFixed(2));
+        spark2Ref.current.setAttribute('opacity', op2.toFixed(2));
+      }
+
+      if (portholeLedRef.current) {
+        portholeLedRef.current.setAttribute('fill', isAtEnd ? '#34D399' : '#22C55E');
+      }
+
+      // 6. Update Telemetry Percentage Readout & ARIA without React re-renders
+      const pct = Math.round(clampedProgress * 100);
+      if (percentTextRef.current) {
+        percentTextRef.current.textContent = `${pct}%`;
+        const showPct = smoothSpeed > 0.03 || (clampedProgress > 0.015 && clampedProgress < 0.995);
+        percentTextRef.current.style.opacity = showPct ? '0.92' : '0';
+      }
+      if (railRef.current) {
+        railRef.current.setAttribute('aria-valuenow', String(pct));
+      }
+
+      rafId = window.requestAnimationFrame(stepPhysics);
+    };
+
+    const onScroll = () => readRawScrollMetrics(true);
+    const onResize = () => {
+      if (railRef.current) {
+        railWidth = railRef.current.clientWidth;
+      }
+      readRawScrollMetrics(false);
+    };
+
+    readRawScrollMetrics(false);
+    currentProgress = targetProgress;
+    if (railRef.current) {
+      railWidth = railRef.current.clientWidth;
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        if (railRef.current) {
+          railWidth = railRef.current.clientWidth;
+        }
+        readRawScrollMetrics(false);
+      });
+      resizeObserver.observe(document.documentElement);
+      if (document.body) {
+        resizeObserver.observe(document.body);
+      }
+      if (railRef.current) {
+        resizeObserver.observe(railRef.current);
+      }
+    }
+
+    rafId = window.requestAnimationFrame(stepPhysics);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
   }, []);
+
+  // Interactive click on the scroll progress rail to smoothly fly the rocket to that scroll point
+  const handleRailClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const rect = rail.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const clickRatio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const docHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    const maxScroll = Math.max(0, docHeight - window.innerHeight);
+    window.scrollTo({ top: clickRatio * maxScroll, behavior: 'smooth' });
+  };
 
   // Escape key handler for mobile menu
   useEffect(() => {
@@ -79,22 +454,65 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
       initial={{ y: -70, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`sticky top-0 z-40 w-full transition-all duration-300 relative ${
+      className={`w-full transition-all duration-300 relative ${
         scrolled
-          ? 'py-2.5 backdrop-blur-xl bg-[#0f141d]/90 border-b border-[#9d613c]/30 shadow-xl shadow-black/50'
-          : 'py-4 backdrop-blur-md bg-[#0f141d]/80 border-b border-white/5'
+          ? 'py-2.5 backdrop-blur-xl bg-[#0f141d]/92 border-b border-[#9d613c]/30 shadow-xl shadow-black/50'
+          : 'py-4 backdrop-blur-md bg-[#0f141d]/82 border-b border-white/5'
       }`}
     >
-      {/* Slim, elegant scroll progress indicator bar */}
+      {/* 120fps Spring-Physics Scroll Progress Rail + Interactive Anti-AI-Slop Validator Rocket */}
       <div
-        className="absolute top-0 left-0 right-0 h-[2.5px] bg-white/5 overflow-hidden pointer-events-none z-50"
+        ref={railRef}
+        onClick={handleRailClick}
+        title={
+          lang === 'id'
+            ? 'Klik jalur untuk meluncur ke posisi halaman'
+            : 'Click track to launch to page position'
+        }
+        className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-[#090d14]/90 cursor-pointer z-50 overflow-visible"
         role="progressbar"
         aria-label="Page scroll progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={0}
       >
-        <motion.div
-          style={{ scaleX, transformOrigin: '0%' }}
-          className="h-full bg-gradient-to-r from-[#9d613c] via-[#e59b63] to-[#fbeee0] shadow-[0_0_10px_rgba(229,155,99,0.7)]"
+        {/* GPU-Accelerated Progress Fill Bar (scaleX) */}
+        <div
+          ref={fillBarRef}
+          style={{
+            transform: 'scaleX(0)',
+            transformOrigin: '0% 50%',
+            willChange: 'transform',
+          }}
+          className="w-full h-full bg-gradient-to-r from-[#9d613c] via-[#e59b63] to-[#fbeee0] shadow-[0_0_12px_rgba(229,155,99,0.85)] pointer-events-none"
         />
+
+        {/* Leading-Edge GPU-Accelerated Validator Rocket Carriage (translate3d) */}
+        <div
+          ref={rocketCarriageRef}
+          style={{
+            transform: 'translate3d(18px, -50%, 0)',
+            willChange: 'transform',
+          }}
+          className="absolute top-1/2 left-0 -translate-x-1/2 flex items-center gap-1 pointer-events-none"
+        >
+          <ValidatorScrollRocket
+            rocketBodyRef={rocketBodyRef}
+            outerFlameRef={outerFlameRef}
+            innerFlameRef={innerFlameRef}
+            afterburnerGlowRef={afterburnerGlowRef}
+            spark1Ref={spark1Ref}
+            spark2Ref={spark2Ref}
+            portholeLedRef={portholeLedRef}
+          />
+          <span
+            ref={percentTextRef}
+            style={{ opacity: 0 }}
+            className="font-mono text-[9px] tracking-tight text-[#fbeee0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)] transition-opacity duration-200 select-none"
+          >
+            0%
+          </span>
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
