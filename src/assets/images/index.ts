@@ -1,7 +1,7 @@
 // Static image assets stored directly in the source code
 import avatarImage from './chibi_uray_avatar_1790346065453.jpg';
-import bgDesktopImage from './bg_desktop_wallpaper_1790351000012.jpg';
-import bgMobileImage from './bg_mobile_wallpaper_1790351012306.jpg';
+import bgDesktopImage from './bg_desktop_wallpaper_1790352009520.jpg';
+import bgMobileImage from './bg_mobile_wallpaper_1790352030739.jpg';
 
 export const ASSET_IMAGES = {
   avatar: avatarImage,
