@@ -14,23 +14,28 @@ import { NetworkDetailModal } from './components/NetworkDetailModal';
 import { ContactModal } from './components/ContactModal';
 import { Footer } from './components/Footer';
 import { RevealOnScroll } from './components/RevealOnScroll';
-import { NETWORKS_DATA } from './data/portfolioData';
-import { NetworkInfo } from './types';
 import { DoodleStar, DoodleTape, DoodleCornerHatch } from './components/Doodles';
 import { BackgroundLayer } from './components/BackgroundLayer';
 import { RetroAudioPlayer } from './components/RetroAudioPlayer';
 import { RunningTextMarquee } from './components/RunningTextMarquee';
 import { NodeSentryCharacter } from './components/CardCharacters';
 import { LoadingScreen } from './components/LoadingScreen';
+import { useLanguage } from './context/LanguageContext';
 
 export default function App() {
+  const { lang, networks } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
+  const [isRevealed, setIsRevealed] = useState(false);
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
-  const [selectedNetwork, setSelectedNetwork] = useState<NetworkInfo | null>(null);
+  const [selectedNetworkId, setSelectedNetworkId] = useState<string | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
   const isNavigatingRef = useRef(false);
+
+  const selectedNetwork = selectedNetworkId
+    ? networks.find((n) => n.id === selectedNetworkId) || null
+    : null;
 
   // Smooth scroll handler with robust mobile and desktop support
   const handleNavigate = (sectionId: string) => {
@@ -99,24 +104,32 @@ export default function App() {
   }, []);
 
   const handleSelectNetwork = (networkId: string) => {
-    const net = NETWORKS_DATA.find((n) => n.id === networkId);
-    if (net) {
-      setSelectedNetwork(net);
-    }
+    setSelectedNetworkId(networkId);
+  };
+
+  const handleStartReveal = () => {
+    setIsRevealed(true);
+    setTimeout(() => {
+      setShowWelcomeBanner(true);
+    }, 450);
+    setTimeout(() => {
+      setShowWelcomeBanner(false);
+    }, 4650);
   };
 
   const handleLoadingFinish = () => {
     setIsLoading(false);
-    setShowWelcomeBanner(true);
-    setTimeout(() => {
-      setShowWelcomeBanner(false);
-    }, 4200);
   };
 
   return (
-    <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative">
-      {/* Initial Boot Loading Screen with Animated Character */}
-      {isLoading && <LoadingScreen onFinish={handleLoadingFinish} />}
+    <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative overflow-x-hidden">
+      {/* Initial Boot Loading Screen with Smooth Cross-Dissolve */}
+      {isLoading && (
+        <LoadingScreen
+          onStartExit={handleStartReveal}
+          onFinish={handleLoadingFinish}
+        />
+      )}
 
       {/* Post-Loading Welcome Doodle HUD Toast */}
       <AnimatePresence>
@@ -132,10 +145,12 @@ export default function App() {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
             <div className="text-left">
               <span className="block font-mono text-[10px] uppercase tracking-wider text-emerald-300">
-                ✓ ALL NODES SYNCED (100%)
+                {lang === 'id' ? '✓ SEMUA NODE SINKRON (100%)' : '✓ ALL NODES SYNCED (100%)'}
               </span>
               <span className="font-hand text-sm sm:text-base text-[#fbeee0]">
-                Welcome to Uray&apos;s Validator Sketchbook! ✨
+                {lang === 'id'
+                  ? 'Selamat datang di Validator Sketchbook Uray! ✨'
+                  : "Welcome to Uray's Validator Sketchbook! ✨"}
               </span>
             </div>
           </motion.div>
@@ -145,62 +160,73 @@ export default function App() {
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
-      {/* Top Bar Navigation with Post-Boot Slide-In */}
+      {/* Smooth Whole-Page Camera Unblur & Glide Wrapper */}
       <motion.div
-        initial={{ opacity: 0, y: -32 }}
-        animate={!isLoading ? { opacity: 1, y: 0 } : { opacity: 0, y: -32 }}
-        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
-        className="sticky top-0 z-40"
+        initial={{ opacity: 0, scale: 0.975, y: 22, filter: 'blur(8px)' }}
+        animate={
+          isRevealed
+            ? { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
+            : { opacity: 0, scale: 0.975, y: 22, filter: 'blur(8px)' }
+        }
+        transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col flex-grow relative z-10"
       >
-        <Navbar
-          activeSection={activeSection}
-          onNavigate={handleNavigate}
-          onOpenContact={() => setContactModalOpen(true)}
-        />
-      </motion.div>
-
-      {/* Running Text Marquee Banner with Unfurl Entrance */}
-      <motion.div
-        initial={{ opacity: 0, y: -14 }}
-        animate={!isLoading ? { opacity: 1, y: 0 } : { opacity: 0, y: -14 }}
-        transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <RunningTextMarquee />
-      </motion.div>
-
-      {/* Main Content Area */}
-      <main className="flex-grow relative z-10">
-        
-        {/* 1. Hero Section */}
-        <section id="home" className="scroll-mt-20">
-          <HeroSection
-            onScrollDown={() => handleNavigate('about')}
-            onSelectNetwork={handleSelectNetwork}
-            isLoaded={!isLoading}
-          />
-        </section>
-
-        {/* 2. About Section */}
-        <section
-          id="about"
-          className={`py-12 md:py-20 relative scroll-mt-20 transition-all duration-500 ${
-            highlightedCard === 'about' ? 'bg-[#9d613c]/5' : ''
-          }`}
+        {/* Top Bar Navigation with Post-Boot Slide-In */}
+        <motion.div
+          initial={{ opacity: 0, y: -28 }}
+          animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: -28 }}
+          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+          className="sticky top-0 z-40"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-              
-              {/* Main Bio Card */}
-              <div className="lg:col-span-7 flex flex-col">
-                <RevealOnScroll delay={0} ready={!isLoading} className="h-full flex flex-col">
-                  <AboutCard />
-                </RevealOnScroll>
-              </div>
+          <Navbar
+            activeSection={activeSection}
+            onNavigate={handleNavigate}
+            onOpenContact={() => setContactModalOpen(true)}
+          />
+        </motion.div>
 
-              {/* Infrastructure Philosophy & Stats Side Card */}
-              <div className="lg:col-span-5 flex flex-col">
-                <RevealOnScroll delay={150} ready={!isLoading} className="h-full flex flex-col">
+        {/* Running Text Marquee Banner with Unfurl Entrance */}
+        <motion.div
+          initial={{ opacity: 0, y: -14 }}
+          animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: -14 }}
+          transition={{ duration: 0.7, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <RunningTextMarquee />
+        </motion.div>
+
+        {/* Main Content Area */}
+        <main className="flex-grow relative z-10">
+          
+          {/* 1. Hero Section */}
+          <section id="home" className="scroll-mt-20">
+            <HeroSection
+              onScrollDown={() => handleNavigate('about')}
+              onSelectNetwork={handleSelectNetwork}
+              isLoaded={isRevealed}
+            />
+          </section>
+
+          {/* 2. About Section */}
+          <section
+            id="about"
+            className={`py-12 md:py-20 relative scroll-mt-20 transition-all duration-500 ${
+              highlightedCard === 'about' ? 'bg-[#9d613c]/5' : ''
+            }`}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+                
+                {/* Main Bio Card */}
+                <div className="lg:col-span-7 flex flex-col">
+                  <RevealOnScroll delay={0} ready={isRevealed} className="h-full flex flex-col">
+                    <AboutCard />
+                  </RevealOnScroll>
+                </div>
+
+                {/* Infrastructure Philosophy & Stats Side Card */}
+                <div className="lg:col-span-5 flex flex-col">
+                  <RevealOnScroll delay={150} ready={isRevealed} className="h-full flex flex-col">
                   <div className="doodle-card doodle-card-alt p-6 sm:p-8 flex flex-col justify-between h-full">
                     {/* Top Sketchbook Tape */}
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rotate-[2deg] pointer-events-none z-20">
@@ -216,12 +242,14 @@ export default function App() {
                           <div className="flex items-center gap-2 pt-1">
                             <span className="text-[#e59b63] text-2xl font-hand font-bold">〔</span>
                             <h3 className="font-fredoka text-2xl font-medium text-[#fbeee0]">
-                              Node Operations
+                              {lang === 'id' ? 'Operasi Node' : 'Node Operations'}
                             </h3>
                             <DoodleStar className="w-5 h-5 text-[#e59b63] animate-twinkle" />
                           </div>
                           <span className="font-hand text-sm text-[#e59b63] ml-6 -mt-1">
-                            ~ 24/7 sentry & telemetry ~
+                            {lang === 'id'
+                              ? '~ sentry & telemetri 24/7 ~'
+                              : '~ 24/7 sentry & telemetry ~'}
                           </span>
                         </div>
 
@@ -232,7 +260,9 @@ export default function App() {
                       </div>
                       
                       <p className="text-sm text-[#f0e4d6] leading-relaxed mb-6 pl-3 border-l-2 border-dashed border-[#9d613c]/70">
-                        Dedicated to high-availability validator architecture with 24/7 automated telemetry, zero-downtime key rotation, and strict security hardening.
+                        {lang === 'id'
+                          ? 'Berdedikasi pada arsitektur validator ketersediaan tinggi dengan telemetri otomatis 24/7, rotasi kunci tanpa downtime, dan pengamanan sistem yang ketat.'
+                          : 'Dedicated to high-availability validator architecture with 24/7 automated telemetry, zero-downtime key rotation, and strict security hardening.'}
                       </p>
 
                       {/* Sketchbook Doodle Stat Grid */}
@@ -242,7 +272,7 @@ export default function App() {
                             99.9%
                           </span>
                           <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            Historical Uptime
+                            {lang === 'id' ? 'Uptime Historis' : 'Historical Uptime'}
                           </span>
                         </div>
                         <div className="doodle-subcard p-4">
@@ -250,7 +280,7 @@ export default function App() {
                             3+
                           </span>
                           <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            Active Networks
+                            {lang === 'id' ? 'Jaringan Aktif' : 'Active Networks'}
                           </span>
                         </div>
                         <div className="doodle-subcard p-4">
@@ -258,7 +288,7 @@ export default function App() {
                             24/7
                           </span>
                           <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            Alerts & Sentry
+                            {lang === 'id' ? 'Peringatan & Sentry' : 'Alerts & Sentry'}
                           </span>
                         </div>
                         <div className="doodle-subcard p-4">
@@ -266,7 +296,7 @@ export default function App() {
                             100%
                           </span>
                           <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            Slashing Guard
+                            {lang === 'id' ? 'Proteksi Slashing' : 'Slashing Guard'}
                           </span>
                         </div>
                       </div>
@@ -276,14 +306,14 @@ export default function App() {
                     <div className="relative z-10 pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex items-center justify-between text-xs text-[#d6c4b2]">
                       <span className="flex items-center gap-1.5 font-mono">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        Production Grade
+                        {lang === 'id' ? 'Kelas Produksi' : 'Production Grade'}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleNavigate('experience')}
                         className="font-hand text-base text-[#e59b63] hover:text-[#fbeee0] font-medium cursor-pointer transition-colors"
                       >
-                        View Networks ↓
+                        {lang === 'id' ? 'Lihat Jaringan ↓' : 'View Networks ↓'}
                       </button>
                     </div>
                   </div>
@@ -308,14 +338,14 @@ export default function App() {
               
               {/* Experience Validator Cards */}
               <div className="lg:col-span-8 flex flex-col">
-                <RevealOnScroll delay={0} ready={!isLoading} className="h-full flex flex-col">
+                <RevealOnScroll delay={0} ready={isRevealed} className="h-full flex flex-col">
                   <ExperienceCard onSelectNetwork={handleSelectNetwork} />
                 </RevealOnScroll>
               </div>
 
               {/* Connect Card */}
               <div id="connect" className="lg:col-span-4 flex flex-col scroll-mt-20">
-                <RevealOnScroll delay={150} ready={!isLoading} className="h-full flex flex-col">
+                <RevealOnScroll delay={150} ready={isRevealed} className="h-full flex flex-col">
                   <ConnectCard onOpenContact={() => setContactModalOpen(true)} />
                 </RevealOnScroll>
               </div>
@@ -325,10 +355,11 @@ export default function App() {
           </div>
         </section>
 
-      </main>
+        </main>
 
-      {/* Footer */}
-      <Footer onScrollToTop={() => handleNavigate('home')} />
+        {/* Footer */}
+        <Footer onScrollToTop={() => handleNavigate('home')} />
+      </motion.div>
 
       {/* Retro 8-bit Backsound Player Widget */}
       <RetroAudioPlayer />
@@ -336,7 +367,7 @@ export default function App() {
       {/* Modals */}
       <NetworkDetailModal
         network={selectedNetwork}
-        onClose={() => setSelectedNetwork(null)}
+        onClose={() => setSelectedNetworkId(null)}
       />
 
       <ContactModal

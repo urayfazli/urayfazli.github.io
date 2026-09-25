@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useScroll, useSpring } from 'motion/react';
 import { GitHubIcon, XIcon } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { ASSET_IMAGES } from '../assets/images';
-import { RetroNavbarButton } from './RetroAudioPlayer';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NavbarProps {
   activeSection: string;
@@ -12,6 +12,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpenContact }) => {
+  const { lang, setLang } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
@@ -49,13 +50,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
   }, [mobileMenuOpen]);
 
   const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'about', label: 'About' },
-    { id: 'experience', label: 'Experience' },
-    { id: 'contact', label: 'Contact', isContact: true },
+    { id: 'home', label: lang === 'id' ? 'Beranda' : 'Home' },
+    { id: 'about', label: lang === 'id' ? 'Tentang' : 'About' },
+    { id: 'experience', label: lang === 'id' ? 'Pengalaman' : 'Experience' },
+    { id: 'contact', label: lang === 'id' ? 'Kontak' : 'Contact', isContact: true },
   ];
 
-  const handleItemClick = (e: React.MouseEvent, item: typeof navItems[0]) => {
+  const handleItemClick = (e: React.MouseEvent, item: (typeof navItems)[0]) => {
     e.preventDefault();
     if (item.isContact) {
       onOpenContact();
@@ -64,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
     }
   };
 
-  const handleMobileClick = (item: typeof navItems[0]) => {
+  const handleMobileClick = (item: (typeof navItems)[0]) => {
     setMobileMenuOpen(false);
     if (item.isContact) {
       onOpenContact();
@@ -97,7 +98,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        
         {/* Brand Zone: Mini Chibi Avatar + Name with Micro-Animations */}
         <a
           href="#home"
@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
               Uray Fazli Alman
             </span>
             <span className="text-[10px] uppercase tracking-wider font-mono text-[#9d613c] group-hover:text-[#c48255] transition-colors -mt-1 hidden sm:block">
-              Node Operator & Engineer
+              {lang === 'id' ? 'Operator Node & Engineer' : 'Node Operator & Engineer'}
             </span>
           </div>
         </a>
@@ -181,10 +181,41 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           })}
         </nav>
 
-        {/* Right Zone: BGM Quick Toggle & Social Links with Bouncy Hover Micro-Animations */}
-        <div className="hidden sm:flex items-center gap-2">
-          {/* Retro BGM Toggle in Navbar */}
-          <RetroNavbarButton />
+        {/* Right Zone: Language Toggle (ID / EN) & Social Links */}
+        <div className="hidden sm:flex items-center gap-2.5">
+          {/* Interactive ID / EN Language Switcher Pill */}
+          <div
+            role="group"
+            aria-label="Language switcher"
+            className="flex items-center bg-[#141b25]/90 border border-white/10 p-1 rounded-full shadow-sm backdrop-blur-md"
+          >
+            {(['id', 'en'] as const).map((code) => {
+              const isSelected = lang === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLang(code)}
+                  className={`relative px-2.5 py-1 rounded-full text-xs font-mono uppercase tracking-wider cursor-pointer transition-colors select-none ${
+                    isSelected
+                      ? 'text-white font-bold'
+                      : 'text-[#a39483] hover:text-[#fbeee0]'
+                  }`}
+                  title={code === 'id' ? 'Bahasa Indonesia' : 'English'}
+                  aria-pressed={isSelected}
+                >
+                  {isSelected && (
+                    <motion.span
+                      layoutId="langToggleDesktopPill"
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-[#9d613c] to-[#b97746] shadow-xs z-0"
+                      transition={{ type: 'spring', stiffness: 420, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10">{code.toUpperCase()}</span>
+                </button>
+              );
+            })}
+          </div>
 
           <motion.div
             whileHover={{ scale: 1.03 }}
@@ -218,9 +249,32 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           </motion.div>
         </div>
 
-        {/* Mobile Hamburger Button with Animated Toggle & BGM */}
+        {/* Mobile Language Toggle + Hamburger Button */}
         <div className="flex md:hidden items-center gap-2">
-          <RetroNavbarButton />
+          {/* Compact Mobile ID / EN Toggle */}
+          <div
+            role="group"
+            aria-label="Language switcher"
+            className="flex sm:hidden items-center bg-[#141b25]/90 border border-white/10 p-0.5 rounded-full"
+          >
+            {(['id', 'en'] as const).map((code) => {
+              const isSelected = lang === code;
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setLang(code)}
+                  className={`relative px-2 py-1 rounded-full text-[11px] font-mono uppercase cursor-pointer transition-colors ${
+                    isSelected
+                      ? 'bg-[#9d613c] text-white font-bold'
+                      : 'text-[#a39483] hover:text-[#fbeee0]'
+                  }`}
+                >
+                  {code.toUpperCase()}
+                </button>
+              );
+            })}
+          </div>
 
           <button
             type="button"
@@ -247,7 +301,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         </div>
       </div>
 
-      {/* Floating Mobile Drawer Menu (Absolute overlay so opening/closing does NOT cause page layout shifts) */}
+      {/* Floating Mobile Drawer Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -258,7 +312,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             className="md:hidden absolute top-full left-0 right-0 z-50 bg-[#0c121c]/98 backdrop-blur-3xl border-b border-[#9d613c]/30 shadow-2xl shadow-black/80"
           >
             <div className="px-4 pt-3 pb-6 space-y-2 max-w-7xl mx-auto">
-              {navItems.map((item, index) => {
+              {navItems.map((item) => {
                 const isActive = activeSection === item.id;
                 return (
                   <button

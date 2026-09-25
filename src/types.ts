@@ -5,7 +5,7 @@ export interface NetworkInfo {
   category: string;
   description: string;
   logoType: 'aptos' | 'sei' | 'subquery';
-  status: 'Active' | 'Mainnet & Testnet' | 'Synchronized';
+  status: 'Active' | 'Aktif' | 'Mainnet & Testnet' | 'Synchronized';
   hardware: {
     cpu: string;
     ram: string;

@@ -2,8 +2,11 @@ import React from 'react';
 import { DoodleRays, WavyUnderline, DoodleTape, DoodleCornerHatch } from './Doodles';
 import { TechnicalSkills } from './TechnicalSkills';
 import { AboutCoderCharacter } from './CardCharacters';
+import { useLanguage } from '../context/LanguageContext';
 
 export const AboutCard: React.FC = () => {
+  const { lang } = useLanguage();
+
   return (
     <div className="doodle-card group p-5 sm:p-8 flex flex-col justify-between h-full">
       {/* Top Sketchbook Masking Tape */}
@@ -22,12 +25,14 @@ export const AboutCard: React.FC = () => {
               {/* Hand drawn bracket / corner indicator */}
               <span className="text-[#e59b63] text-2xl font-hand font-bold">〔</span>
               <h2 className="font-fredoka text-2xl sm:text-3xl font-medium tracking-wide text-[#fbeee0]">
-                About Me
+                {lang === 'id' ? 'Tentang Saya' : 'About Me'}
               </h2>
               <DoodleRays className="w-5 h-5 text-[#fbeee0] rotate-12" />
             </div>
             <span className="font-hand text-sm text-[#e59b63] ml-6 -mt-1">
-              ~ infrastructure & validator notes ~
+              {lang === 'id'
+                ? '~ catatan infrastruktur & validator ~'
+                : '~ infrastructure & validator notes ~'}
             </span>
           </div>
 
@@ -39,8 +44,9 @@ export const AboutCard: React.FC = () => {
 
         {/* Bio paragraph in a subtle hand-drawn quote note */}
         <p className="text-sm sm:text-base text-[#f0e4d6] leading-relaxed font-normal pl-3 border-l-2 border-dashed border-[#9d613c]/70">
-          Experienced blockchain node operator focused on building reliable and scalable
-          decentralized infrastructure across multiple networks.
+          {lang === 'id'
+            ? 'Operator node blockchain berpengalaman yang berfokus membangun infrastruktur terdesentralisasi yang andal, aman, dan skalabel di berbagai jaringan.'
+            : 'Experienced blockchain node operator focused on building reliable and scalable decentralized infrastructure across multiple networks.'}
         </p>
 
         {/* Dedicated Technical Skills Subsection */}

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { NetworkInfo } from '../types';
 import { AptosLogo, SeiLogo, SubQueryLogo } from './Doodles';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NetworkDetailModalProps {
   network: NetworkInfo | null;
@@ -8,6 +9,8 @@ interface NetworkDetailModalProps {
 }
 
 export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network, onClose }) => {
+  const { lang } = useLanguage();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -76,19 +79,27 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
         {/* Hardware Specifications Grid */}
         <div className="mb-6 p-4 rounded-2xl bg-[#0f1520] border border-white/5">
           <h4 className="text-xs font-mono uppercase tracking-wider text-[#b97746] mb-3 font-semibold">
-            Dedicated Node Specs & Infrastructure
+            {lang === 'id'
+              ? 'Spesifikasi Node & Infrastruktur Dedicated'
+              : 'Dedicated Node Specs & Infrastructure'}
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">Processor</div>
+              <div className="text-[#a89786] font-mono text-[11px]">
+                {lang === 'id' ? 'Prosesor' : 'Processor'}
+              </div>
               <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.cpu}</div>
             </div>
             <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">Memory</div>
+              <div className="text-[#a89786] font-mono text-[11px]">
+                {lang === 'id' ? 'Memori' : 'Memory'}
+              </div>
               <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.ram}</div>
             </div>
             <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">Storage</div>
+              <div className="text-[#a89786] font-mono text-[11px]">
+                {lang === 'id' ? 'Penyimpanan' : 'Storage'}
+              </div>
               <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.storage}</div>
             </div>
             <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
@@ -101,7 +112,7 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
         {/* Key Highlights / Operator Responsibilities */}
         <div className="mb-6">
           <h4 className="text-xs font-mono uppercase tracking-wider text-[#b97746] mb-3 font-semibold">
-            Operational Highlights
+            {lang === 'id' ? 'Sorotan Operasional' : 'Operational Highlights'}
           </h4>
           <ul className="space-y-2">
             {network.highlights.map((item, idx) => (
@@ -139,7 +150,7 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-xl bg-[#9d613c] hover:bg-[#b06f44] text-white text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
-              Official Website ↗
+              {lang === 'id' ? 'Situs Resmi ↗' : 'Official Website ↗'}
             </a>
             {network.explorerUrl && (
               <a
@@ -156,10 +167,9 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
             onClick={onClose}
             className="text-xs text-[#bba998] hover:text-[#fbeee0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] px-2 py-1 rounded-lg"
           >
-            Close window
+            {lang === 'id' ? 'Tutup jendela' : 'Close window'}
           </button>
         </div>
-
       </div>
     </div>
   );

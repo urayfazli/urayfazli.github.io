@@ -4,6 +4,7 @@ import { DoodleRays, DoodleStar, SpeechBubble, GitHubIcon, XIcon, DoodleTape } f
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { TypingText } from './TypingText';
 import { ASSET_IMAGES } from '../assets/images';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   onScrollDown: () => void;
@@ -15,6 +16,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onScrollDown,
   isLoaded = true,
 }) => {
+  const { lang } = useLanguage();
   return (
     <section
       id="home"
@@ -41,7 +43,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               className="flex items-center gap-2 mb-2"
             >
               <span className="font-fredoka text-2xl sm:text-3xl text-[#fbeee0] font-normal">
-                Hi, I&apos;m
+                {lang === 'id' ? 'Halo, saya' : "Hi, I'm"}
               </span>
               <DoodleRays className="w-6 h-6 text-[#fbeee0] rotate-[-10deg]" />
             </motion.div>
@@ -84,7 +86,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               className="mb-5"
             >
               <span className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018] hover:bg-[#b06f44] hover:-translate-y-0.5 transition-all cursor-default">
-                Node Operator
+                {lang === 'id' ? 'Operator Node' : 'Node Operator'}
               </span>
             </motion.div>
 
@@ -97,7 +99,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             >
               {isLoaded && (
                 <TypingText
-                  text="Building a more decentralized future, one node at a time."
+                  key={lang}
+                  text={
+                    lang === 'id'
+                      ? 'Membangun masa depan yang lebih terdesentralisasi, satu node setiap waktu.'
+                      : 'Building a more decentralized future, one node at a time.'
+                  }
                   speed={38}
                   delay={420}
                   className="text-[#d6c4b2] text-lg sm:text-xl font-normal leading-relaxed"
@@ -222,7 +229,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               }}
               className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-30 animate-float-slow"
             >
-              <SpeechBubble text="Node Operator" />
+              <SpeechBubble text={lang === 'id' ? 'Operator Node' : 'Node Operator'} />
             </motion.div>
 
             {/* Character Main Visual Art Frame with Spring Sketchbook Entrance */}
@@ -264,7 +271,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {/* In-corner subtle aesthetic doodle badge */}
                 <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="truncate">Aptos · Sei · SubQuery Active Nodes</span>
+                  <span className="truncate">
+                    {lang === 'id'
+                      ? 'Node Aktif Aptos · Sei · SubQuery'
+                      : 'Aptos · Sei · SubQuery Active Nodes'}
+                  </span>
                 </div>
               </div>
             </motion.div>
@@ -281,7 +292,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="w-1.5 h-2.5 rounded-full bg-[#fbeee0] animate-bounce" />
               </div>
               <span className="text-xs font-hand tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
-                Scroll Down
+                {lang === 'id' ? 'Gulir ke Bawah' : 'Scroll Down'}
               </span>
               <svg
                 className="w-4 h-4 text-[#fbeee0] group-hover:translate-y-1 transition-transform"

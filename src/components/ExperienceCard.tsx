@@ -1,13 +1,15 @@
 import React from 'react';
 import { DoodleRays, AptosLogo, SeiLogo, SubQueryLogo, DoodleTape, DoodleCornerHatch } from './Doodles';
-import { NETWORKS_DATA } from '../data/portfolioData';
 import { ExperienceForgeCharacter, NetworkDroidCharacter } from './CardCharacters';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ExperienceCardProps {
   onSelectNetwork: (networkId: string) => void;
 }
 
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork }) => {
+  const { lang, networks } = useLanguage();
+
   return (
     <div className="doodle-card p-5 sm:p-8 flex flex-col justify-between h-full">
       {/* Top Sketchbook Masking Tape */}
@@ -25,17 +27,19 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[#e59b63] text-2xl font-hand font-bold">〔</span>
               <h2 className="font-fredoka text-2xl sm:text-3xl font-medium tracking-wide text-[#fbeee0]">
-                Experience
+                {lang === 'id' ? 'Pengalaman' : 'Experience'}
               </h2>
               <DoodleRays className="w-5 h-5 text-[#fbeee0] rotate-12" />
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
               <p className="font-hand text-xl text-[#e59b63]">
-                Node Operator & Infrastructure
+                {lang === 'id'
+                  ? 'Operator Node & Infrastruktur'
+                  : 'Node Operator & Infrastructure'}
               </p>
               <span className="text-[11px] font-mono text-[#fbeee0] bg-[#0b1018] px-2.5 py-0.5 rounded-lg border-[1.5px] border-dashed border-[#fbeee0]/50 hidden sm:inline-block">
-                Mainnet & Testnet Active
+                {lang === 'id' ? 'Mainnet & Testnet Aktif' : 'Mainnet & Testnet Active'}
               </span>
             </div>
           </div>
@@ -48,7 +52,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
 
         {/* 3 Network Doodle Subcards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-          {NETWORKS_DATA.map((net) => {
+          {networks.map((net) => {
             const handleKeyDown = (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -78,7 +82,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                     <div className="flex items-center gap-1.5">
                       <NetworkDroidCharacter type={net.logoType} />
                       <span className="text-[10px] font-mono uppercase tracking-wider text-[#fbeee0] bg-[#9d613c]/30 px-2 py-0.5 rounded-md border border-dashed border-[#fbeee0]/50">
-                        Active
+                        {net.status}
                       </span>
                     </div>
                   </div>
@@ -99,7 +103,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                 <div className="pt-3 border-t-[1.5px] border-dashed border-[#fbeee0]/20 flex items-center justify-between text-[11px] font-mono text-[#d8c7b6]">
                   <span>99.9% Uptime</span>
                   <span className="font-hand text-sm text-[#e59b63] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                    Inspect →
+                    {lang === 'id' ? 'Detail →' : 'Inspect →'}
                   </span>
                 </div>
               </div>
@@ -111,10 +115,12 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
       {/* Bottom Interactive Hint */}
       <div className="relative z-10 mt-6 pt-3 border-t-2 border-dashed border-[#fbeee0]/20 flex items-center justify-between text-xs text-[#d6c4b2]">
         <span className="font-hand text-base text-[#fbeee0]/90">
-          ✎ Click any network card above for live node telemetry & architecture specs
+          {lang === 'id'
+            ? '✎ Klik kartu jaringan di atas untuk melihat spesifikasi & telemetri node'
+            : '✎ Click any network card above for live node telemetry & architecture specs'}
         </span>
         <span className="hidden sm:inline font-mono text-[11px] text-[#e59b63] bg-[#0b1018] px-2.5 py-0.5 rounded-lg border border-dashed border-[#fbeee0]/40">
-          3/3 Validating
+          {lang === 'id' ? '3/3 Aktif Validasi' : '3/3 Validating'}
         </span>
       </div>
     </div>

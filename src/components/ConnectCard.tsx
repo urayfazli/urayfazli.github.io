@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { GitHubIcon, XIcon, DoodleTape, DoodleCornerHatch, DoodleRays } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { ConnectMessengerCharacter } from './CardCharacters';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ConnectCardProps {
   onOpenContact: () => void;
 }
 
 export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
+  const { lang } = useLanguage();
   const [copiedHandle, setCopiedHandle] = useState<string | null>(null);
 
   const handleCopy = (e: React.MouseEvent, text: string, label: string) => {
@@ -35,12 +37,14 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
             <div className="flex items-center gap-2">
               <span className="text-[#e59b63] text-2xl font-hand font-bold">〔</span>
               <h2 className="font-fredoka text-2xl sm:text-3xl font-medium tracking-wide text-[#fbeee0]">
-                Connect
+                {lang === 'id' ? 'Terhubung' : 'Connect'}
               </h2>
               <DoodleRays className="w-5 h-5 text-[#fbeee0] rotate-12" />
             </div>
             <span className="font-hand text-base text-[#e59b63] ml-6 block -mt-1">
-              ~ open for Node Ops & Web3 collab ~
+              {lang === 'id'
+                ? '~ terbuka untuk kolaborasi Node Ops & Web3 ~'
+                : '~ open for Node Ops & Web3 collab ~'}
             </span>
           </div>
 
@@ -64,7 +68,7 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
               </div>
               <div>
                 <span className="block text-xs font-hand text-[#e59b63] text-sm leading-tight">
-                  GitHub Repository
+                  {lang === 'id' ? 'Repositori GitHub' : 'GitHub Repository'}
                 </span>
                 <span className="font-mono text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white">
                   {SOCIAL_DATA.github}
@@ -79,7 +83,13 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
                 className="px-2.5 py-1 rounded-lg bg-[#182230] hover:bg-[#223042] text-[11px] font-mono text-[#e8d8c8] hover:text-white border border-dashed border-[#fbeee0]/40 transition-colors cursor-pointer"
                 title="Copy GitHub URL"
               >
-                {copiedHandle === 'github' ? 'Copied ✓' : 'Copy'}
+                {copiedHandle === 'github'
+                  ? lang === 'id'
+                    ? 'Tersalin ✓'
+                    : 'Copied ✓'
+                  : lang === 'id'
+                  ? 'Salin'
+                  : 'Copy'}
               </button>
               <a
                 href={SOCIAL_DATA.githubUrl}
@@ -121,7 +131,13 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
                 className="px-2.5 py-1 rounded-lg bg-[#182230] hover:bg-[#223042] text-[11px] font-mono text-[#e8d8c8] hover:text-white border border-dashed border-[#fbeee0]/40 transition-colors cursor-pointer"
                 title="Copy X Handle"
               >
-                {copiedHandle === 'twitter' ? 'Copied ✓' : 'Copy'}
+                {copiedHandle === 'twitter'
+                  ? lang === 'id'
+                    ? 'Tersalin ✓'
+                    : 'Copied ✓'
+                  : lang === 'id'
+                  ? 'Salin'
+                  : 'Copy'}
               </button>
               <a
                 href={SOCIAL_DATA.twitterUrl}
@@ -149,10 +165,12 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
               </div>
               <div>
                 <span className="block font-hand text-sm text-[#fbeee0] leading-tight">
-                  Validator Inquiry / Collaboration
+                  {lang === 'id'
+                    ? 'Pertanyaan Validator / Kolaborasi'
+                    : 'Validator Inquiry / Collaboration'}
                 </span>
                 <span className="font-fredoka text-sm sm:text-base font-medium text-[#fbeee0]">
-                  Send Direct Message ✎
+                  {lang === 'id' ? 'Kirim Pesan Langsung ✎' : 'Send Direct Message ✎'}
                 </span>
               </div>
             </div>
@@ -167,7 +185,7 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
       <div className="relative z-10 mt-7 pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex flex-col items-end">
         <div className="relative inline-flex items-center gap-2 rotate-[-2deg] group cursor-default">
           <span className="font-hand text-2xl sm:text-3xl text-[#fbeee0] tracking-wide leading-none group-hover:text-[#e59b63] transition-colors">
-            Let&apos;s build together!
+            {lang === 'id' ? 'Mari membangun bersama!' : "Let's build together!"}
           </span>
           <span className="inline-block w-2.5 h-5 bg-[#22c55e] rounded-xs animate-pulse" aria-hidden="true" />
         </div>
