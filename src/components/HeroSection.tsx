@@ -1,5 +1,6 @@
 import React from 'react';
-import { DoodleRays, DoodleStar, SpeechBubble, GitHubIcon, XIcon } from './Doodles';
+import { motion } from 'motion/react';
+import { DoodleRays, DoodleStar, SpeechBubble, GitHubIcon, XIcon, DoodleTape } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { TypingText } from './TypingText';
 import { ASSET_IMAGES } from '../assets/images';
@@ -7,145 +8,296 @@ import { ASSET_IMAGES } from '../assets/images';
 interface HeroSectionProps {
   onScrollDown: () => void;
   onSelectNetwork: (networkId: string) => void;
+  isLoaded?: boolean;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollDown }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({
+  onScrollDown,
+  isLoaded = true,
+}) => {
   return (
-    <section id="home" className="relative pt-6 pb-16 md:pt-12 md:pb-24 overflow-hidden scroll-mt-28">
+    <section
+      id="home"
+      className="relative pt-6 pb-16 md:pt-12 md:pb-24 overflow-hidden scroll-mt-28"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-          
           {/* Left Column: Greeting, Title, Tagline, Socials */}
           <div className="lg:col-span-6 z-10 flex flex-col items-start text-left">
-            
-            {/* "Hi, I'm" with cute hand-drawn rays */}
-            <div className="flex items-center gap-2 mb-2">
+            {/* Step 1: "Hi, I'm" with cute hand-drawn rays */}
+            <motion.div
+              initial={{ opacity: 0, y: 20, rotate: -4 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, y: 0, rotate: 0 }
+                  : { opacity: 0, y: 20, rotate: -4 }
+              }
+              transition={{
+                type: 'spring',
+                stiffness: 300,
+                damping: 22,
+                delay: 0.08,
+              }}
+              className="flex items-center gap-2 mb-2"
+            >
               <span className="font-fredoka text-2xl sm:text-3xl text-[#fbeee0] font-normal">
-                Hi, I'm
+                Hi, I&apos;m
               </span>
               <DoodleRays className="w-6 h-6 text-[#fbeee0] rotate-[-10deg]" />
-            </div>
+            </motion.div>
 
-            {/* Giant Title: Uray Fazli Alman */}
-            <h1 className="font-fredoka text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-[#fbeee0] leading-[1.08] mb-4">
+            {/* Step 2: Giant Title: Uray Fazli Alman */}
+            <motion.h1
+              initial={{ opacity: 0, y: 34, scale: 0.94 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, y: 0, scale: 1 }
+                  : { opacity: 0, y: 34, scale: 0.94 }
+              }
+              transition={{
+                type: 'spring',
+                stiffness: 260,
+                damping: 22,
+                delay: 0.18,
+              }}
+              className="font-fredoka text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-[#fbeee0] leading-[1.08] mb-4"
+            >
               Uray Fazli
               <br />
               Alman
-            </h1>
+            </motion.h1>
 
-            {/* Caramel Pill Badge: Node Operator */}
-            <div className="mb-5">
-              <span className="inline-flex items-center px-5 py-1.5 rounded-full bg-[#9d613c] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-md hover:bg-[#b06f44] transition-colors cursor-default">
+            {/* Step 3: Caramel Doodle Badge: Node Operator */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, rotate: -6 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, scale: 1, rotate: 0 }
+                  : { opacity: 0, scale: 0.7, rotate: -6 }
+              }
+              transition={{
+                type: 'spring',
+                stiffness: 380,
+                damping: 18,
+                delay: 0.3,
+              }}
+              className="mb-5"
+            >
+              <span className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018] hover:bg-[#b06f44] hover:-translate-y-0.5 transition-all cursor-default">
                 Node Operator
               </span>
-            </div>
+            </motion.div>
 
-            {/* Tagline with Typing Animation */}
-            <div className="min-h-[4rem] sm:min-h-[3.75rem] max-w-md mb-8 flex items-center">
-              <TypingText
-                text="Building a more decentralized future, one node at a time."
-                speed={42}
-                delay={350}
-                className="text-[#d6c4b2] text-lg sm:text-xl font-normal leading-relaxed"
-                cursorClassName="bg-[#9d613c]"
-              />
-            </div>
+            {/* Step 4: Tagline with Typing Animation (starts only after loading finishes!) */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.4, delay: 0.38 }}
+              className="min-h-[4rem] sm:min-h-[3.75rem] max-w-md mb-8 flex items-center"
+            >
+              {isLoaded && (
+                <TypingText
+                  text="Building a more decentralized future, one node at a time."
+                  speed={38}
+                  delay={420}
+                  className="text-[#d6c4b2] text-lg sm:text-xl font-normal leading-relaxed"
+                  cursorClassName="bg-[#e59b63]"
+                />
+              )}
+            </motion.div>
 
-            {/* Social Action Pill Buttons */}
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            {/* Step 5: Social Action Doodle Buttons */}
+            <div className="flex flex-wrap items-center gap-3.5 sm:gap-4">
               {/* GitHub Button */}
-              <a
+              <motion.a
                 href={SOCIAL_DATA.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 px-5 py-2.5 rounded-full border border-[#2f3d52] bg-[#141c28] hover:bg-[#1b2636] hover:border-[#9d613c]/60 text-[#fbeee0] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c]"
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={
+                  isLoaded
+                    ? { opacity: 1, y: 0, scale: 1 }
+                    : { opacity: 0, y: 20, scale: 0.9 }
+                }
+                transition={{
+                  type: 'spring',
+                  stiffness: 320,
+                  damping: 20,
+                  delay: 0.48,
+                }}
+                className="doodle-subcard group flex items-center gap-3 px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
-                <GitHubIcon className="w-5 h-5 text-[#fbeee0] group-hover:scale-110 transition-transform" />
+                <GitHubIcon className="w-5 h-5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[-6deg] transition-transform" />
                 <span className="font-medium text-sm sm:text-base tracking-wide">
                   {SOCIAL_DATA.github}
                 </span>
-              </a>
+              </motion.a>
 
               {/* X.com Button */}
-              <a
+              <motion.a
                 href={SOCIAL_DATA.twitterUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-3 px-5 py-2.5 rounded-full border border-[#2f3d52] bg-[#141c28] hover:bg-[#1b2636] hover:border-[#9d613c]/60 text-[#fbeee0] transition-all duration-200 shadow-md hover:shadow-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c]"
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={
+                  isLoaded
+                    ? { opacity: 1, y: 0, scale: 1 }
+                    : { opacity: 0, y: 20, scale: 0.9 }
+                }
+                transition={{
+                  type: 'spring',
+                  stiffness: 320,
+                  damping: 20,
+                  delay: 0.58,
+                }}
+                className="doodle-subcard group flex items-center gap-3 px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
-                <XIcon className="w-4.5 h-4.5 text-[#fbeee0] group-hover:scale-110 transition-transform" />
+                <XIcon className="w-4.5 h-4.5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[6deg] transition-transform" />
                 <span className="font-medium text-sm sm:text-base tracking-wide">
                   {SOCIAL_DATA.twitter}
                 </span>
-              </a>
+              </motion.a>
             </div>
 
             {/* Subtle doodle star near text */}
-            <div className="mt-8 ml-2">
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={
+                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+              }
+              transition={{ type: 'spring', delay: 0.7 }}
+              className="mt-8 ml-2"
+            >
               <DoodleStar className="w-6 h-6 text-[#9d613c] animate-twinkle" />
-            </div>
+            </motion.div>
           </div>
 
           {/* Right Column: Cute Chibi Character, Speech Bubble, Doodles */}
           <div className="lg:col-span-6 relative flex flex-col items-center justify-center">
-            
             {/* Floating Sparkle Stars */}
-            <div className="absolute -top-4 left-6 sm:left-12 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={
+                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+              }
+              transition={{ type: 'spring', delay: 0.55 }}
+              className="absolute -top-4 left-6 sm:left-12 pointer-events-none"
+            >
               <DoodleStar className="w-7 h-7 text-[#fbeee0] animate-twinkle" />
-            </div>
-            <div className="absolute top-1/2 -left-4 sm:left-2 pointer-events-none">
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={
+                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+              }
+              transition={{ type: 'spring', delay: 0.65 }}
+              className="absolute top-1/2 -left-4 sm:left-2 pointer-events-none"
+            >
               <DoodleStar className="w-6 h-6 text-[#d8c3ad] animate-twinkle [animation-delay:1s]" />
-            </div>
-            <div className="absolute top-1/4 right-2 sm:right-6 pointer-events-none">
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={
+                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+              }
+              transition={{ type: 'spring', delay: 0.75 }}
+              className="absolute top-1/4 right-2 sm:right-6 pointer-events-none"
+            >
               <DoodleStar className="w-5 h-5 text-[#fbeee0] animate-twinkle [animation-delay:1.8s]" />
-            </div>
+            </motion.div>
 
-            {/* Speech Bubble: "Node Operator" positioned playfully above character */}
-            <div className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-20 animate-float-slow">
+            {/* Speech Bubble: "Node Operator" popping above character after card lands */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.4, y: 16, rotate: 10 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, scale: 1, y: 0, rotate: 0 }
+                  : { opacity: 0, scale: 0.4, y: 16, rotate: 10 }
+              }
+              transition={{
+                type: 'spring',
+                stiffness: 380,
+                damping: 18,
+                delay: 0.52,
+              }}
+              className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-30 animate-float-slow"
+            >
               <SpeechBubble text="Node Operator" />
-            </div>
+            </motion.div>
 
-            {/* Character Main Visual Art Frame */}
-            <div className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center">
-              
+            {/* Character Main Visual Art Frame with Spring Sketchbook Entrance */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.82, rotate: 5, y: 32 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, scale: 1, rotate: 0, y: 0 }
+                  : { opacity: 0, scale: 0.82, rotate: 5, y: 32 }
+              }
+              transition={{
+                type: 'spring',
+                stiffness: 240,
+                damping: 20,
+                delay: 0.22,
+              }}
+              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center"
+            >
               {/* Soft warm aura backdrop behind character */}
-              <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#9d613c]/20 via-[#402d23]/40 to-transparent blur-2xl" />
+              <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#9d613c]/25 via-[#402d23]/40 to-transparent blur-2xl" />
 
-              {/* Character Illustration Card Container */}
-              <div className="relative w-[280px] xs:w-[320px] sm:w-[380px] lg:w-[440px] h-[280px] xs:h-[320px] sm:h-[380px] lg:h-[440px] rounded-3xl overflow-hidden border-2 border-[#2b394e]/70 bg-gradient-to-b from-[#16202e] to-[#0f151f] shadow-2xl group transition-transform duration-500 hover:scale-[1.02]">
+              {/* Character Illustration Doodle Frame */}
+              <div className="doodle-card relative w-[280px] xs:w-[320px] sm:w-[380px] lg:w-[440px] h-[280px] xs:h-[320px] sm:h-[380px] lg:h-[440px] overflow-hidden group">
+                {/* Top Sketchbook Tape on Avatar Frame */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
+                  <DoodleTape className="w-24 h-5" />
+                </div>
+
                 <img
                   src={ASSET_IMAGES.avatar}
                   alt="Uray Fazli Alman - Cute Chibi Illustration"
                   className="w-full h-full object-cover object-center scale-105 group-hover:scale-108 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
-                
+
                 {/* Subtle vignette border gradient overlay */}
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0f141d]/70 via-transparent to-transparent" />
-                
-                {/* In-corner subtle aesthetic badge with honest status */}
-                <div className="absolute bottom-3 left-3 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#d6c4b2]/90 bg-[#121824]/90 px-2.5 sm:px-3 py-1 rounded-full border border-white/10 max-w-[90%] truncate">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0f141d]/75 via-transparent to-transparent" />
+
+                {/* In-corner subtle aesthetic doodle badge */}
+                <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                   <span className="truncate">Aptos · Sei · SubQuery Active Nodes</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Scroll Down Affordance on bottom right */}
-            <div className="hidden lg:flex flex-col items-center gap-1.5 absolute -bottom-10 right-0 cursor-pointer group" onClick={onScrollDown}>
-              <div className="w-6 h-10 rounded-full border-2 border-[#fbeee0]/70 flex items-start justify-center p-1.5 group-hover:border-[#9d613c] transition-colors">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.45, delay: 0.78 }}
+              className="hidden lg:flex flex-col items-center gap-1.5 absolute -bottom-10 right-0 cursor-pointer group"
+              onClick={onScrollDown}
+            >
+              <div className="w-6 h-10 rounded-full border-2 border-[#fbeee0]/70 flex items-start justify-center p-1.5 group-hover:border-[#e59b63] transition-colors">
                 <div className="w-1.5 h-2.5 rounded-full bg-[#fbeee0] animate-bounce" />
               </div>
-              <span className="text-xs font-medium tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
+              <span className="text-xs font-hand tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
                 Scroll Down
               </span>
-              <svg className="w-4 h-4 text-[#fbeee0] group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg
+                className="w-4 h-4 text-[#fbeee0] group-hover:translate-y-1 transition-transform"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
-            </div>
-
+            </motion.div>
           </div>
-
         </div>
       </div>
     </section>

@@ -6,11 +6,57 @@ interface LoadingScreenProps {
   onFinish: () => void;
 }
 
-const BOOT_LOGS = [
-  { threshold: 10, text: 'Mounting encrypted validator keystore...' },
-  { threshold: 35, text: 'Establishing P2P mesh: Aptos • Sei • SubQuery...' },
-  { threshold: 65, text: 'Arming 24/7 sentry & slashing guard...' },
-  { threshold: 90, text: 'Consensus synced! Ready to launch portfolio ✓' },
+interface BootStage {
+  threshold: number;
+  text: string;
+  moduleLabel: string;
+  packetInfo: string;
+}
+
+const BOOT_STAGES: BootStage[] = [
+  {
+    threshold: 0,
+    text: 'Booting Uray Fazli Node OS v2.6...',
+    moduleLabel: 'KERNEL_INIT',
+    packetInfo: 'Allocating memory buffers...',
+  },
+  {
+    threshold: 14,
+    text: 'Mounting encrypted validator keystore...',
+    moduleLabel: 'KEYSTORE_AUTH',
+    packetInfo: 'Verifying Ed25519 keys...',
+  },
+  {
+    threshold: 32,
+    text: 'Fetching Aptos & Sei Mainnet RPC state...',
+    moduleLabel: 'RPC_HANDSHAKE',
+    packetInfo: 'Downloading state snapshot (42.8 MB)...',
+  },
+  {
+    threshold: 56,
+    text: 'Syncing SubQuery indexer blocks & telemetry...',
+    moduleLabel: 'INDEX_SYNC',
+    packetInfo: 'Indexing ledger height #18,492,010...',
+  },
+  {
+    threshold: 78,
+    text: 'Arming 24/7 sentry & slashing protection...',
+    moduleLabel: 'SENTRY_GUARD',
+    packetInfo: 'Checking double-sign firewall ✓',
+  },
+  {
+    threshold: 94,
+    text: 'Consensus synced! Launching portfolio ✓',
+    moduleLabel: 'NODE_ONLINE',
+    packetInfo: 'All systems nominal (99.9% uptime)',
+  },
+];
+
+const MODULE_CHECKLIST = [
+  { id: 'keys', label: 'Keystore', doneAt: 22 },
+  { id: 'aptos', label: 'Aptos RPC', doneAt: 46 },
+  { id: 'sei', label: 'Sei Node', doneAt: 68 },
+  { id: 'subql', label: 'SubQuery', doneAt: 88 },
 ];
 
 export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
@@ -18,31 +64,62 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    const duration = 2200; // 2.2s snappy, engaging boot sequence
-    const intervalMs = 25;
-    const step = 100 / (duration / intervalMs);
+    // Realistic staged data-loading simulation (~5.2 seconds total)
+    // Simulates network packet bursts, heavy snapshot pauses, and verification steps
+    let current = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          return 100;
-        }
-        // Slight organic easing boost near the end
-        const increment = prev > 80 ? step * 1.35 : step;
-        return Math.min(100, prev + increment);
-      });
-    }, intervalMs);
+    const tick = () => {
+      if (current >= 100) return;
 
-    return () => clearInterval(timer);
+      let increment = 1;
+      let nextDelay = 65;
+
+      if (current < 15) {
+        // Initial fast boot
+        increment = 1.6;
+        nextDelay = 55;
+      } else if (current >= 15 && current < 28) {
+        // Pause/slowdown while mounting keystore
+        increment = 0.65;
+        nextDelay = 85;
+      } else if (current >= 28 && current < 48) {
+        // Downloading RPC state snapshot (variable packet burst)
+        increment = current > 36 && current < 42 ? 0.35 : 1.15;
+        nextDelay = current > 36 && current < 42 ? 110 : 65;
+      } else if (current >= 48 && current < 72) {
+        // Heavy block indexing phase
+        increment = current > 58 && current < 64 ? 0.4 : 1.05;
+        nextDelay = current > 58 && current < 64 ? 105 : 70;
+      } else if (current >= 72 && current < 92) {
+        // Sentry & slashing verification pause around 82%
+        increment = current > 80 && current < 85 ? 0.35 : 1.2;
+        nextDelay = current > 80 && current < 85 ? 115 : 65;
+      } else {
+        // Final completion burst
+        increment = 1.5;
+        nextDelay = 50;
+      }
+
+      current = Math.min(100, current + increment);
+      setProgress(current);
+
+      if (current < 100) {
+        timeoutId = setTimeout(tick, nextDelay);
+      }
+    };
+
+    timeoutId = setTimeout(tick, 120);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
     if (progress >= 100 && !isExiting) {
+      // Hold at 100% briefly so user sees the completed state & happy operator reaction
       const doneTimer = setTimeout(() => {
         setIsExiting(true);
-        setTimeout(onFinish, 480);
-      }, 380);
+        setTimeout(onFinish, 520);
+      }, 750);
       return () => clearTimeout(doneTimer);
     }
   }, [progress, isExiting, onFinish]);
@@ -53,12 +130,15 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
   };
 
   const roundedProgress = Math.min(100, Math.round(progress));
-  const isReady = roundedProgress >= 92;
-  const isSyncing = roundedProgress >= 35 && roundedProgress < 92;
+  const isReady = roundedProgress >= 94;
+  const isSyncing = roundedProgress >= 32 && roundedProgress < 94;
 
-  const currentLog =
-    [...BOOT_LOGS].reverse().find((log) => roundedProgress >= log.threshold)?.text ||
-    'Booting Uray Fazli Node OS v2.6...';
+  const currentStage =
+    [...BOOT_STAGES].reverse().find((stage) => roundedProgress >= stage.threshold) ||
+    BOOT_STAGES[0];
+
+  // Simulated synced block counter for authentic data-loading feel
+  const syncedBlocks = Math.floor((roundedProgress / 100) * 14208);
 
   return (
     <AnimatePresence>
@@ -67,7 +147,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
           key="boot-loader"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.03, filter: 'blur(6px)' }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[100] bg-[#0a0e15] flex items-center justify-center p-4 sm:p-6 overflow-hidden select-none"
           role="status"
           aria-live="polite"
@@ -92,7 +172,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
             initial={{ y: 24, opacity: 0, scale: 0.94 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-            className="doodle-card w-full max-w-md p-6 sm:p-8 relative z-10 flex flex-col items-center text-center"
+            className="doodle-card w-full max-w-md p-6 sm:p-7 relative z-10 flex flex-col items-center text-center"
           >
             {/* Top Sketchbook Masking Tape */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
@@ -103,14 +183,14 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
             <DoodleCornerHatch className="absolute top-2.5 left-2.5 w-6 h-6 text-[#9d613c]/50 pointer-events-none" />
 
             {/* Top Status Tag */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b1018] border-[1.5px] border-dashed border-[#fbeee0]/50 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b1018] border-[1.5px] border-dashed border-[#fbeee0]/50 mb-2.5">
               <span
                 className={`w-2 h-2 rounded-full ${
                   isReady ? 'bg-emerald-400' : 'bg-[#e59b63] animate-ping'
                 }`}
               />
               <span className="font-mono text-[11px] uppercase tracking-wider text-[#fbeee0]">
-                {isReady ? 'NODE ONLINE • READY' : 'BOOTING VALIDATOR OS'}
+                {isReady ? 'NODE ONLINE • READY' : `LOADING DATA • ${currentStage.moduleLabel}`}
               </span>
             </div>
 
@@ -118,7 +198,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
                 BESPOKE RIGGED ANIMATED CHARACTER SCENE (NO AI SLOP)
                 Chibi CRT Operator + Server Rack + Levitating Genesis Cube
                ============================================================== */}
-            <div className="relative my-2 flex items-center justify-center">
+            <div className="relative my-1.5 flex items-center justify-center">
               {/* Pop-up Hand-Drawn Speech Bubble */}
               <AnimatePresence mode="wait">
                 <motion.div
@@ -127,12 +207,12 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -4, scale: 0.85 }}
                   transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-                  className="absolute -top-4 right-1 sm:-right-4 px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[3deg] z-20 whitespace-nowrap"
+                  className="absolute -top-3.5 right-0 sm:-right-4 px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[3deg] z-20 whitespace-nowrap"
                 >
                   {isReady ? (
                     <span className="text-emerald-300">gm ser! we are live 🚀</span>
                   ) : isSyncing ? (
-                    <span>syncing blocks... ⚡</span>
+                    <span>fetching node data... ⚡</span>
                   ) : (
                     <span>warming up node... ☕</span>
                   )}
@@ -141,7 +221,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
 
               <svg
                 viewBox="0 0 220 145"
-                className="w-56 h-36 sm:w-64 sm:h-40 overflow-visible drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
+                className="w-56 h-35 sm:w-64 sm:h-38 overflow-visible drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
                 fill="none"
               >
                 {/* Ground Sketch Shadow */}
@@ -177,7 +257,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
                     animate={{ opacity: [1, 0.2, 1] }}
                     transition={{ duration: 0.45, repeat: Infinity }}
                   />
-                  <circle cx="12" cy="47" r="2.2" fill={roundedProgress > 30 ? '#22C55E' : '#64748B'} />
+                  <circle cx="12" cy="47" r="2.2" fill={roundedProgress > 32 ? '#22C55E' : '#64748B'} />
                   <motion.circle
                     cx="19"
                     cy="47"
@@ -186,8 +266,8 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{ duration: 0.6, repeat: Infinity }}
                   />
-                  <circle cx="12" cy="67" r="2.2" fill={roundedProgress > 65 ? '#22C55E' : '#64748B'} />
-                  <circle cx="19" cy="67" r="2.2" fill={roundedProgress > 85 ? '#22C55E' : '#E59B63'} />
+                  <circle cx="12" cy="67" r="2.2" fill={roundedProgress > 68 ? '#22C55E' : '#64748B'} />
+                  <circle cx="19" cy="67" r="2.2" fill={roundedProgress > 88 ? '#22C55E' : '#E59B63'} />
 
                   {/* Top Rotating Radar Dish on Rack */}
                   <motion.g
@@ -495,23 +575,43 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
             </div>
 
             {/* Title & Hand-Drawn Subtitle */}
-            <div className="flex items-center justify-center gap-1.5 mt-1">
+            <div className="flex items-center justify-center gap-1.5">
               <h1 className="font-fredoka text-xl sm:text-2xl font-semibold tracking-wide text-[#fbeee0]">
                 Uray Fazli Alman
               </h1>
               <DoodleRays className="w-5 h-5 text-[#e59b63] rotate-12" />
             </div>
-            <p className="font-hand text-base sm:text-lg text-[#e59b63] -mt-0.5 mb-4">
+            <p className="font-hand text-base sm:text-lg text-[#e59b63] -mt-0.5 mb-3">
               ~ Blockchain Node Operator & Systems Engineer ~
             </p>
 
-            {/* Hand-Drawn Doodle Progress Bar */}
-            <div className="w-full mb-2.5">
+            {/* Live Module Data Checklist Pills */}
+            <div className="w-full grid grid-cols-4 gap-1.5 mb-3">
+              {MODULE_CHECKLIST.map((mod) => {
+                const isDone = roundedProgress >= mod.doneAt;
+                return (
+                  <div
+                    key={mod.id}
+                    className={`px-1.5 py-1 rounded-lg border text-[10px] font-mono flex items-center justify-center gap-1 transition-all duration-300 ${
+                      isDone
+                        ? 'bg-emerald-500/15 border-emerald-400/60 text-emerald-300'
+                        : 'bg-[#0b1018] border-dashed border-[#fbeee0]/25 text-[#bba998]/60'
+                    }`}
+                  >
+                    <span>{isDone ? '✓' : '⋯'}</span>
+                    <span className="truncate">{mod.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Hand-Drawn Doodle Progress Bar + Telemetry Packet Stream */}
+            <div className="w-full mb-2">
               <div className="flex items-center justify-between text-xs font-mono mb-1.5 px-1">
-                <span className="text-[#d8c7b6] truncate max-w-[78%] text-left">
-                  &gt;_ {currentLog}
+                <span className="text-[#fbeee0] truncate max-w-[78%] text-left">
+                  &gt;_ {currentStage.text}
                 </span>
-                <span className="text-[#fbeee0] font-bold">{roundedProgress}%</span>
+                <span className="text-[#e59b63] font-bold">{roundedProgress}%</span>
               </div>
 
               <div className="w-full h-4 p-0.5 bg-[#0b1018] border-2 border-[#fbeee0] rounded-[10px_8px_11px_9px] shadow-[3px_3px_0px_#9d613c] overflow-hidden">
@@ -520,10 +620,18 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({ onFinish }) => {
                   style={{ width: `${roundedProgress}%` }}
                 />
               </div>
+
+              {/* Sub-bar Packet & Block Sync Readout */}
+              <div className="flex items-center justify-between text-[10px] font-mono text-[#bba998] mt-1.5 px-1">
+                <span className="truncate">{currentStage.packetInfo}</span>
+                <span className="shrink-0 text-[#fbeee0]/80">
+                  BLOCKS: {syncedBlocks.toLocaleString()}/14,208
+                </span>
+              </div>
             </div>
 
             {/* Bottom Wavy Doodle & Skip Button */}
-            <div className="w-full mt-3 pt-2 border-t border-dashed border-[#fbeee0]/20 flex items-center justify-between">
+            <div className="w-full mt-2 pt-2 border-t border-dashed border-[#fbeee0]/20 flex items-center justify-between">
               <WavyUnderline className="w-24 h-4 text-[#fbeee0]/70" />
               <button
                 type="button"

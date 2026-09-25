@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutCard } from './components/AboutCard';
@@ -24,6 +25,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkInfo | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -103,23 +105,68 @@ export default function App() {
     }
   };
 
+  const handleLoadingFinish = () => {
+    setIsLoading(false);
+    setShowWelcomeBanner(true);
+    setTimeout(() => {
+      setShowWelcomeBanner(false);
+    }, 4200);
+  };
+
   return (
     <div className="min-h-screen bg-[#0c1017] text-[#fbeee0] flex flex-col font-sans selection:bg-[#9d613c] selection:text-white relative">
       {/* Initial Boot Loading Screen with Animated Character */}
-      {isLoading && <LoadingScreen onFinish={() => setIsLoading(false)} />}
+      {isLoading && <LoadingScreen onFinish={handleLoadingFinish} />}
+
+      {/* Post-Loading Welcome Doodle HUD Toast */}
+      <AnimatePresence>
+        {showWelcomeBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -28, scale: 0.88, rotate: -2 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotate: -1 }}
+            exit={{ opacity: 0, y: -18, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 22 }}
+            onClick={() => setShowWelcomeBanner(false)}
+            className="fixed top-20 right-4 sm:right-8 z-50 cursor-pointer select-none px-4 py-2 rounded-[16px_11px_18px_12px] bg-[#101722]/95 border-2 border-[#fbeee0] shadow-[4px_4px_0px_#9d613c] flex items-center gap-2.5 backdrop-blur-md"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
+            <div className="text-left">
+              <span className="block font-mono text-[10px] uppercase tracking-wider text-emerald-300">
+                ✓ ALL NODES SYNCED (100%)
+              </span>
+              <span className="font-hand text-sm sm:text-base text-[#fbeee0]">
+                Welcome to Uray&apos;s Validator Sketchbook! ✨
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
-      {/* Top Bar Navigation */}
-      <Navbar
-        activeSection={activeSection}
-        onNavigate={handleNavigate}
-        onOpenContact={() => setContactModalOpen(true)}
-      />
+      {/* Top Bar Navigation with Post-Boot Slide-In */}
+      <motion.div
+        initial={{ opacity: 0, y: -32 }}
+        animate={!isLoading ? { opacity: 1, y: 0 } : { opacity: 0, y: -32 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+        className="sticky top-0 z-40"
+      >
+        <Navbar
+          activeSection={activeSection}
+          onNavigate={handleNavigate}
+          onOpenContact={() => setContactModalOpen(true)}
+        />
+      </motion.div>
 
-      {/* Running Text Marquee Banner */}
-      <RunningTextMarquee />
+      {/* Running Text Marquee Banner with Unfurl Entrance */}
+      <motion.div
+        initial={{ opacity: 0, y: -14 }}
+        animate={!isLoading ? { opacity: 1, y: 0 } : { opacity: 0, y: -14 }}
+        transition={{ duration: 0.45, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <RunningTextMarquee />
+      </motion.div>
 
       {/* Main Content Area */}
       <main className="flex-grow relative z-10">
@@ -129,6 +176,7 @@ export default function App() {
           <HeroSection
             onScrollDown={() => handleNavigate('about')}
             onSelectNetwork={handleSelectNetwork}
+            isLoaded={!isLoading}
           />
         </section>
 
@@ -145,14 +193,14 @@ export default function App() {
               
               {/* Main Bio Card */}
               <div className="lg:col-span-7 flex flex-col">
-                <RevealOnScroll delay={0} className="h-full flex flex-col">
+                <RevealOnScroll delay={0} ready={!isLoading} className="h-full flex flex-col">
                   <AboutCard />
                 </RevealOnScroll>
               </div>
 
               {/* Infrastructure Philosophy & Stats Side Card */}
               <div className="lg:col-span-5 flex flex-col">
-                <RevealOnScroll delay={150} className="h-full flex flex-col">
+                <RevealOnScroll delay={150} ready={!isLoading} className="h-full flex flex-col">
                   <div className="doodle-card doodle-card-alt p-6 sm:p-8 flex flex-col justify-between h-full">
                     {/* Top Sketchbook Tape */}
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rotate-[2deg] pointer-events-none z-20">
@@ -260,14 +308,14 @@ export default function App() {
               
               {/* Experience Validator Cards */}
               <div className="lg:col-span-8 flex flex-col">
-                <RevealOnScroll delay={0} className="h-full flex flex-col">
+                <RevealOnScroll delay={0} ready={!isLoading} className="h-full flex flex-col">
                   <ExperienceCard onSelectNetwork={handleSelectNetwork} />
                 </RevealOnScroll>
               </div>
 
               {/* Connect Card */}
               <div id="connect" className="lg:col-span-4 flex flex-col scroll-mt-20">
-                <RevealOnScroll delay={150} className="h-full flex flex-col">
+                <RevealOnScroll delay={150} ready={!isLoading} className="h-full flex flex-col">
                   <ConnectCard onOpenContact={() => setContactModalOpen(true)} />
                 </RevealOnScroll>
               </div>
