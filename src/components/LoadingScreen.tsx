@@ -33,11 +33,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
     if (exitTriggeredRef.current) return;
     exitTriggeredRef.current = true;
     setIsExiting(true);
-    // Start revealing the main website underneath while the loader smoothly cross-dissolves
+    // Start revealing & dollying-in the main website underneath while the camera dollies through the loader
     onStartExit?.();
     setTimeout(() => {
       onFinish();
-    }, 950);
+    }, 1150);
   };
 
   useEffect(() => {
@@ -108,75 +108,125 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           ? { opacity: 0, pointerEvents: 'none' as const }
           : { opacity: 1, pointerEvents: 'auto' as const }
       }
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed inset-0 z-[100] bg-[#0a0e15] flex flex-col items-center justify-center p-6 overflow-hidden select-none"
+      transition={{ duration: 1.05, delay: isExiting ? 0.1 : 0, ease: [0.22, 1, 0.36, 1] }}
+      style={{ perspective: '1200px' }}
+      className="fixed inset-0 z-[100] bg-[#0a0e15] flex flex-col items-center justify-center p-6 overflow-hidden select-none will-change-[opacity]"
       role="status"
       aria-live="polite"
       aria-label="Loading Uray Fazli Alman Portfolio"
     >
-      {/* Subtle Sketchbook Dot-Grid */}
-      <motion.div
-        animate={isExiting ? { opacity: 0, scale: 1.12 } : { opacity: 0.25, scale: 1 }}
-        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(251, 238, 224, 0.16) 1px, transparent 1px)',
-          backgroundSize: '20px 20px',
-        }}
-      />
-
-      {/* Expanding Warm Radial Iris Wave on Exit */}
+      {/* Subtle Sketchbook Dot-Grid (Background Plane Dolly-In) */}
       <motion.div
         animate={
           isExiting
-            ? { scale: 2.6, opacity: 0 }
-            : { scale: 1, opacity: 1 }
+            ? { opacity: 0, scale: 1.85 }
+            : { opacity: 0.25, scale: 1 }
         }
-        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] rounded-full bg-[#9d613c]/20 blur-3xl pointer-events-none"
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 pointer-events-none will-change-transform"
+        style={{
+          backgroundImage: 'radial-gradient(rgba(251, 238, 224, 0.16) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          transformOrigin: '50% 45%',
+        }}
       />
 
-      {/* Floating Doodle Stars Around the Character */}
-      <DoodleStar className="absolute top-1/4 left-1/4 w-6 h-6 text-[#e59b63]/60 animate-twinkle pointer-events-none hidden sm:block" />
-      <DoodleStar className="absolute bottom-1/4 right-1/4 w-7 h-7 text-[#fbeee0]/50 animate-twinkle pointer-events-none hidden sm:block" />
+      {/* Expanding Warm Radial Iris Tunnel on Dolly-In Exit */}
+      <motion.div
+        animate={
+          isExiting
+            ? { scale: 3.6, opacity: 0 }
+            : { scale: 1, opacity: 1 }
+        }
+        transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] rounded-full bg-[#9d613c]/25 blur-3xl pointer-events-none will-change-transform"
+      />
+
+      {/* Foreground Floating Doodle Stars (Rush outward past camera edges on Dolly-In) */}
+      <motion.div
+        animate={
+          isExiting
+            ? { x: -160, y: -120, scale: 2.2, opacity: 0 }
+            : { x: 0, y: 0, scale: 1, opacity: 1 }
+        }
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute top-1/4 left-1/4 pointer-events-none hidden sm:block will-change-transform"
+      >
+        <DoodleStar className="w-6 h-6 text-[#e59b63]/60 animate-twinkle" />
+      </motion.div>
+      <motion.div
+        animate={
+          isExiting
+            ? { x: 160, y: 120, scale: 2.2, opacity: 0 }
+            : { x: 0, y: 0, scale: 1, opacity: 1 }
+        }
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute bottom-1/4 right-1/4 pointer-events-none hidden sm:block will-change-transform"
+      >
+        <DoodleStar className="w-7 h-7 text-[#fbeee0]/50 animate-twinkle" />
+      </motion.div>
 
       {/* ==============================================================
           OPEN-CANVAS ANIMATED CHARACTER SCENE (NO CARD CONTAINER)
-          Smoothly glides upward & zooms softly into the viewport on exit
+          Smoothly dollies forward toward the camera (Z-axis pass-through) on exit
          ============================================================== */}
       <motion.div
         initial={{ y: 20, opacity: 0, scale: 0.9 }}
         animate={
           isExiting
-            ? { y: -32, opacity: 0, scale: 1.09, filter: 'blur(8px)' }
-            : { y: 0, opacity: 1, scale: 1, filter: 'blur(0px)' }
+            ? {
+                y: 18,
+                opacity: 0,
+                scale: 2.35,
+                filter: 'blur(10px)',
+              }
+            : {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                filter: 'blur(0px)',
+              }
         }
         transition={
           isExiting
-            ? { duration: 0.78, ease: [0.16, 1, 0.3, 1] }
+            ? {
+                duration: 1.12,
+                ease: [0.16, 1, 0.3, 1],
+                opacity: { duration: 0.88, delay: 0.14, ease: [0.22, 1, 0.36, 1] },
+              }
             : { type: 'spring', stiffness: 280, damping: 22 }
         }
-        className="relative z-10 flex flex-col items-center"
+        style={{ transformOrigin: '50% 42%' }}
+        className="relative z-10 flex flex-col items-center will-change-transform"
       >
-        {/* Dynamic Doodle Speech Bubble Above Character */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={isReady ? 'ready-msg' : isSyncing ? 'sync-msg' : 'init-msg'}
-            initial={{ opacity: 0, y: 8, scale: 0.85 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.85 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-            className="mb-2 px-4 py-1 rounded-[16px_11px_18px_12px] bg-[#101722] border-2 border-[#fbeee0] text-sm sm:text-base font-hand tracking-wide text-[#fbeee0] shadow-[4px_4px_0px_#9d613c] rotate-[-2deg] whitespace-nowrap"
-          >
-            {isReady ? (
-              <span className="text-emerald-300">gm ser! we are live 🚀</span>
-            ) : isSyncing ? (
-              <span>fetching node data... ({roundedProgress}%) ⚡</span>
-            ) : (
-              <span>warming up node... ({roundedProgress}%) ☕</span>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {/* Dynamic Doodle Speech Bubble Above Character (Glides up & out of frame as camera dollies in) */}
+        <motion.div
+          animate={
+            isExiting
+              ? { y: -26, scale: 1.18, opacity: 0 }
+              : { y: 0, scale: 1, opacity: 1 }
+          }
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isReady ? 'ready-msg' : isSyncing ? 'sync-msg' : 'init-msg'}
+              initial={{ opacity: 0, y: 8, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.85 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+              className="mb-2 px-4 py-1 rounded-[16px_11px_18px_12px] bg-[#101722] border-2 border-[#fbeee0] text-sm sm:text-base font-hand tracking-wide text-[#fbeee0] shadow-[4px_4px_0px_#9d613c] rotate-[-2deg] whitespace-nowrap"
+            >
+              {isReady ? (
+                <span className="text-emerald-300">gm ser! we are live 🚀</span>
+              ) : isSyncing ? (
+                <span>fetching node data... ({roundedProgress}%) ⚡</span>
+              ) : (
+                <span>warming up node... ({roundedProgress}%) ☕</span>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
 
         {/* Large Centerpiece Animated Character SVG */}
         <svg
@@ -532,19 +582,29 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           </g>
         </svg>
 
-        {/* Floating Hand-Drawn Status Caption Below Character */}
-        <p className="mt-2 font-hand text-lg sm:text-xl text-[#fbeee0] tracking-wide">
-          {currentStage.text}
-        </p>
-
-        {/* Subtle Skip Button */}
-        <button
-          type="button"
-          onClick={triggerSmoothExit}
-          className="mt-3 font-hand text-sm text-[#bba998] hover:text-[#e59b63] underline decoration-dashed underline-offset-4 cursor-pointer transition-colors"
+        {/* Floating Hand-Drawn Status Caption & Skip Button Below Character (Glides down & out of frame on Dolly-In) */}
+        <motion.div
+          animate={
+            isExiting
+              ? { y: 28, scale: 1.15, opacity: 0 }
+              : { y: 0, scale: 1, opacity: 1 }
+          }
+          transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center"
         >
-          Skip →
-        </button>
+          <p className="mt-2 font-hand text-lg sm:text-xl text-[#fbeee0] tracking-wide">
+            {currentStage.text}
+          </p>
+
+          {/* Subtle Skip Button */}
+          <button
+            type="button"
+            onClick={triggerSmoothExit}
+            className="mt-3 font-hand text-sm text-[#bba998] hover:text-[#e59b63] underline decoration-dashed underline-offset-4 cursor-pointer transition-colors"
+          >
+            Skip →
+          </button>
+        </motion.div>
       </motion.div>
     </motion.div>
   );

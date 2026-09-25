@@ -23,58 +23,24 @@ const BGMCharacterAvatar: React.FC<{
 
   return (
     <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
-      {/* Floating Emotes: Greeting Wave 👋, Angry Steam 💢, or Musical Notes ♫ */}
+      {/* Floating Emotes: Angry Steam or Musical Notes ♫ */}
       <AnimatePresence>
-        {isGreeting && (
-          <motion.span
-            key="greeting-wave-badge"
-            initial={{ opacity: 0, scale: 0.5, y: 6 }}
-            animate={{
-              opacity: 1,
-              scale: [1, 1.2, 1],
-              rotate: [-12, 18, -12],
-              y: [-2, -8, -2],
-            }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.7, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute -top-1 right-0 text-sm sm:text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20"
-          >
-            👋
-          </motion.span>
-        )}
-
         {isAngry && (
-          <>
-            <motion.span
-              key="angry-vein"
-              initial={{ opacity: 0, scale: 0.4 }}
-              animate={{
-                opacity: 1,
-                scale: [1, 1.3, 1],
-                rotate: [-8, 8, -8],
-              }}
-              exit={{ opacity: 0, scale: 0.4 }}
-              transition={{ duration: 0.45, repeat: Infinity }}
-              className="absolute -top-1 right-0.5 text-sm sm:text-lg drop-shadow-[0_2px_6px_rgba(239,68,68,0.8)] z-20"
-            >
-              💢
-            </motion.span>
-            <motion.span
-              key="angry-steam"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{
-                opacity: [0, 0.95, 0],
-                y: [-2, -20],
-                x: [-8, -16],
-                scale: [0.7, 1.15],
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
-              className="absolute top-0 left-1 text-xs sm:text-sm z-20"
-            >
-              💨
-            </motion.span>
-          </>
+          <motion.span
+            key="angry-steam"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{
+              opacity: [0, 0.95, 0],
+              y: [-2, -20],
+              x: [-8, -16],
+              scale: [0.7, 1.15],
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
+            className="absolute top-0 left-1 text-xs sm:text-sm z-20"
+          >
+            💨
+          </motion.span>
         )}
 
         {isPlaying && !isAngry && (
@@ -666,21 +632,21 @@ const BGMCharacterAvatar: React.FC<{
 };
 
 const NPC_GREETING_DIALOGUE_ID =
-  'Halo ser! 👋 Selamat datang di web Uray! Yuk nyalain BGM sambil berburu airdrop & testnet! 🎧✨';
+  'Halo ser! Selamat datang di web Uray! Yuk nyalain BGM sambil berburu airdrop & testnet! 🎧✨';
 
 const NPC_GREETING_DIALOGUE_EN =
-  "Hello ser! 👋 Welcome to Uray's web! Turn on the BGM while hunting airdrops & testnets! 🎧✨";
+  "Hello ser! Welcome to Uray's web! Turn on the BGM while hunting airdrops & testnets! 🎧✨";
 
 const NPC_ANGRY_DIALOGUES_ID = [
-  '😤 Woi ser! Betah amat bengong di web ini lama-lama?! Jangan cuma rebahan, sana upgrade skill atau garap testnet dulu! 💢',
-  '💢 Udah lama banget mantengin layar! Kalau lagi nganggur jangan pasrah aja, ayo gerak cari peluang & klaim airdrop! 😤🪂',
-  '🔥 CPU aku sampe ngebul liat kamu diem bae! Yuk produktif—klik kontak Uray atau nyalain musik biar semangat! 💢🎧',
+  '😤 Woi ser! Betah amat bengong di web ini lama-lama?! Jangan cuma rebahan, sana upgrade skill atau garap testnet dulu! ⚡',
+  '😤 Udah lama banget mantengin layar! Kalau lagi nganggur jangan pasrah aja, ayo gerak cari peluang & klaim airdrop! 🪂',
+  '🔥 CPU aku sampe ngebul liat kamu diem bae! Yuk produktif—klik kontak Uray atau nyalain musik biar semangat! 🎧',
 ];
 
 const NPC_ANGRY_DIALOGUES_EN = [
-  '😤 Hey ser! Why are you spacing out on this page so long?! Stop slacking—go upgrade your skills or grind testnets! 💢',
-  '💢 Staring at the screen forever?! If you are between jobs, do not just sit there—go hunt opportunities & airdrops! 😤🪂',
-  '🔥 My CPU is overheating watching you idle! Get productive—collab with Uray or play a track to boost your energy! 💢🎧',
+  '😤 Hey ser! Why are you spacing out on this page so long?! Stop slacking—go upgrade your skills or grind testnets! ⚡',
+  '😤 Staring at the screen forever?! If you are between jobs, do not just sit there—go hunt opportunities & airdrops! 🪂',
+  '🔥 My CPU is overheating watching you idle! Get productive—collab with Uray or play a track to boost your energy! 🎧',
 ];
 
 const NPC_IDLE_DIALOGUES_ID = [
@@ -1698,19 +1664,19 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                         {!isDragging && mood === 'greeting'
                           ? npcPhase === 'composing' || npcPhase === 'typing'
                             ? lang === 'id'
-                              ? '👋 MENYAPA...'
-                              : '👋 GREETING...'
+                              ? 'MENYAPA...'
+                              : 'GREETING...'
                             : lang === 'id'
-                            ? '👋 HALO!'
-                            : '👋 HI!'
+                            ? 'HALO!'
+                            : 'HI!'
                           : !isDragging && mood === 'angry'
                           ? npcPhase === 'composing' || npcPhase === 'typing'
                             ? lang === 'id'
-                              ? '💢 NGAMBEK...'
-                              : '💢 FUMING...'
+                              ? 'NGAMBEK...'
+                              : 'FUMING...'
                             : lang === 'id'
-                            ? '💢 MARAH!'
-                            : '💢 ANGRY!'
+                            ? 'MARAH!'
+                            : 'ANGRY!'
                           : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
                           ? lang === 'id'
                             ? 'MENGETIK...'

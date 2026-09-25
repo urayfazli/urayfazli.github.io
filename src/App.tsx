@@ -160,16 +160,17 @@ export default function App() {
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
-      {/* Smooth Whole-Page Camera Unblur & Glide Wrapper */}
+      {/* Smooth Whole-Page Camera Dolly-In & Unblur Wrapper */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.975, y: 22, filter: 'blur(8px)' }}
+        initial={{ opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }}
         animate={
           isRevealed
             ? { opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }
-            : { opacity: 0, scale: 0.975, y: 22, filter: 'blur(8px)' }
+            : { opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }
         }
-        transition={{ duration: 1.05, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col flex-grow relative z-10"
+        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformOrigin: '50% 35vh' }}
+        className="flex flex-col flex-grow relative z-10 will-change-transform"
       >
         {/* Top Bar Navigation with Post-Boot Slide-In */}
         <motion.div
