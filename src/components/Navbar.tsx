@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GitHubIcon, XIcon } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { ASSET_IMAGES } from '../assets/images';
+import { RetroNavbarButton } from './RetroAudioPlayer';
 
 interface NavbarProps {
   activeSection: string;
@@ -158,8 +159,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           })}
         </nav>
 
-        {/* Right Zone: Social Links with Bouncy Hover Micro-Animations */}
+        {/* Right Zone: BGM Quick Toggle & Social Links with Bouncy Hover Micro-Animations */}
         <div className="hidden sm:flex items-center gap-2">
+          {/* Retro BGM Toggle in Navbar */}
+          <RetroNavbarButton />
+
           <motion.div
             whileHover={{ scale: 1.03 }}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/10 bg-[#141b25]/90 text-[#d7c6b5] shadow-sm backdrop-blur-md hover:border-[#9d613c]/40 transition-colors"
@@ -192,8 +196,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           </motion.div>
         </div>
 
-        {/* Mobile Hamburger Button with Animated Toggle */}
+        {/* Mobile Hamburger Button with Animated Toggle & BGM */}
         <div className="flex md:hidden items-center gap-2">
+          <RetroNavbarButton />
+
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

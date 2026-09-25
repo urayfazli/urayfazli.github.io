@@ -1,59 +1,79 @@
 import React, { useState } from 'react';
+import {
+  TechTerminalDoodle,
+  LinuxTerminalIcon,
+  DockerContainerIcon,
+  K8sClusterIcon,
+  NodeSecurityIcon,
+  TelemetryWaveIcon,
+  SlashingGuardIcon,
+  StateSyncIcon,
+  BashScriptIcon,
+} from './Doodles';
 
 export interface SkillItem {
+  id: string;
   name: string;
   category: 'core' | 'devops' | 'security' | 'monitoring';
-  icon?: string;
+  icon: React.ReactNode;
   desc: string;
 }
 
 export const SKILLS_LIST: SkillItem[] = [
   {
+    id: 'linux',
     name: 'Linux Administration',
     category: 'core',
-    icon: '🐧',
-    desc: 'Systemd service management, kernel tuning, bare-metal server optimization, and storage RAID.',
+    icon: <LinuxTerminalIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
+    desc: 'Systemd daemon lifecycle, kernel network tuning, bare-metal server optimization, and storage RAID.',
   },
   {
+    id: 'docker',
     name: 'Docker',
     category: 'devops',
-    icon: '🐳',
-    desc: 'Multi-stage container builds, automated daemon recovery, docker-compose orchestration.',
+    icon: <DockerContainerIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
+    desc: 'Multi-stage container builds, automated daemon recovery, docker-compose node orchestration.',
   },
   {
+    id: 'kubernetes',
     name: 'Kubernetes',
     category: 'devops',
-    icon: '☸️',
+    icon: <K8sClusterIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
     desc: 'StatefulSets for validator nodes, persistent volume claims, automated pod rescheduling.',
   },
   {
+    id: 'security',
     name: 'Blockchain Node Security',
     category: 'security',
-    icon: '🛡️',
+    icon: <NodeSecurityIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
     desc: 'Hardware Security Modules (HSM), key management isolation, zero-port RPC exposure, DDoS mitigations.',
   },
   {
+    id: 'monitoring',
     name: 'Prometheus & Grafana',
     category: 'monitoring',
-    icon: '📊',
-    desc: 'Custom exporters, real-time peer & block height telemetry, instant pager/Telegram alerting.',
+    icon: <TelemetryWaveIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
+    desc: 'Custom node exporters, real-time peer & block height telemetry, instant pager/Telegram alerting.',
   },
   {
+    id: 'slashing',
     name: 'Slashing Protection',
     category: 'security',
-    icon: '⚡',
+    icon: <SlashingGuardIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
     desc: 'Double-sign prevention policies, sentry node architecture, secure failover hooks.',
   },
   {
+    id: 'sync',
     name: 'State Sync & Snapshots',
     category: 'core',
-    icon: '🔄',
+    icon: <StateSyncIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
     desc: 'Fast bootstrap mechanisms, automated snapshot pruning, rockDB/levelDB compaction.',
   },
   {
+    id: 'bash',
     name: 'Bash & Shell Scripting',
     category: 'devops',
-    icon: '💻',
+    icon: <BashScriptIcon className="w-3.5 h-3.5 text-[#9d613c] group-hover:text-[#fbeee0] transition-colors" />,
     desc: 'Automated chain upgrades, health check daemons, zero-downtime binary replacements.',
   },
 ];
@@ -77,25 +97,29 @@ export const TechnicalSkills: React.FC = () => {
 
   return (
     <div className="mt-6 pt-5 border-t border-white/10">
-      {/* Header with Title and Filter Segmented Controls */}
+      {/* Header with Custom Handcrafted Terminal Doodle (No AI Slop) and Category Filters */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[#9d613c] text-xs">✦</span>
+        <div className="flex items-center gap-2">
+          {/* Custom Bespoke Terminal Node Doodle matching the site's warm anime/tech theme */}
+          <div className="w-6 h-6 rounded-lg bg-[#9d613c]/15 border border-[#9d613c]/40 flex items-center justify-center shrink-0">
+            <TechTerminalDoodle className="w-3.5 h-3.5 text-[#9d613c]" />
+          </div>
           <h3 className="font-fredoka text-sm sm:text-base font-medium tracking-wide text-[#fbeee0]">
             Technical Skills
           </h3>
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-1 bg-[#0d131c] p-1 rounded-full border border-white/5 text-[11px] max-w-full overflow-x-auto shrink-0">
+        {/* Category Filter Interactive Tabs */}
+        <div className="flex items-center gap-1 bg-[#0d131c] p-1 rounded-lg border border-white/5 text-[11px] max-w-full overflow-x-auto shrink-0">
           {categories.map((cat) => (
             <button
               key={cat.id}
+              type="button"
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-2.5 py-1 sm:py-0.5 rounded-full font-medium transition-all duration-200 cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 sm:py-0.5 rounded-md font-mono text-[11px] transition-all duration-200 cursor-pointer whitespace-nowrap ${
                 activeCategory === cat.id
-                  ? 'bg-[#9d613c] text-white shadow-xs'
-                  : 'text-[#d8c8b8] hover:text-[#fbeee0]'
+                  ? 'bg-[#9d613c] text-white shadow-xs font-semibold'
+                  : 'text-[#d8c8b8] hover:text-[#fbeee0] hover:bg-white/5'
               }`}
             >
               {cat.label}
@@ -104,50 +128,42 @@ export const TechnicalSkills: React.FC = () => {
         </div>
       </div>
 
-      {/* Visually Appealing Pill-Style Tag Cloud */}
+      {/* Handcrafted Skill Items with Theme-Specific SVG Icons */}
       <div className="flex flex-wrap gap-2 items-center" role="list">
         {filteredSkills.map((skill) => {
           const isHighlighted =
-            skill.name === 'Linux Administration' ||
-            skill.name === 'Docker' ||
-            skill.name === 'Kubernetes' ||
-            skill.name === 'Blockchain Node Security';
+            skill.id === 'linux' ||
+            skill.id === 'docker' ||
+            skill.id === 'kubernetes' ||
+            skill.id === 'security';
 
-          const isFocusedOrHovered = hoveredSkill?.name === skill.name;
+          const isFocusedOrHovered = hoveredSkill?.id === skill.id;
 
           return (
             <button
-              key={skill.name}
+              key={skill.id}
               type="button"
               role="listitem"
               onMouseEnter={() => setHoveredSkill(skill)}
               onMouseLeave={() => setHoveredSkill(null)}
               onFocus={() => setHoveredSkill(skill)}
               onBlur={() => setHoveredSkill(null)}
-              className={`group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] ${
+              className={`group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] ${
                 isHighlighted
                   ? 'bg-[#182333] border border-[#9d613c]/60 text-[#fbeee0] hover:bg-[#9d613c]/20 hover:border-[#9d613c] shadow-xs hover:scale-105'
                   : 'bg-[#101722] border border-[#222f42] text-[#d6c4b2] hover:border-[#9d613c]/50 hover:text-white hover:scale-102'
-              } ${isFocusedOrHovered ? 'ring-1 ring-[#9d613c]' : ''}`}
+              } ${isFocusedOrHovered ? 'ring-1 ring-[#9d613c] border-[#9d613c]' : ''}`}
             >
-              {/* Subtle category dot or icon */}
-              {skill.icon ? (
-                <span className="text-xs opacity-90 group-hover:scale-110 transition-transform">
-                  {skill.icon}
-                </span>
-              ) : (
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isHighlighted ? 'bg-[#9d613c]' : 'bg-[#5b6f8a]'
-                  }`}
-                />
-              )}
+              {/* Bespoke SVG Icon */}
+              <span className="shrink-0 flex items-center justify-center">
+                {skill.icon}
+              </span>
 
               <span>{skill.name}</span>
 
-              {/* Special badge indicator for core competencies */}
+              {/* Special indicator for primary competencies */}
               {isHighlighted && (
-                <span className="w-1 h-1 rounded-full bg-[#9d613c]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#9d613c] shrink-0" />
               )}
             </button>
           );
@@ -164,8 +180,8 @@ export const TechnicalSkills: React.FC = () => {
             <span className="text-[#d8c8b8]">{hoveredSkill.desc}</span>
           </p>
         ) : (
-          <p className="text-[11px] text-[#b8a796] font-mono flex items-center gap-1.5">
-            <span>💡</span>
+          <p className="text-[11px] text-[#b8a796] font-mono flex items-center gap-2">
+            <span className="text-[#9d613c] font-bold">&gt;_</span>
             <span>Hover or focus on any skill tag to view operational scope</span>
           </p>
         )}

@@ -17,6 +17,7 @@ import { NETWORKS_DATA } from './data/portfolioData';
 import { NetworkInfo } from './types';
 import { DoodleStar } from './components/Doodles';
 import { BackgroundLayer } from './components/BackgroundLayer';
+import { RetroAudioPlayer } from './components/RetroAudioPlayer';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -251,6 +252,9 @@ export default function App() {
 
       {/* Footer */}
       <Footer onScrollToTop={() => handleNavigate('home')} />
+
+      {/* Retro 8-bit Backsound Player Widget */}
+      <RetroAudioPlayer />
 
       {/* Modals */}
       <NetworkDetailModal

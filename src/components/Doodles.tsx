@@ -174,3 +174,134 @@ export const XIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' 
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 );
+
+// Handcrafted Technical Skills Section Header Icon (Non-AI-slop, matches cozy anime tech theme)
+export const TechTerminalDoodle: React.FC<{ className?: string }> = ({
+  className = 'w-4 h-4 text-[#9d613c]',
+}) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    {/* Retro Terminal Frame with soft rounded corners */}
+    <rect x="2.5" y="3.5" width="19" height="17" rx="3.5" stroke="#9d613c" />
+    {/* Hand-drawn terminal titlebar line */}
+    <line x1="2.5" y1="8" x2="21.5" y2="8" stroke="#9d613c" strokeWidth="1.6" opacity="0.6" />
+    {/* Terminal prompt symbol > */}
+    <path d="M6.5 11.5L9.5 14L6.5 16.5" stroke="#fbeee0" strokeWidth="2" />
+    {/* Terminal cursor _ */}
+    <line x1="11.5" y1="16.5" x2="16" y2="16.5" stroke="#fbeee0" strokeWidth="2" />
+  </svg>
+);
+
+// Hand-drawn micro-icons for individual skills (replaces generic emojis)
+export const LinuxTerminalIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <rect x="2" y="3" width="16" height="14" rx="2.5" stroke="#9d613c" strokeWidth="1.8" />
+    <path d="M5.5 8L8 10L5.5 12" stroke="#fbeee0" />
+    <line x1="10" y1="12" x2="14" y2="12" stroke="#fbeee0" />
+  </svg>
+);
+
+export const DockerContainerIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="#9d613c" />
+    <path d="M10 2V18" stroke="#9d613c" strokeDasharray="2 2" />
+    <path d="M3 6L10 10L17 6" stroke="#9d613c" />
+    <rect x="7" y="11" width="2.5" height="2.5" fill="#fbeee0" />
+    <rect x="11" y="11" width="2.5" height="2.5" fill="#fbeee0" />
+  </svg>
+);
+
+export const K8sClusterIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <circle cx="10" cy="10" r="3" stroke="#fbeee0" fill="#9d613c" />
+    <circle cx="10" cy="3" r="1.5" fill="#fbeee0" />
+    <circle cx="16" cy="6.5" r="1.5" fill="#fbeee0" />
+    <circle cx="16" cy="13.5" r="1.5" fill="#fbeee0" />
+    <circle cx="10" cy="17" r="1.5" fill="#fbeee0" />
+    <circle cx="4" cy="13.5" r="1.5" fill="#fbeee0" />
+    <circle cx="4" cy="6.5" r="1.5" fill="#fbeee0" />
+    <line x1="10" y1="7" x2="10" y2="4.5" stroke="#9d613c" />
+    <line x1="12.5" y1="8.5" x2="14.8" y2="7.3" stroke="#9d613c" />
+    <line x1="12.5" y1="11.5" x2="14.8" y2="12.7" stroke="#9d613c" />
+    <line x1="10" y1="13" x2="10" y2="15.5" stroke="#9d613c" />
+    <line x1="7.5" y1="11.5" x2="5.2" y2="12.7" stroke="#9d613c" />
+    <line x1="7.5" y1="8.5" x2="5.2" y2="7.3" stroke="#9d613c" />
+  </svg>
+);
+
+export const NodeSecurityIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M10 2.5L16.5 5.5V10.5C16.5 14.5 13.5 17 10 18C6.5 17 3.5 14.5 3.5 10.5V5.5L10 2.5Z" stroke="#9d613c" fill="#141c28" />
+    <circle cx="10" cy="9.5" r="1.5" fill="#fbeee0" />
+    <path d="M10 11V13.5" stroke="#fbeee0" strokeWidth="1.8" />
+  </svg>
+);
+
+export const TelemetryWaveIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M2.5 11.5L6 11.5L8 5.5L12 15L14 9.5L15.5 11.5L17.5 11.5" stroke="#9d613c" />
+    <circle cx="8" cy="5.5" r="1.2" fill="#fbeee0" />
+    <circle cx="12" cy="15" r="1.2" fill="#fbeee0" />
+  </svg>
+);
+
+export const SlashingGuardIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M11 2L4.5 10.5H10L9 18L15.5 9.5H10L11 2Z" stroke="#9d613c" fill="#9d613c" fillOpacity="0.2" />
+  </svg>
+);
+
+export const StateSyncIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M4 10A6 6 0 0 1 14.5 5.8L16 4" stroke="#9d613c" />
+    <path d="M16 4V7.5H12.5" stroke="#fbeee0" />
+    <path d="M16 10A6 6 0 0 1 5.5 14.2L4 16" stroke="#9d613c" />
+    <path d="M4 16V12.5H7.5" stroke="#fbeee0" />
+  </svg>
+);
+
+export const BashScriptIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M4 6.5L8.5 10L4 13.5" stroke="#9d613c" />
+    <line x1="10.5" y1="13.5" x2="16" y2="13.5" stroke="#fbeee0" />
+  </svg>
+);
+
+// Retro Cassette Tape Doodle
+export const RetroCassetteDoodle: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <rect x="2" y="4" width="20" height="15" rx="3" stroke="#9d613c" fill="#141c28" />
+    <rect x="5.5" y="8" width="13" height="7" rx="1.5" stroke="#fbeee0" opacity="0.8" />
+    <circle cx="8.5" cy="11.5" r="1.8" fill="#9d613c" stroke="#fbeee0" />
+    <circle cx="15.5" cy="11.5" r="1.8" fill="#9d613c" stroke="#fbeee0" />
+    <line x1="10.3" y1="11.5" x2="13.7" y2="11.5" stroke="#fbeee0" strokeDasharray="1 1" />
+  </svg>
+);
+
+// Retro Speaker / Sound Doodle
+export const RetroSpeakerDoodle: React.FC<{ className?: string; isMuted?: boolean }> = ({
+  className = 'w-4 h-4',
+  isMuted = false,
+}) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <polygon points="3,7 7,7 12,3 12,17 7,13 3,13" fill="#9d613c" stroke="#fbeee0" />
+    {!isMuted ? (
+      <>
+        <path d="M15 7C16 8 16 12 15 13" stroke="#fbeee0" />
+        <path d="M17.5 5C19.5 7 19.5 13 17.5 15" stroke="#9d613c" />
+      </>
+    ) : (
+      <line x1="14" y1="8" x2="18" y2="12" stroke="#ef4444" strokeWidth="2" />
+    )}
+  </svg>
+);
+
+

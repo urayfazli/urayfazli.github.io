@@ -1,6 +1,7 @@
 import React from 'react';
 import { CrownDoodle, GitHubIcon, XIcon } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
+import { VisitorCounterBadge } from './VisitorCounterBadge';
 
 interface FooterProps {
   onScrollToTop: () => void;
@@ -56,10 +57,17 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
 
         </div>
 
-        <div className="mt-8 pt-6 border-t border-white/5 text-center text-[11px] text-[#786a5d] font-mono">
-          © {new Date().getFullYear()} Uray Fazli Alman · Aptos · Sei · SubQuery Node Infrastructure
+        {/* Real-time Telemetry Bar with Visitor Counter Badge & Copyright */}
+        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-[11px] text-[#786a5d] font-mono text-center sm:text-left">
+            © {new Date().getFullYear()} Uray Fazli Alman · Aptos · Sei · SubQuery Node Infrastructure
+          </div>
+
+          {/* Live Visitor Counter Badge */}
+          <VisitorCounterBadge />
         </div>
       </div>
     </footer>
   );
 };
+
