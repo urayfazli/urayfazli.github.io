@@ -2,6 +2,7 @@ import React from 'react';
 import { DoodleRays, AptosLogo, SeiLogo, SubQueryLogo, DoodleTape, DoodleCornerHatch } from './Doodles';
 import { ExperienceForgeCharacter, NetworkDroidCharacter } from './CardCharacters';
 import { useLanguage } from '../context/LanguageContext';
+import { robotSound } from '../utils/robotSoundEngine';
 
 interface ExperienceCardProps {
   onSelectNetwork: (networkId: string) => void;
@@ -56,6 +57,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
             const handleKeyDown = (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
+                robotSound.play(net.logoType);
                 onSelectNetwork(net.id);
               }
             };
@@ -65,7 +67,10 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                 key={net.id}
                 role="button"
                 tabIndex={0}
-                onClick={() => onSelectNetwork(net.id)}
+                onClick={() => {
+                  robotSound.play(net.logoType);
+                  onSelectNetwork(net.id);
+                }}
                 onKeyDown={handleKeyDown}
                 aria-label={`View operational details for ${net.name}`}
                 className="doodle-subcard group p-4 sm:p-5 flex flex-col justify-between cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] touch-manipulation active:scale-[0.98]"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DoodleStar } from './Doodles';
+import { robotSound } from '../utils/robotSoundEngine';
 
 interface LoadingScreenProps {
   onStartExit?: () => void;
@@ -228,8 +229,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
         {/* Large Centerpiece Animated Character SVG */}
         <svg
+          onClick={() => robotSound.play('coder')}
           viewBox="0 0 220 150"
-          className="w-72 h-48 sm:w-88 sm:h-58 overflow-visible drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)]"
+          className="w-72 h-48 sm:w-88 sm:h-58 overflow-visible drop-shadow-[0_12px_24px_rgba(0,0,0,0.65)] cursor-pointer active:scale-95 transition-transform"
           fill="none"
         >
           {/* Ground Sketch Shadow */}

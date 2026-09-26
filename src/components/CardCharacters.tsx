@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { robotSound } from '../utils/robotSoundEngine';
 
 /**
  * Bespoke, multi-part rigged SVG characters for each portfolio card.
@@ -7,36 +8,56 @@ import { motion, AnimatePresence } from 'motion/react';
  * and independent limb/antenna motion — zero generic AI-slop geometry.
  */
 
+const CHARACTER_FADE_IN = {
+  initial: { opacity: 0, y: 10, scale: 0.96 },
+  whileInView: { opacity: 1, y: 0, scale: 1 },
+  viewport: { once: true, amount: 0.2 },
+};
+
 /* ============================================================================
  * 1. ABOUT ME CARD CHARACTER — "DEV-UNIT 01" (Headphone CRT Coder + Coffee)
  * ============================================================================ */
 export const AboutCoderCharacter: React.FC = () => {
   const [excited, setExcited] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleTrigger = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    robotSound.play('coder');
+    setExcited(true);
+    setIsPressed(true);
+    window.setTimeout(() => setIsPressed(false), 160);
+  };
 
   return (
-    <div
-      onClick={() => setExcited((prev) => !prev)}
+    <motion.div
+      initial={CHARACTER_FADE_IN.initial}
+      whileInView={CHARACTER_FADE_IN.whileInView}
+      viewport={CHARACTER_FADE_IN.viewport}
+      transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+      onClick={handleTrigger}
       onMouseEnter={() => setExcited(true)}
       onMouseLeave={() => setExcited(false)}
       role="button"
       tabIndex={0}
+      title="Click for DEV-UNIT 01 robot voice!"
       aria-label="Interactive Chibi Operator Character"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          setExcited((prev) => !prev);
+          handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer group/char focus:outline-none"
+      className="relative inline-flex items-center select-none cursor-pointer group/char focus:outline-none will-change-[transform,opacity]"
     >
       {/* Interactive Speech Bubble */}
       <AnimatePresence>
         {excited && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.85 }}
+            initial={{ opacity: 0, y: 5, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.85 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 24 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             className="absolute -top-8 right-0 sm:-left-20 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[-2deg] z-20 pointer-events-none"
           >
             <span className="text-emerald-400">●</span> building web3... ✎
@@ -46,7 +67,9 @@ export const AboutCoderCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 96 84"
-        className="w-20 h-18 sm:w-24 sm:h-20 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+        className={`w-20 h-18 sm:w-24 sm:h-20 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+          isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
+        }`}
         fill="none"
       >
         <defs>
@@ -249,7 +272,7 @@ export const AboutCoderCharacter: React.FC = () => {
           />
         </g>
       </svg>
-    </div>
+    </motion.div>
   );
 };
 
@@ -258,30 +281,44 @@ export const AboutCoderCharacter: React.FC = () => {
  * ============================================================================ */
 export const NodeSentryCharacter: React.FC = () => {
   const [scanning, setScanning] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleTrigger = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    robotSound.play('sentry');
+    setScanning(true);
+    setIsPressed(true);
+    window.setTimeout(() => setIsPressed(false), 160);
+  };
 
   return (
-    <div
-      onClick={() => setScanning((prev) => !prev)}
+    <motion.div
+      initial={CHARACTER_FADE_IN.initial}
+      whileInView={CHARACTER_FADE_IN.whileInView}
+      viewport={CHARACTER_FADE_IN.viewport}
+      transition={{ duration: 0.65, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+      onClick={handleTrigger}
       onMouseEnter={() => setScanning(true)}
       onMouseLeave={() => setScanning(false)}
       role="button"
       tabIndex={0}
+      title="Click for SENTRY-99 tactical mech voice!"
       aria-label="Interactive Validator Sentry Mech"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          setScanning((prev) => !prev);
+          handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
     >
       <AnimatePresence>
         {scanning && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.85 }}
+            initial={{ opacity: 0, y: 5, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.85 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 24 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-emerald-300 shadow-[3px_3px_0px_#9d613c] rotate-[2deg] z-20 pointer-events-none"
           >
             ✓ ZERO SLASHING • 99.9%
@@ -291,7 +328,9 @@ export const NodeSentryCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className="w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+          isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
+        }`}
         fill="none"
       >
         <defs>
@@ -387,7 +426,7 @@ export const NodeSentryCharacter: React.FC = () => {
           />
         </motion.g>
       </svg>
-    </div>
+    </motion.div>
   );
 };
 
@@ -395,131 +434,193 @@ export const NodeSentryCharacter: React.FC = () => {
  * 3. NETWORK SUB-CARD MINI COMPANIONS (Aptos, Sei, SubQuery)
  * ============================================================================ */
 export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery' }> = ({ type }) => {
+  const [chirpBounce, setChirpBounce] = useState(false);
+
+  const handleDroidClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    robotSound.play(type);
+    setChirpBounce(true);
+    window.setTimeout(() => setChirpBounce(false), 260);
+  };
+
+  const staggerDelay = type === 'aptos' ? 0.08 : type === 'sei' ? 0.16 : 0.24;
+
   if (type === 'aptos') {
     // Aptos Aero-Sprinter Droid (High-TPS Speed Unit with Cyan/Emerald Visor)
     return (
-      <motion.svg
-        viewBox="0 0 48 48"
-        className="w-11 h-11 overflow-visible shrink-0"
-        fill="none"
-        animate={{ y: [0, -3, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      <motion.div
+        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
+        className="inline-flex shrink-0 will-change-[transform,opacity]"
       >
-        {/* Speed Halo Ring */}
-        <motion.ellipse
-          cx="24"
-          cy="10"
-          rx="10"
-          ry="2.5"
-          stroke="#22C55E"
-          strokeWidth="1.5"
-          animate={{ scaleX: [0.9, 1.1, 0.9], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-        />
-        {/* Sleek Aero Helmet */}
-        <path
-          d="M12 22C12 15.5 17 12 24 12C31 12 36 15.5 36 22V33C36 36.5 33 39 29 39H19C15 39 12 36.5 12 33V22Z"
-          fill="#182334"
-          stroke="#FBEEE0"
-          strokeWidth="1.5"
-        />
-        {/* Aero Side Fins */}
-        <path d="M12 23L7 20V29L12 31V23Z" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1" />
-        <path d="M36 23L41 20V29L36 31V23Z" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1" />
-        {/* Visor */}
-        <rect x="15" y="19" width="18" height="11" rx="4.5" fill="#080C12" stroke="#9D613C" strokeWidth="1.2" />
-        {/* Expressive Speed Eyes */}
-        <path d="M18.5 23.5L22 25L18.5 26.5" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M29.5 23.5L26 25L29.5 26.5" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        {/* Aptos Stripe Detail */}
-        <line x1="19" y1="34.5" x2="29" y2="34.5" stroke="#E59B63" strokeWidth="2" strokeLinecap="round" />
-      </motion.svg>
+        <motion.svg
+          onClick={handleDroidClick}
+          viewBox="0 0 48 48"
+          className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+          fill="none"
+          animate={
+            chirpBounce
+              ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
+              : { y: [0, -3, 0] }
+          }
+          transition={{
+            duration: chirpBounce ? 0.24 : 2,
+            repeat: chirpBounce ? 0 : Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          {/* Speed Halo Ring */}
+          <motion.ellipse
+            cx="24"
+            cy="10"
+            rx="10"
+            ry="2.5"
+            stroke="#22C55E"
+            strokeWidth="1.5"
+            animate={{ scaleX: [0.9, 1.1, 0.9], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+          {/* Sleek Aero Helmet */}
+          <path
+            d="M12 22C12 15.5 17 12 24 12C31 12 36 15.5 36 22V33C36 36.5 33 39 29 39H19C15 39 12 36.5 12 33V22Z"
+            fill="#182334"
+            stroke="#FBEEE0"
+            strokeWidth="1.5"
+          />
+          {/* Aero Side Fins */}
+          <path d="M12 23L7 20V29L12 31V23Z" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1" />
+          <path d="M36 23L41 20V29L36 31V23Z" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1" />
+          {/* Visor */}
+          <rect x="15" y="19" width="18" height="11" rx="4.5" fill="#080C12" stroke="#9D613C" strokeWidth="1.2" />
+          {/* Expressive Speed Eyes */}
+          <path d="M18.5 23.5L22 25L18.5 26.5" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M29.5 23.5L26 25L29.5 26.5" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Aptos Stripe Detail */}
+          <line x1="19" y1="34.5" x2="29" y2="34.5" stroke="#E59B63" strokeWidth="2" strokeLinecap="round" />
+        </motion.svg>
+      </motion.div>
     );
   }
 
   if (type === 'sei') {
     // Sei Twin-Turbo Parallel Bot (Dual-Core Lightning Horns & Crimson/Amber Visor)
     return (
-      <motion.svg
-        viewBox="0 0 48 48"
-        className="w-11 h-11 overflow-visible shrink-0"
-        fill="none"
-        animate={{ y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }}
-        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      <motion.div
+        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
+        className="inline-flex shrink-0 will-change-[transform,opacity]"
       >
-        {/* Dual Parallel Horns / Antennas */}
-        <path d="M15 14L11 7L18 11" fill="#E59B63" stroke="#FBEEE0" strokeWidth="1.2" strokeLinejoin="round" />
-        <path d="M33 14L37 7L30 11" fill="#E59B63" stroke="#FBEEE0" strokeWidth="1.2" strokeLinejoin="round" />
-        {/* Armored Cube Head */}
-        <rect x="11" y="13" width="26" height="25" rx="7" fill="#182334" stroke="#E59B63" strokeWidth="1.6" />
-        {/* Visor */}
-        <rect x="14.5" y="18" width="19" height="12" rx="4" fill="#080C12" />
-        {/* Glowing Twin Eyes */}
-        <motion.circle
-          cx="20"
-          cy="24"
-          r="2.3"
-          fill="#F97316"
-          animate={{ scale: [1, 1.25, 1] }}
-          transition={{ duration: 1.1, repeat: Infinity }}
-        />
-        <motion.circle
-          cx="28"
-          cy="24"
-          r="2.3"
-          fill="#F97316"
-          animate={{ scale: [1, 1.25, 1] }}
-          transition={{ duration: 1.1, repeat: Infinity }}
-        />
-        {/* Happy Grin */}
-        <path d="M21.5 27.5H26.5" stroke="#FBEEE0" strokeWidth="1.6" strokeLinecap="round" />
-        {/* Parallel Core Indicator Dots */}
-        <circle cx="21" cy="34" r="1.3" fill="#22C55E" />
-        <circle cx="27" cy="34" r="1.3" fill="#22C55E" />
-      </motion.svg>
+        <motion.svg
+          onClick={handleDroidClick}
+          viewBox="0 0 48 48"
+          className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+          fill="none"
+          animate={
+            chirpBounce
+              ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
+              : { y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }
+          }
+          transition={{
+            duration: chirpBounce ? 0.24 : 1.8,
+            repeat: chirpBounce ? 0 : Infinity,
+            ease: 'easeInOut',
+          }}
+        >
+          {/* Dual Parallel Horns / Antennas */}
+          <path d="M15 14L11 7L18 11" fill="#E59B63" stroke="#FBEEE0" strokeWidth="1.2" strokeLinejoin="round" />
+          <path d="M33 14L37 7L30 11" fill="#E59B63" stroke="#FBEEE0" strokeWidth="1.2" strokeLinejoin="round" />
+          {/* Armored Cube Head */}
+          <rect x="11" y="13" width="26" height="25" rx="7" fill="#182334" stroke="#E59B63" strokeWidth="1.6" />
+          {/* Visor */}
+          <rect x="14.5" y="18" width="19" height="12" rx="4" fill="#080C12" />
+          {/* Glowing Twin Eyes */}
+          <motion.circle
+            cx="20"
+            cy="24"
+            r="2.3"
+            fill="#F97316"
+            animate={{ scale: [1, 1.25, 1] }}
+            transition={{ duration: 1.1, repeat: Infinity }}
+          />
+          <motion.circle
+            cx="28"
+            cy="24"
+            r="2.3"
+            fill="#F97316"
+            animate={{ scale: [1, 1.25, 1] }}
+            transition={{ duration: 1.1, repeat: Infinity }}
+          />
+          {/* Happy Grin */}
+          <path d="M21.5 27.5H26.5" stroke="#FBEEE0" strokeWidth="1.6" strokeLinecap="round" />
+          {/* Parallel Core Indicator Dots */}
+          <circle cx="21" cy="34" r="1.3" fill="#22C55E" />
+          <circle cx="27" cy="34" r="1.3" fill="#22C55E" />
+        </motion.svg>
+      </motion.div>
     );
   }
 
   // SubQuery Indexer Owl-Bot (Big Analytical Monocle Lens + Data Antenna)
   return (
-    <motion.svg
-      viewBox="0 0 48 48"
-      className="w-11 h-11 overflow-visible shrink-0"
-      fill="none"
-      animate={{ y: [0, -2.5, 0] }}
-      transition={{ duration: 2.3, repeat: Infinity, ease: 'easeInOut' }}
+    <motion.div
+      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
+      className="inline-flex shrink-0 will-change-[transform,opacity]"
     >
-      {/* Top Data Dish */}
-      <line x1="24" y1="12" x2="24" y2="6" stroke="#FBEEE0" strokeWidth="1.6" />
-      <motion.circle
-        cx="24"
-        cy="5.5"
-        r="2.2"
-        fill="#38BDF8"
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 1.3, repeat: Infinity }}
-      />
-      {/* Round Owl-Bot Chassis */}
-      <rect x="11" y="12" width="26" height="26" rx="9" fill="#182334" stroke="#9D613C" strokeWidth="1.6" />
-      {/* Visor */}
-      <rect x="14" y="17" width="20" height="13" rx="5" fill="#080C12" />
-      {/* Left Standard Eye */}
-      <circle cx="19.5" cy="23.5" r="2" fill="#FBEEE0" />
-      {/* Right Enlarged Indexer Monocle Scope */}
-      <circle cx="28.5" cy="23.5" r="4.2" fill="#0F172A" stroke="#E59B63" strokeWidth="1.6" />
-      <motion.circle
-        cx="28.5"
-        cy="23.5"
-        r="1.8"
-        fill="#38BDF8"
-        animate={{ scale: [0.8, 1.2, 0.8] }}
-        transition={{ duration: 1.6, repeat: Infinity }}
-      />
-      {/* Little Owl Beak / Data Port */}
-      <polygon points="23,26 25,26 24,28.5" fill="#E59B63" />
-      {/* Bottom Indexed Bars */}
-      <line x1="18" y1="34" x2="30" y2="34" stroke="#FBEEE0" strokeWidth="1.6" strokeDasharray="2 2" />
-    </motion.svg>
+      <motion.svg
+        onClick={handleDroidClick}
+        viewBox="0 0 48 48"
+        className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+        fill="none"
+        animate={
+          chirpBounce
+            ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
+            : { y: [0, -2.5, 0] }
+        }
+        transition={{
+          duration: chirpBounce ? 0.24 : 2.3,
+          repeat: chirpBounce ? 0 : Infinity,
+          ease: 'easeInOut',
+        }}
+      >
+        {/* Top Data Dish */}
+        <line x1="24" y1="12" x2="24" y2="6" stroke="#FBEEE0" strokeWidth="1.6" />
+        <motion.circle
+          cx="24"
+          cy="5.5"
+          r="2.2"
+          fill="#38BDF8"
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 1.3, repeat: Infinity }}
+        />
+        {/* Round Owl-Bot Chassis */}
+        <rect x="11" y="12" width="26" height="26" rx="9" fill="#182334" stroke="#9D613C" strokeWidth="1.6" />
+        {/* Visor */}
+        <rect x="14" y="17" width="20" height="13" rx="5" fill="#080C12" />
+        {/* Left Standard Eye */}
+        <circle cx="19.5" cy="23.5" r="2" fill="#FBEEE0" />
+        {/* Right Enlarged Indexer Monocle Scope */}
+        <circle cx="28.5" cy="23.5" r="4.2" fill="#0F172A" stroke="#E59B63" strokeWidth="1.6" />
+        <motion.circle
+          cx="28.5"
+          cy="23.5"
+          r="1.8"
+          fill="#38BDF8"
+          animate={{ scale: [0.8, 1.2, 0.8] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
+        />
+        {/* Little Owl Beak / Data Port */}
+        <polygon points="23,26 25,26 24,28.5" fill="#E59B63" />
+        {/* Bottom Indexed Bars */}
+        <line x1="18" y1="34" x2="30" y2="34" stroke="#FBEEE0" strokeWidth="1.6" strokeDasharray="2 2" />
+      </motion.svg>
+    </motion.div>
   );
 };
 
@@ -528,30 +629,44 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
  * ============================================================================ */
 export const ExperienceForgeCharacter: React.FC = () => {
   const [active, setActive] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleTrigger = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    robotSound.play('forge');
+    setActive(true);
+    setIsPressed(true);
+    window.setTimeout(() => setIsPressed(false), 160);
+  };
 
   return (
-    <div
-      onClick={() => setActive((prev) => !prev)}
+    <motion.div
+      initial={CHARACTER_FADE_IN.initial}
+      whileInView={CHARACTER_FADE_IN.whileInView}
+      viewport={CHARACTER_FADE_IN.viewport}
+      transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+      onClick={handleTrigger}
       onMouseEnter={() => setActive(true)}
       onMouseLeave={() => setActive(false)}
       role="button"
       tabIndex={0}
+      title="Click for FORGE-03 robot voice!"
       aria-label="Interactive Block Forger Character"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          setActive((prev) => !prev);
+          handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
     >
       <AnimatePresence>
         {active && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.85 }}
+            initial={{ opacity: 0, y: 5, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.85 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 24 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[-2deg] z-20 pointer-events-none"
           >
             ⛓ blocks validated!
@@ -561,7 +676,9 @@ export const ExperienceForgeCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 76"
-        className="w-18 h-15 sm:w-20 sm:h-17 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+        className={`w-18 h-15 sm:w-20 sm:h-17 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+          isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
+        }`}
         fill="none"
       >
         <ellipse cx="44" cy="71" rx="22" ry="3.5" fill="#070A0F" fillOpacity="0.65" />
@@ -618,7 +735,7 @@ export const ExperienceForgeCharacter: React.FC = () => {
           <circle cx="65" cy="40" r="3" fill="#22C55E" />
         </motion.g>
       </svg>
-    </div>
+    </motion.div>
   );
 };
 
@@ -627,30 +744,44 @@ export const ExperienceForgeCharacter: React.FC = () => {
  * ============================================================================ */
 export const ConnectMessengerCharacter: React.FC = () => {
   const [waving, setWaving] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleTrigger = (e: React.MouseEvent | React.KeyboardEvent) => {
+    e.stopPropagation();
+    robotSound.play('courier');
+    setWaving(true);
+    setIsPressed(true);
+    window.setTimeout(() => setIsPressed(false), 160);
+  };
 
   return (
-    <div
-      onClick={() => setWaving((prev) => !prev)}
+    <motion.div
+      initial={CHARACTER_FADE_IN.initial}
+      whileInView={CHARACTER_FADE_IN.whileInView}
+      viewport={CHARACTER_FADE_IN.viewport}
+      transition={{ duration: 0.65, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+      onClick={handleTrigger}
       onMouseEnter={() => setWaving(true)}
       onMouseLeave={() => setWaving(false)}
       role="button"
       tabIndex={0}
+      title="Click for COURIER-7 robot voice!"
       aria-label="Interactive Messenger Bot Character"
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          setWaving((prev) => !prev);
+          handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
     >
       <AnimatePresence>
         {waving && (
           <motion.div
-            initial={{ opacity: 0, y: 6, scale: 0.85 }}
+            initial={{ opacity: 0, y: 5, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.85 }}
-            transition={{ type: 'spring', stiffness: 450, damping: 24 }}
+            exit={{ opacity: 0, y: 4, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[2deg] z-20 pointer-events-none"
           >
             gm ser! let&apos;s connect ✉
@@ -660,7 +791,9 @@ export const ConnectMessengerCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className="w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)]"
+        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+          isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
+        }`}
         fill="none"
       >
         {/* Ground Shadow */}
@@ -739,6 +872,6 @@ export const ConnectMessengerCharacter: React.FC = () => {
           )}
         </motion.g>
       </svg>
-    </div>
+    </motion.div>
   );
 };

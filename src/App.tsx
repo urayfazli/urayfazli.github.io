@@ -10,6 +10,7 @@ import { HeroSection } from './components/HeroSection';
 import { AboutCard } from './components/AboutCard';
 import { ExperienceCard } from './components/ExperienceCard';
 import { ConnectCard } from './components/ConnectCard';
+import { NodeTelemetryTerminal } from './components/NodeTelemetryTerminal';
 import { NetworkDetailModal } from './components/NetworkDetailModal';
 import { ContactModal } from './components/ContactModal';
 import { Footer } from './components/Footer';
@@ -234,47 +235,50 @@ export default function App() {
                         </div>
                       </div>
                       
-                      <p className="text-sm text-[#f0e4d6] leading-relaxed mb-6 pl-3 border-l-2 border-dashed border-[#9d613c]/70">
+                      <p className="text-sm text-[#f0e4d6] leading-relaxed mb-4 pl-3 border-l-2 border-dashed border-[#9d613c]/70">
                         {lang === 'id'
                           ? 'Berdedikasi pada arsitektur validator ketersediaan tinggi dengan telemetri otomatis 24/7, rotasi kunci tanpa downtime, dan pengamanan sistem yang ketat.'
                           : 'Dedicated to high-availability validator architecture with 24/7 automated telemetry, zero-downtime key rotation, and strict security hardening.'}
                       </p>
 
-                      {/* Sketchbook Doodle Stat Grid */}
-                      <div className="grid grid-cols-2 gap-3.5 sm:gap-4 mb-6">
-                        <div className="doodle-subcard p-4">
-                          <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
+                      {/* Unboxed Hairline-Divided Tabular Summary Strip */}
+                      <div className="grid grid-cols-4 divide-x divide-[#fbeee0]/15 border-y border-[#fbeee0]/15 py-2.5 mb-4 text-center">
+                        <div className="px-1.5">
+                          <span className="block text-base sm:text-lg font-mono tabular-nums font-semibold text-[#fbeee0]">
                             99.9%
                           </span>
-                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            {lang === 'id' ? 'Uptime Historis' : 'Historical Uptime'}
+                          <span className="block text-[11px] text-[#e59b63] truncate">
+                            {lang === 'id' ? 'Uptime' : 'Uptime'}
                           </span>
                         </div>
-                        <div className="doodle-subcard p-4">
-                          <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
+                        <div className="px-1.5">
+                          <span className="block text-base sm:text-lg font-mono tabular-nums font-semibold text-[#fbeee0]">
                             3+
                           </span>
-                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            {lang === 'id' ? 'Jaringan Aktif' : 'Active Networks'}
+                          <span className="block text-[11px] text-[#e59b63] truncate">
+                            {lang === 'id' ? 'Jaringan' : 'Networks'}
                           </span>
                         </div>
-                        <div className="doodle-subcard p-4">
-                          <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
+                        <div className="px-1.5">
+                          <span className="block text-base sm:text-lg font-mono tabular-nums font-semibold text-[#fbeee0]">
                             24/7
                           </span>
-                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            {lang === 'id' ? 'Peringatan & Sentry' : 'Alerts & Sentry'}
+                          <span className="block text-[11px] text-[#e59b63] truncate">
+                            {lang === 'id' ? 'Sentry' : 'Sentry'}
                           </span>
                         </div>
-                        <div className="doodle-subcard p-4">
-                          <span className="block text-2xl sm:text-3xl font-fredoka font-semibold text-[#fbeee0]">
+                        <div className="px-1.5">
+                          <span className="block text-base sm:text-lg font-mono tabular-nums font-semibold text-[#fbeee0]">
                             100%
                           </span>
-                          <span className="text-xs font-hand tracking-wide text-[#e59b63] text-sm">
-                            {lang === 'id' ? 'Proteksi Slashing' : 'Slashing Guard'}
+                          <span className="block text-[11px] text-[#e59b63] truncate">
+                            {lang === 'id' ? 'Anti-Slash' : 'Slashing Guard'}
                           </span>
                         </div>
                       </div>
+
+                      {/* Anti-AI-Slop Live Node Telemetry Terminal */}
+                      <NodeTelemetryTerminal onSelectNetwork={handleSelectNetwork} />
                     </div>
 
                     {/* Footer badge */}

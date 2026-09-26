@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { retroAudio } from '../utils/retroAudioEngine';
+import { robotSound } from '../utils/robotSoundEngine';
 import { RetroCassetteDoodle, RetroSpeakerDoodle } from './Doodles';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -840,6 +841,7 @@ interface RetroAudioPlayerProps {
 export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = true }) => {
   const { lang } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(retroAudio.getIsPlaying());
+  const [isShuffle, setIsShuffle] = useState(retroAudio.getIsShuffle());
   const [currentTrack, setCurrentTrack] = useState(retroAudio.getCurrentTrack());
   const [volume, setVolume] = useState(retroAudio.getVolume());
   const [isExpanded, setIsExpanded] = useState(false);
@@ -905,6 +907,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   useEffect(() => {
     const unsubscribe = retroAudio.subscribe(() => {
       setIsPlaying(retroAudio.getIsPlaying());
+      setIsShuffle(retroAudio.getIsShuffle());
       setCurrentTrack(retroAudio.getCurrentTrack());
       setVolume(retroAudio.getVolume());
       setIsWidgetVisible(retroAudio.getIsWidgetVisible());
@@ -1116,7 +1119,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]')) return;
+    if (target.closest('input[type="range"], [data-player-control="true"]')) return;
     if (e.button !== 0) return;
 
     if (clearThresholdTimerRef.current !== null) {
@@ -1138,7 +1141,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    if (target.closest('input[type="range"]')) return;
+    if (target.closest('input[type="range"], [data-player-control="true"]')) return;
     if (e.touches.length === 0) return;
 
     if (clearThresholdTimerRef.current !== null) {
@@ -1159,8 +1162,11 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   };
 
-  // Block synthetic button clicks immediately after releasing a drag gesture
+  // Block synthetic button clicks on the avatar/bubble immediately after releasing a drag gesture,
+  // while never blocking explicit player control buttons inside the card
   const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-player-control="true"]')) return;
     if (dragSessionRef.current.movedBeyondThreshold) {
       e.stopPropagation();
       e.preventDefault();
@@ -1460,6 +1466,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const handleNextNpcDialogue = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (dragSessionRef.current.movedBeyondThreshold) return;
+    robotSound.play('djbot');
     setNpcTalkBounce(true);
     setTimeout(() => setNpcTalkBounce(false), 260);
 
@@ -1521,9 +1528,14 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
   };
 
-  const handleToggle = () => {
-    if (dragSessionRef.current.movedBeyondThreshold) return;
+  const handleToggle = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     retroAudio.toggle();
+  };
+
+  const handleToggleShuffle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    retroAudio.toggleShuffle();
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1532,8 +1544,8 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     retroAudio.setVolume(val);
   };
 
-  const handleMuteToggle = () => {
-    if (dragSessionRef.current.movedBeyondThreshold) return;
+  const handleMuteToggle = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (volume > 0) {
       retroAudio.setVolume(0);
     } else {
@@ -1543,7 +1555,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
   const handleHideWidget = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (dragSessionRef.current.movedBeyondThreshold) return;
     setIsExpanded(false);
     retroAudio.setWidgetVisible(false);
   };
@@ -1556,6 +1567,10 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const handleCharacterClick = () => {
     // Ignore click if user was just dragging the character around
     if (dragSessionRef.current.movedBeyondThreshold) return;
+
+    robotSound.play('djbot');
+    setNpcTalkBounce(true);
+    setTimeout(() => setNpcTalkBounce(false), 260);
 
     if (mood === 'angry' || mood === 'dizzy') {
       if (dizzyRecoveryTimerRef.current !== null) {
@@ -1601,11 +1616,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         {isWidgetVisible ? (
           <motion.div
             key="visible-widget"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: isDragging ? 1.04 : 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-            className="relative flex items-end"
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={
+              hasBootSynced
+                ? { opacity: 1, y: 0, scale: isDragging ? 1.04 : 1 }
+                : { opacity: 0, y: 12, scale: 0.96 }
+            }
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="relative flex items-end will-change-[transform,opacity]"
           >
             {/* 1. Expanded Retro Cassette Player Glass Card (Auto-flips below character if dragged near top of screen) */}
             <AnimatePresence>
@@ -1658,10 +1677,10 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!dragSessionRef.current.movedBeyondThreshold) {
-                            setIsExpanded(false);
-                          }
+                        data-player-control="true"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsExpanded(false);
                         }}
                         className="text-[#e8dacb] hover:text-white px-1.5 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 transition-all cursor-pointer text-xs font-mono"
                         title="Minimize player"
@@ -1672,6 +1691,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
                       <button
                         type="button"
+                        data-player-control="true"
                         onClick={handleHideWidget}
                         className="text-[#e8dacb] hover:text-[#ef4444] px-1.5 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-red-400/40 transition-all cursor-pointer text-xs font-mono"
                         title="Hide DJ character"
@@ -1688,8 +1708,24 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
                         <span className="truncate">{currentTrack.title}</span>
                       </div>
-                      <div className="font-mono text-[10px] text-[#e59b63] truncate">
-                        {currentTrack.genre} · {currentTrack.bpm} BPM
+                      <div className="font-mono text-[10px] text-[#e59b63] truncate flex items-center gap-1">
+                        <span className="truncate">{currentTrack.genre}</span>
+                        <span aria-hidden="true">·</span>
+                        <span className="tabular-nums shrink-0">{currentTrack.bpm} BPM</span>
+                        <span aria-hidden="true">·</span>
+                        <span
+                          className={`shrink-0 ${
+                            isShuffle ? 'text-emerald-400' : 'text-[#d6c4b2]'
+                          }`}
+                        >
+                          {isShuffle
+                            ? lang === 'id'
+                              ? 'ACAK'
+                              : 'SHUFFLE'
+                            : lang === 'id'
+                            ? 'URUT'
+                            : 'ORDER'}
+                        </span>
                       </div>
                     </div>
 
@@ -1719,16 +1755,16 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   </div>
 
                   {/* Playback Glass Controls */}
-                  <div className="relative z-10 flex items-center justify-between gap-2 mb-3">
+                  <div className="relative z-10 flex items-center justify-between gap-1.5 mb-3">
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!dragSessionRef.current.movedBeyondThreshold) {
-                          retroAudio.prevTrack();
-                        }
+                      data-player-control="true"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        retroAudio.prevTrack();
                       }}
-                      className="glass-pill p-2.5 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer"
-                      title="Previous Track"
+                      className="glass-pill p-2 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer shrink-0"
+                      title={lang === 'id' ? 'Lagu Sebelumnya' : 'Previous Track'}
                       aria-label="Previous track"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -1738,53 +1774,103 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
                     <button
                       type="button"
+                      data-player-control="true"
                       onClick={handleToggle}
-                      className="glass-pill-active flex-1 py-2 px-3 rounded-xl active:scale-95 text-white font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:border-white/60 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+                      className="glass-pill-active flex-1 py-2 px-2.5 rounded-xl active:scale-95 text-white font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:border-white/60 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] whitespace-nowrap"
                       title={isPlaying ? 'Pause retro music' : 'Play retro music'}
                       aria-label={isPlaying ? 'Pause' : 'Play'}
                     >
                       {isPlaying ? (
                         <>
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
                           </svg>
                           <span>PAUSE BGM</span>
                         </>
                       ) : (
                         <>
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                          <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M8 5v14l11-7z" />
                           </svg>
-                          <span>PLAY RETRO BGM</span>
+                          <span>PLAY BGM</span>
                         </>
                       )}
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!dragSessionRef.current.movedBeyondThreshold) {
-                          retroAudio.nextTrack();
-                        }
+                      data-player-control="true"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        retroAudio.nextTrack();
                       }}
-                      className="glass-pill p-2.5 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer"
-                      title="Next Track"
+                      className="glass-pill p-2 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer shrink-0"
+                      title={
+                        isShuffle
+                          ? lang === 'id'
+                            ? 'Lagu Acak Berikutnya'
+                            : 'Next Random Track'
+                          : lang === 'id'
+                          ? 'Lagu Berikutnya'
+                          : 'Next Track'
+                      }
                       aria-label="Next track"
                     >
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
                       </svg>
                     </button>
+
+                    {/* Shuffle / Random Playback Mode Toggle Button */}
+                    <button
+                      type="button"
+                      data-player-control="true"
+                      onClick={handleToggleShuffle}
+                      aria-pressed={isShuffle}
+                      className={`p-2 rounded-xl active:scale-95 transition-all cursor-pointer shrink-0 border ${
+                        isShuffle
+                          ? 'bg-emerald-500/25 border-emerald-400/60 text-emerald-300 hover:border-emerald-300'
+                          : 'glass-pill text-[#d6c4b2] hover:text-white hover:border-white/40'
+                      }`}
+                      title={
+                        isShuffle
+                          ? lang === 'id'
+                            ? 'Mode Acak Aktif (Klik untuk Urut)'
+                            : 'Shuffle Mode ON (Click for Sequential)'
+                          : lang === 'id'
+                          ? 'Mode Urut (Klik untuk Acak)'
+                          : 'Sequential Mode (Click for Shuffle)'
+                      }
+                      aria-label="Toggle shuffle mode"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="16 3 21 3 21 8" />
+                        <line x1="4" y1="20" x2="21" y2="3" />
+                        <polyline points="21 16 21 21 16 21" />
+                        <line x1="15" y1="15" x2="21" y2="21" />
+                        <line x1="4" y1="4" x2="9" y2="9" />
+                      </svg>
+                    </button>
                   </div>
 
                   {/* Volume Slider Bar */}
                   <div
+                    data-player-control="true"
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
                     className="relative z-10 flex items-center gap-2 pt-2 border-t border-white/15"
                   >
                     <button
                       type="button"
+                      data-player-control="true"
                       onClick={handleMuteToggle}
                       className="text-[#e8dacb] hover:text-white cursor-pointer shrink-0 transition-colors"
                       title={volume === 0 ? 'Unmute' : 'Mute'}

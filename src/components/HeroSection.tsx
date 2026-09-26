@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   DoodleRays,
@@ -14,6 +14,7 @@ import { SOCIAL_DATA } from '../data/portfolioData';
 import { TypingText } from './TypingText';
 import { ASSET_IMAGES } from '../assets/images';
 import { useLanguage } from '../context/LanguageContext';
+import { robotSound } from '../utils/robotSoundEngine';
 
 interface HeroSectionProps {
   onScrollDown: () => void;
@@ -26,6 +27,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   isLoaded = true,
 }) => {
   const { lang } = useLanguage();
+  const [heroBounce, setHeroBounce] = useState(false);
+
+  const handleHeroCharacterPress = () => {
+    robotSound.play('hero');
+    setHeroBounce(true);
+    window.setTimeout(() => setHeroBounce(false), 320);
+  };
+
   return (
     <section
       id="home"
@@ -222,40 +231,38 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <DoodleStar className="w-5 h-5 text-[#fbeee0] animate-twinkle [animation-delay:1.8s]" />
             </motion.div>
 
-            {/* Speech Bubble: "Node Operator" popping above character after card lands */}
+            {/* Speech Bubble: "Node Operator" smooth fade-in above character */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.4, y: 16, rotate: 10 }}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={
                 isLoaded
-                  ? { opacity: 1, scale: 1, y: 0, rotate: 0 }
-                  : { opacity: 0, scale: 0.4, y: 16, rotate: 10 }
+                  ? { opacity: 1, scale: 1, y: 0 }
+                  : { opacity: 0, scale: 0.96, y: 10 }
               }
               transition={{
-                type: 'spring',
-                stiffness: 380,
-                damping: 18,
-                delay: 0.52,
+                duration: 0.65,
+                delay: 0.34,
+                ease: [0.16, 1, 0.3, 1],
               }}
-              className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-30 animate-float-slow"
+              className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-30 animate-float-slow will-change-[transform,opacity]"
             >
               <SpeechBubble text={lang === 'id' ? 'Operator Node' : 'Node Operator'} />
             </motion.div>
 
-            {/* Character Main Visual Art Frame with Spring Sketchbook Entrance */}
+            {/* Character Main Visual Art Frame with Smooth Anti-Slop Fade-In */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.82, rotate: 5, y: 32 }}
+              initial={{ opacity: 0, scale: 0.97, y: 14 }}
               animate={
                 isLoaded
-                  ? { opacity: 1, scale: 1, rotate: 0, y: 0 }
-                  : { opacity: 0, scale: 0.82, rotate: 5, y: 32 }
+                  ? { opacity: 1, scale: 1, y: 0 }
+                  : { opacity: 0, scale: 0.97, y: 14 }
               }
               transition={{
-                type: 'spring',
-                stiffness: 240,
-                damping: 20,
-                delay: 0.22,
+                duration: 0.75,
+                delay: 0.16,
+                ease: [0.16, 1, 0.3, 1],
               }}
-              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center"
+              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center will-change-[transform,opacity]"
             >
               {/* Soft warm aura backdrop behind character */}
               <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#9d613c]/25 via-[#402d23]/40 to-transparent blur-2xl" />
@@ -263,7 +270,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               {/* Photo Profile Card Wrapper + Perimeter Looping Paper Plane & Rocket System */}
               <div className="relative w-[276px] xs:w-[312px] sm:w-[380px] lg:w-[440px] h-[276px] xs:h-[312px] sm:h-[380px] lg:h-[440px] flex items-center justify-center">
                 {/* Character Illustration Doodle Frame */}
-                <div className="doodle-card relative z-10 w-full h-full overflow-hidden group">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleHeroCharacterPress}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleHeroCharacterPress();
+                    }
+                  }}
+                  aria-label="Interactive Uray Fazli Chibi Avatar"
+                  className={`doodle-card relative z-10 w-full h-full overflow-hidden group cursor-pointer transition-transform duration-200 ${
+                    heroBounce ? 'scale-[0.97] -rotate-1' : 'active:scale-[0.98]'
+                  }`}
+                >
                   {/* Top Sketchbook Tape on Avatar Frame */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
                     <DoodleTape className="w-24 h-5" />
