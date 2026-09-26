@@ -17,42 +17,18 @@ export const TypingText: React.FC<TypingTextProps> = ({
 }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
-  const [isPaused, setIsPaused] = useState(() =>
-    typeof document !== 'undefined' && document.body.hasAttribute('data-djbot-walking')
-  );
-
-  useEffect(() => {
-    const handleWalkChange = (e: Event) => {
-      const customEvent = e as CustomEvent<{ isWalking: boolean }>;
-      setIsPaused(Boolean(customEvent.detail?.isWalking));
-    };
-    window.addEventListener('djbot-walk-change', handleWalkChange);
-    return () => window.removeEventListener('djbot-walk-change', handleWalkChange);
-  }, []);
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    let charIndex = displayedText.length;
+    let cancelled = false;
+    let charIndex = 0;
 
-    if (isPaused) {
-      return;
-    }
-
-    if (charIndex >= text.length) {
-      setIsTyping(false);
-      return;
-    }
-
+    setDisplayedText('');
     setIsTyping(true);
-
-    // Initial delay only when starting from 0
-    const initialWait = charIndex === 0 ? delay : speed;
 
     const startDelay = setTimeout(() => {
       const typeNextChar = () => {
-        if (document.body.hasAttribute('data-djbot-walking')) {
-          return;
-        }
+        if (cancelled) return;
         if (charIndex < text.length) {
           charIndex++;
           setDisplayedText(text.slice(0, charIndex));
@@ -68,19 +44,14 @@ export const TypingText: React.FC<TypingTextProps> = ({
       };
 
       typeNextChar();
-    }, initialWait);
+    }, delay);
 
     return () => {
+      cancelled = true;
       clearTimeout(startDelay);
       clearTimeout(timeoutId);
     };
-  }, [text, speed, delay, isPaused]);
-
-  // Reset displayedText when text prop changes (e.g. language switch)
-  useEffect(() => {
-    setDisplayedText('');
-    setIsTyping(true);
-  }, [text]);
+  }, [text, speed, delay]);
 
   return (
     <p

@@ -62,8 +62,12 @@ export const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose }) =
     }, 2800);
   };
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(SOCIAL_DATA.email);
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(SOCIAL_DATA.email);
+    } catch {
+      // Ignore clipboard permission errors in restricted contexts
+    }
     setCopiedEmail(true);
     setTimeout(() => setCopiedEmail(false), 2000);
   };

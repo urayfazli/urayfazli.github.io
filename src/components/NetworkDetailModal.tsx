@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NetworkInfo } from '../types';
 import { AptosLogo, SeiLogo, SubQueryLogo, DoodleTape } from './Doodles';
@@ -11,20 +11,30 @@ interface NetworkDetailModalProps {
 
 export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network, onClose }) => {
   const { lang } = useLanguage();
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!network) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onCloseRef.current();
+      }
     };
-    if (network) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-    }
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [network, onClose]);
+  }, [network]);
 
   return (
     <AnimatePresence>

@@ -396,6 +396,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
     };
   }, []);
 
+  const railScrollTimerRef = useRef<number | null>(null);
+
   // Interactive click on the scroll progress rail to smoothly fly the rocket to that scroll point
   const handleRailClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rail = railRef.current;
@@ -408,6 +410,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
       document.body.scrollHeight
     );
     const maxScroll = Math.max(0, docHeight - window.innerHeight);
+
+    document.documentElement.dataset.navScrolling = 'true';
+    if (railScrollTimerRef.current !== null) {
+      window.clearTimeout(railScrollTimerRef.current);
+    }
+    railScrollTimerRef.current = window.setTimeout(() => {
+      delete document.documentElement.dataset.navScrolling;
+      railScrollTimerRef.current = null;
+    }, 900);
+
     window.scrollTo({ top: clickRatio * maxScroll, behavior: 'smooth' });
   };
 

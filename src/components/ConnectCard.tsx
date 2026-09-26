@@ -12,10 +12,14 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
   const { lang } = useLanguage();
   const [copiedHandle, setCopiedHandle] = useState<string | null>(null);
 
-  const handleCopy = (e: React.MouseEvent, text: string, label: string) => {
+  const handleCopy = async (e: React.MouseEvent, text: string, label: string) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Ignore clipboard permission errors in restricted contexts
+    }
     setCopiedHandle(label);
     setTimeout(() => setCopiedHandle(null), 2000);
   };

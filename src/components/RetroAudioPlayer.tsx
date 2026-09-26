@@ -1070,8 +1070,17 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       if (initialAnchorTopRef.current === null || forceRemeasureBadge) {
         const badgeEl = document.getElementById('hero-operator-node-badge');
         if (badgeEl) {
-          const badgeRect = badgeEl.getBoundingClientRect();
-          const badgeDocCenterY = badgeRect.top + window.scrollY + badgeRect.height / 2;
+          let el: HTMLElement | null = badgeEl;
+          let layoutTop = 0;
+          while (el) {
+            layoutTop += el.offsetTop;
+            el = el.offsetParent as HTMLElement | null;
+          }
+          const badgeHeight = badgeEl.offsetHeight || 38;
+          const badgeDocCenterY =
+            layoutTop > 0
+              ? layoutTop + badgeHeight / 2
+              : badgeEl.getBoundingClientRect().top + window.scrollY + badgeHeight / 2;
           // Align DJ Bot's center vertically with the "Operator Node" badge at the top of the page
           topTarget = Math.max(76, badgeDocCenterY - botHeight * 0.52);
           initialAnchorTopRef.current = topTarget;
