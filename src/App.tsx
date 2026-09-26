@@ -48,13 +48,15 @@ export default function App() {
     }
 
     isNavigatingRef.current = true;
+    document.documentElement.dataset.navScrolling = 'true';
 
     if (sectionId === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
         isNavigatingRef.current = false;
-      }, 750);
+        delete document.documentElement.dataset.navScrolling;
+      }, 850);
       return;
     }
 
@@ -72,7 +74,11 @@ export default function App() {
       setTimeout(() => {
         setHighlightedCard(null);
         isNavigatingRef.current = false;
-      }, 800);
+        delete document.documentElement.dataset.navScrolling;
+      }, 900);
+    } else {
+      isNavigatingRef.current = false;
+      delete document.documentElement.dataset.navScrolling;
     }
   };
 
