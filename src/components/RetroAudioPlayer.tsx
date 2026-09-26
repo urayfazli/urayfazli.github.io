@@ -16,12 +16,13 @@ const BGMCharacterAvatar: React.FC<{
   isPlaying: boolean;
   isExpanded: boolean;
   isDragging: boolean;
+  isWalking: boolean;
   mood: DjBotMood;
   step: number;
-}> = ({ isPlaying, isExpanded, isDragging, mood, step }) => {
-  const isAngry = mood === 'angry' && !isDragging;
-  const isDizzy = mood === 'dizzy' && !isDragging;
-  const isGreeting = mood === 'greeting' && !isDragging;
+}> = ({ isPlaying, isExpanded, isDragging, isWalking, mood, step }) => {
+  const isAngry = mood === 'angry' && !isDragging && !isWalking;
+  const isDizzy = mood === 'dizzy' && !isDragging && !isWalking;
+  const isGreeting = mood === 'greeting' && !isDragging && !isWalking;
 
   return (
     <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
@@ -93,7 +94,7 @@ const BGMCharacterAvatar: React.FC<{
         className="w-full h-full overflow-visible drop-shadow-[0_8px_14px_rgba(0,0,0,0.7)]"
         fill="none"
       >
-        {/* Ground Shadow (shrinks slightly when lifted/dragged) */}
+        {/* Ground Shadow (shrinks slightly when lifted/dragged, pulses with footsteps when walking) */}
         <motion.ellipse
           cx="55"
           cy="108"
@@ -103,12 +104,58 @@ const BGMCharacterAvatar: React.FC<{
           animate={
             isDragging
               ? { scaleX: 0.7, opacity: 0.4 }
+              : isWalking
+              ? { scaleX: [0.96, 0.82, 0.96], opacity: [0.75, 0.55, 0.75] }
               : { scaleX: 1, opacity: 0.75 }
+          }
+          transition={
+            isWalking
+              ? { duration: 0.34, repeat: Infinity, ease: 'easeInOut' }
+              : undefined
           }
         />
 
+        {/* Animated Footstep Dust Puffs When Walking */}
+        {isWalking && (
+          <g>
+            <motion.circle
+              cx="76"
+              cy="104"
+              r="3.2"
+              fill="#E59B63"
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{
+                opacity: [0, 0.7, 0],
+                x: [0, 10, 16],
+                y: [0, -4, -8],
+                scale: [0.5, 1.2, 0.7],
+              }}
+              transition={{ duration: 0.48, repeat: Infinity, ease: 'easeOut' }}
+            />
+            <motion.circle
+              cx="68"
+              cy="106"
+              r="2.4"
+              fill="#FBEEE0"
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{
+                opacity: [0, 0.65, 0],
+                x: [0, 8, 14],
+                y: [0, -3, -6],
+                scale: [0.4, 1.1, 0.6],
+              }}
+              transition={{
+                duration: 0.48,
+                delay: 0.24,
+                repeat: Infinity,
+                ease: 'easeOut',
+              }}
+            />
+          </g>
+        )}
+
         {/* Ambient Pulse Ring on Ground when Playing, Angry, or Dizzy */}
-        {(isPlaying || isAngry || isDizzy) && (
+        {(isPlaying || isAngry || isDizzy) && !isWalking && (
           <motion.ellipse
             cx="55"
             cy="108"
@@ -126,6 +173,8 @@ const BGMCharacterAvatar: React.FC<{
           animate={
             isDragging
               ? { y: -6, rotate: -4 }
+              : isWalking
+              ? { x: [-1.5, 1.5, -1.5], y: [0, -5, 0], rotate: [-4.5, -1.5, -4.5] }
               : isDizzy
               ? { x: [-3.5, 4, -3, 3.5, -3.5], y: [0, 2, -2, 1, 0], rotate: [-7, 8, -6, 7, -7] }
               : isAngry
@@ -137,13 +186,23 @@ const BGMCharacterAvatar: React.FC<{
               : { y: [0, -1, 0], rotate: 0 }
           }
           transition={{
-            duration: isDizzy ? 0.75 : isAngry ? 0.25 : isGreeting ? 0.6 : isPlaying ? 0.45 : 2,
+            duration: isWalking
+              ? 0.32
+              : isDizzy
+              ? 0.75
+              : isAngry
+              ? 0.25
+              : isGreeting
+              ? 0.6
+              : isPlaying
+              ? 0.45
+              : 2,
             repeat: isDragging ? 0 : Infinity,
             ease: 'easeInOut',
           }}
           style={{ transformOrigin: '55px 82px' }}
         >
-          {/* Cute Chibi Feet (dangle when dragged, stagger when dizzy, stomp when angry!) */}
+          {/* Cute Chibi Feet (walk with alternating stride when isWalking, dangle when dragged, stomp when angry!) */}
           <motion.rect
             x="36"
             y="96"
@@ -156,15 +215,18 @@ const BGMCharacterAvatar: React.FC<{
             animate={
               isDragging
                 ? { y: [-2, 3, -2], rotate: [-8, 8, -8] }
+                : isWalking
+                ? { x: [-5, 5, -5], y: [0, -6.5, 0], rotate: [-18, 14, -18] }
                 : isDizzy
                 ? { y: [-3, 2, -3], rotate: [-14, 10, -14] }
                 : isAngry
                 ? { y: [0, -4, 0] }
-                : { y: 0, rotate: 0 }
+                : { x: 0, y: 0, rotate: 0 }
             }
             transition={{
-              duration: isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
-              repeat: isDragging || isAngry || isDizzy ? Infinity : 0,
+              duration: isWalking ? 0.36 : isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
+              repeat: isDragging || isWalking || isAngry || isDizzy ? Infinity : 0,
+              ease: 'easeInOut',
             }}
           />
           <motion.rect
@@ -179,15 +241,18 @@ const BGMCharacterAvatar: React.FC<{
             animate={
               isDragging
                 ? { y: [3, -2, 3], rotate: [8, -8, 8] }
+                : isWalking
+                ? { x: [5, -5, 5], y: [-6.5, 0, -6.5], rotate: [14, -18, 14] }
                 : isDizzy
                 ? { y: [2, -3, 2], rotate: [12, -14, 12] }
                 : isAngry
                 ? { y: [-4, 0, -4] }
-                : { y: 0, rotate: 0 }
+                : { x: 0, y: 0, rotate: 0 }
             }
             transition={{
-              duration: isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
-              repeat: isDragging || isAngry || isDizzy ? Infinity : 0,
+              duration: isWalking ? 0.36 : isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
+              repeat: isDragging || isWalking || isAngry || isDizzy ? Infinity : 0,
+              ease: 'easeInOut',
             }}
           />
 
@@ -282,6 +347,12 @@ const BGMCharacterAvatar: React.FC<{
           animate={
             isDragging
               ? { y: -7, rotate: [-5, 5, -5] }
+              : isWalking
+              ? {
+                  x: [-2, 1, -2],
+                  y: [0, -4, 0],
+                  rotate: [-5, -1, -5],
+                }
               : isDizzy
               ? {
                   x: [-4.5, 5, -3.5, 4.5, -4.5],
@@ -311,6 +382,8 @@ const BGMCharacterAvatar: React.FC<{
           transition={{
             duration: isDragging
               ? 0.35
+              : isWalking
+              ? 0.32
               : isDizzy
               ? 0.72
               : isAngry
@@ -461,7 +534,7 @@ const BGMCharacterAvatar: React.FC<{
             fillOpacity="0.12"
           />
 
-          {/* Dynamic Visor Face: Dragged vs Dizzy vs Angry vs Greeting vs Jamming vs Idle */}
+          {/* Dynamic Visor Face: Dragged vs Walking vs Dizzy vs Angry vs Greeting vs Jamming vs Idle */}
           {isDragging ? (
             <g>
               {/* Excited Starry/Wide Eyes > < when being dragged */}
@@ -480,6 +553,22 @@ const BGMCharacterAvatar: React.FC<{
                 strokeLinejoin="round"
               />
               <circle cx="55" cy="43" r="3.2" fill="#E59B63" />
+            </g>
+          ) : isWalking ? (
+            <g>
+              {/* Cheerful Marching Eyes Looking Toward Bottom-Left */}
+              <rect x="36.5" y="30.5" width="6.5" height="9" rx="3.2" fill="#22C55E" />
+              <rect x="61.5" y="30.5" width="6.5" height="9" rx="3.2" fill="#22C55E" />
+              {/* Warm Cheeks */}
+              <rect x="32.5" y="40" width="5" height="2.4" rx="1.2" fill="#E59B63" />
+              <rect x="70.5" y="40" width="5" height="2.4" rx="1.2" fill="#E59B63" />
+              {/* Happy Marching / Whistling Smile */}
+              <path
+                d="M48 43C50.5 46.5 57.5 46.5 60 43"
+                stroke="#FBEEE0"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
             </g>
           ) : isDizzy ? (
             <g>
@@ -656,17 +745,19 @@ const BGMCharacterAvatar: React.FC<{
           )}
         </motion.g>
 
-        {/* Animated Chibi Hands (Holds Head on Dizzy, Waves on Greeting, Shakes Fists on Angry!) */}
+        {/* Animated Chibi Hands (Swing in stride on Walking, Hold Head on Dizzy, Wave on Greeting, Shake Fists on Angry!) */}
         <motion.circle
-          cx={isDizzy ? 16 : isAngry ? 19 : isPlaying ? 18 : 26}
-          cy={isDizzy ? 34 : isAngry ? 54 : isPlaying ? 44 : 78}
+          cx={isWalking ? 23 : isDizzy ? 16 : isAngry ? 19 : isPlaying ? 18 : 26}
+          cy={isWalking ? 74 : isDizzy ? 34 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
-          stroke={isDizzy ? '#A3E635' : isAngry ? '#EF4444' : '#9D613C'}
+          stroke={isWalking ? '#22C55E' : isDizzy ? '#A3E635' : isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
           animate={
             isDragging
               ? { x: 0, y: [-8, -2, -8] }
+              : isWalking
+              ? { x: [-6, 6, -6], y: [-4, 4, -4] }
               : isDizzy
               ? { x: [-3, 3, -3], y: [-4, 4, -4] }
               : isAngry
@@ -676,7 +767,7 @@ const BGMCharacterAvatar: React.FC<{
               : { x: 0, y: [0, -2, 0] }
           }
           transition={{
-            duration: isDizzy ? 0.55 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
+            duration: isWalking ? 0.36 : isDizzy ? 0.55 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
             repeat: Infinity,
           }}
         />
@@ -704,15 +795,17 @@ const BGMCharacterAvatar: React.FC<{
         )}
 
         <motion.circle
-          cx={isDizzy ? 94 : isGreeting ? 95 : isAngry ? 91 : isPlaying ? 92 : 84}
-          cy={isDizzy ? 34 : isGreeting ? 30 : isAngry ? 54 : isPlaying ? 44 : 78}
+          cx={isWalking ? 87 : isDizzy ? 94 : isGreeting ? 95 : isAngry ? 91 : isPlaying ? 92 : 84}
+          cy={isWalking ? 74 : isDizzy ? 34 : isGreeting ? 30 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
-          stroke={isDizzy ? '#A3E635' : isGreeting ? '#E59B63' : isAngry ? '#EF4444' : '#9D613C'}
+          stroke={isWalking ? '#22C55E' : isDizzy ? '#A3E635' : isGreeting ? '#E59B63' : isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
           animate={
             isDragging
               ? { x: 0, y: [-2, -8, -2] }
+              : isWalking
+              ? { x: [6, -6, 6], y: [4, -4, 4] }
               : isDizzy
               ? { x: [3, -3, 3], y: [4, -4, 4] }
               : isGreeting
@@ -724,7 +817,7 @@ const BGMCharacterAvatar: React.FC<{
               : { x: 0, y: [0, -2, 0] }
           }
           transition={{
-            duration: isDizzy ? 0.55 : isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
+            duration: isWalking ? 0.36 : isDizzy ? 0.55 : isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
             repeat: Infinity,
           }}
         />
@@ -848,6 +941,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const [isWidgetVisible, setIsWidgetVisible] = useState(retroAudio.getIsWidgetVisible());
   const [step, setStep] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isWalking, setIsWalking] = useState(false);
 
   // Interactive NPC Dialogue State (Paused -> Sedang Mengetik -> Typewriter with punctuation pauses -> Reading) + Mood ('greeting' | 'normal' | 'angry' | 'dizzy')
   const [hasBootSynced, setHasBootSynced] = useState(false);
@@ -859,10 +953,14 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const [npcPhase, setNpcPhase] = useState<'paused' | 'composing' | 'typing' | 'reading'>('composing');
   const [npcTalkBounce, setNpcTalkBounce] = useState(false);
   const dizzyRecoveryTimerRef = useRef<number | null>(null);
+  const walkRafRef = useRef<number | null>(null);
+  const isWalkingRef = useRef<boolean>(false);
+  const botStageRef = useRef<'hero_greeting' | 'walking_to_home' | 'home_or_free'>('hero_greeting');
   const moodRef = useRef<DjBotMood>(mood);
   const npcPhaseRef = useRef<'paused' | 'composing' | 'typing' | 'reading'>(npcPhase);
   moodRef.current = mood;
   npcPhaseRef.current = npcPhase;
+  isWalkingRef.current = isWalking;
 
   // Scroll-independent viewport offset (dx, dy from initial bottom-left anchor)
   const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -963,9 +1061,11 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       setViewportInfo((prev) => {
         const openDownward = prev.openDownward ? currentTop < 350 : currentTop < 310;
-        const bubbleOnLeft = prev.bubbleOnLeft
-          ? botCenterX > vw * 0.46
-          : botCenterX > vw * 0.54;
+        const bubbleWidth = vw >= 640 ? 270 : 215;
+        const wouldOverflowRight = currentLeft + bubbleWidth > vw - margin;
+        const bubbleOnLeft =
+          wouldOverflowRight ||
+          (prev.bubbleOnLeft ? botCenterX > vw * 0.46 : botCenterX > vw * 0.54);
 
         if (
           prev.openDownward === openDownward &&
@@ -982,9 +1082,153 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     [isWidgetVisible]
   );
 
-  // Re-clamp on window resize or when widget expands/hides
+  /**
+   * Compute offset so DJ Bot stands on the right side vertically aligned ("sejajar")
+   * with the "Operator Node" badge (#hero-operator-node-badge) during initial greeting.
+   */
+  const computeHeroAnchorOffset = useCallback(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const baseLeft = vw >= 640 ? 20 : 16;
+    const baseBottom = vw >= 640 ? 20 : 16;
+    const botEl = botButtonRef.current || widgetRef.current;
+    const defaultBotW = isWidgetVisible ? (vw >= 640 ? 96 : 64) : 44;
+    const defaultBotH = isWidgetVisible ? (vw >= 640 ? 100 : 72) : 44;
+    const botWidth = botEl ? botEl.offsetWidth || defaultBotW : defaultBotW;
+    const botHeight = botEl ? botEl.offsetHeight || defaultBotH : defaultBotH;
+    const baseTop = vh - baseBottom - botHeight;
+
+    const rightMargin = vw >= 1024 ? 32 : vw >= 640 ? 24 : 16;
+    let topTarget = vw >= 640 ? 255 : 225;
+
+    const badgeEl = document.getElementById('hero-operator-node-badge');
+    if (badgeEl) {
+      const badgeRect = badgeEl.getBoundingClientRect();
+      const badgeCenterY = badgeRect.top + badgeRect.height / 2;
+      // Align DJ Bot's center vertically with the "Operator Node" badge
+      topTarget = badgeCenterY - botHeight * 0.52;
+    }
+
+    const rawX = vw - botWidth - rightMargin - baseLeft;
+    const rawY = topTarget - baseTop;
+    return clampAndInspectBounds(rawX, rawY);
+  }, [clampAndInspectBounds, isWidgetVisible]);
+
+  /**
+   * Broadcast walking state so ALL interactive text on the page pauses while DJ Bot walks.
+   */
+  const setGlobalWalkState = useCallback((walking: boolean) => {
+    isWalkingRef.current = walking;
+    setIsWalking(walking);
+    if (typeof document !== 'undefined') {
+      if (walking) {
+        document.body.setAttribute('data-djbot-walking', 'true');
+      } else {
+        document.body.removeAttribute('data-djbot-walking');
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('djbot-walk-change', { detail: { isWalking: walking } })
+      );
+    }
+  }, []);
+
+  /**
+   * Smoothly walk DJ Bot from its Hero Greeting position (next to "Halo, saya Uray Fazli Alman")
+   * down to the bottom-left home corner ({ x: 0, y: 0 }), pausing all interactive text during the walk.
+   */
+  const startWalkToBottomLeft = useCallback(() => {
+    if (botStageRef.current !== 'hero_greeting') {
+      setMood('normal');
+      setDialogueIndex(0);
+      setNpcPhase('paused');
+      return;
+    }
+
+    botStageRef.current = 'walking_to_home';
+    setMood('normal');
+    setNpcPhase('paused');
+    setTypedText('');
+    setGlobalWalkState(true);
+
+    const startX = offsetRef.current.x;
+    const startY = offsetRef.current.y;
+    const targetPos = clampAndInspectBounds(0, 0);
+    const walkDurationMs = 2400;
+    const walkStartTime = performance.now();
+
+    const stepWalkFrame = (now: number) => {
+      // If user grabs/drags DJ Bot mid-walk, hand control to drag session immediately
+      if (dragSessionRef.current.active) {
+        botStageRef.current = 'home_or_free';
+        setGlobalWalkState(false);
+        walkRafRef.current = null;
+        return;
+      }
+
+      const elapsed = now - walkStartTime;
+      const t = Math.min(1, Math.max(0, elapsed / walkDurationMs));
+      // Smooth sinusoidal ease-in-out stride
+      const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
+
+      const curX = startX + (targetPos.x - startX) * eased;
+      const curY = startY + (targetPos.y - startY) * eased;
+      const clamped = clampAndInspectBounds(curX, curY);
+
+      offsetRef.current = clamped;
+      if (widgetRef.current) {
+        widgetRef.current.style.transform = `translate3d(${clamped.x}px, ${clamped.y}px, 0)`;
+      }
+
+      if (t < 1) {
+        walkRafRef.current = requestAnimationFrame(stepWalkFrame);
+      } else {
+        const finalHome = clampAndInspectBounds(0, 0);
+        offsetRef.current = finalHome;
+        if (widgetRef.current) {
+          widgetRef.current.style.transform = `translate3d(${finalHome.x}px, ${finalHome.y}px, 0)`;
+        }
+        setOffset(finalHome);
+        botStageRef.current = 'home_or_free';
+        setGlobalWalkState(false);
+        setDialogueIndex(0);
+        setNpcPhase('paused');
+        walkRafRef.current = null;
+      }
+    };
+
+    if (walkRafRef.current !== null) {
+      cancelAnimationFrame(walkRafRef.current);
+    }
+    walkRafRef.current = requestAnimationFrame(stepWalkFrame);
+  }, [clampAndInspectBounds, setGlobalWalkState]);
+
+  useEffect(() => {
+    return () => {
+      if (walkRafRef.current !== null) {
+        cancelAnimationFrame(walkRafRef.current);
+      }
+      if (typeof document !== 'undefined') {
+        document.body.removeAttribute('data-djbot-walking');
+      }
+    };
+  }, []);
+
+  // Re-clamp on window resize/scroll or keep synced to Hero anchor while in initial greeting stage
   useEffect(() => {
     const syncBounds = () => {
+      if (botStageRef.current === 'hero_greeting' && !dragSessionRef.current.active) {
+        const anchorOffset = computeHeroAnchorOffset();
+        offsetRef.current = anchorOffset;
+        if (widgetRef.current) {
+          widgetRef.current.style.transform = `translate3d(${anchorOffset.x}px, ${anchorOffset.y}px, 0)`;
+        }
+        setOffset(anchorOffset);
+        return;
+      }
+      if (botStageRef.current === 'walking_to_home') return;
+
       setOffset((prev) => {
         const next = clampAndInspectBounds(prev.x, prev.y);
         offsetRef.current = next;
@@ -993,8 +1237,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
     syncBounds();
     window.addEventListener('resize', syncBounds);
-    return () => window.removeEventListener('resize', syncBounds);
-  }, [clampAndInspectBounds, isExpanded, isWidgetVisible]);
+    window.addEventListener('scroll', syncBounds, { passive: true });
+    return () => {
+      window.removeEventListener('resize', syncBounds);
+      window.removeEventListener('scroll', syncBounds);
+    };
+  }, [clampAndInspectBounds, computeHeroAnchorOffset, isExpanded, isWidgetVisible]);
 
   // Global window-level Mouse & Touch drag listeners (immune to child button focus, fast cursor motion, and mobile scroll cancellation)
   useEffect(() => {
@@ -1009,6 +1257,14 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       // 5px threshold cleanly separates an intentional drag from a tap/click on buttons
       if (!session.movedBeyondThreshold && distance > 5) {
         session.movedBeyondThreshold = true;
+        if (botStageRef.current !== 'home_or_free') {
+          botStageRef.current = 'home_or_free';
+          if (walkRafRef.current !== null) {
+            cancelAnimationFrame(walkRafRef.current);
+            walkRafRef.current = null;
+          }
+          setGlobalWalkState(false);
+        }
         setIsDragging(true);
       }
 
@@ -1173,12 +1429,35 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
   };
 
-  // 1. Synchronize Greeting Action AFTER Loading Screen finishes (when isReady becomes true)
+  // 1. Synchronize Greeting Action at Hero Anchor AFTER Loading Screen finishes (when isReady becomes true)
   useEffect(() => {
     if (!isReady) return;
 
-    // Slight 350ms post-reveal delay so DJ Bot pops in & waves right as the loading screen curtain clears
+    // Continuously track #dj-bot-hero-anchor during the 1s post-loading hero entrance glide
+    let trackRaf = 0;
+    const trackStart = performance.now();
+    const syncHeroAnchorDuringEntrance = (now: number) => {
+      if (botStageRef.current === 'hero_greeting' && !dragSessionRef.current.active) {
+        const nextPos = computeHeroAnchorOffset();
+        offsetRef.current = nextPos;
+        if (widgetRef.current) {
+          widgetRef.current.style.transform = `translate3d(${nextPos.x}px, ${nextPos.y}px, 0)`;
+        }
+        setOffset(nextPos);
+      }
+      if (now - trackStart < 1100 && botStageRef.current === 'hero_greeting') {
+        trackRaf = requestAnimationFrame(syncHeroAnchorDuringEntrance);
+      }
+    };
+    trackRaf = requestAnimationFrame(syncHeroAnchorDuringEntrance);
+
+    // Slight 350ms post-reveal delay so DJ Bot pops in & waves right next to "Halo, saya Uray Fazli Alman"
     const bootGreetingSyncTimer = setTimeout(() => {
+      if (botStageRef.current === 'hero_greeting' && !dragSessionRef.current.active) {
+        const initialPos = computeHeroAnchorOffset();
+        offsetRef.current = initialPos;
+        setOffset(initialPos);
+      }
       setHasBootSynced(true);
       setMood('greeting');
       setDialogueIndex(0);
@@ -1189,14 +1468,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }, 350);
 
     return () => {
+      cancelAnimationFrame(trackRaf);
       clearTimeout(bootGreetingSyncTimer);
     };
-  }, [isReady]);
+  }, [isReady, computeHeroAnchorOffset]);
 
   // 2. Trigger a brief Angry burst when staying on the website for a long time (every 65s in normal mode),
   // and enforce a hard safety cap (8.5s max) so DJ Bot never stays angry for too long
   useEffect(() => {
-    if (!hasBootSynced) return;
+    if (!hasBootSynced || isWalking) return;
 
     if (mood === 'normal') {
       const longStayAngryTimer = setTimeout(() => {
@@ -1253,10 +1533,11 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       const velocityPxPerMs = dy / dt;
 
-      // Do NOT trigger dizzy animation when DJ Bot is greeting (menyapa), angry (marah), or composing/typing (mengetik)
+      // Do NOT trigger dizzy animation when DJ Bot is walking, greeting (menyapa), angry (marah), or composing/typing (mengetik)
       const currentMood = moodRef.current;
       const currentPhase = npcPhaseRef.current;
-      const isGreetingOrAngry = currentMood === 'greeting' || currentMood === 'angry';
+      const isGreetingOrAngry =
+        isWalkingRef.current || currentMood === 'greeting' || currentMood === 'angry';
       const isCurrentlyTyping =
         currentMood !== 'dizzy' && (currentPhase === 'composing' || currentPhase === 'typing');
 
@@ -1313,13 +1594,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
   // Reset dialogue index to 0 and trigger "Sedang mengetik..." when switching Play/Idle, track, or language
   useEffect(() => {
-    if (!hasBootSynced) return;
-    // If user starts playing music while DJ Bot is greeting or angry, switch to normal play mode
+    if (!hasBootSynced || isWalkingRef.current) return;
+    // If user starts playing music while DJ Bot is angry, switch to normal play mode
     if (isPlaying) {
-      setMood((prev) => (prev === 'greeting' || prev === 'angry' ? 'normal' : prev));
+      setMood((prev) => (prev === 'angry' ? 'normal' : prev));
     }
-    setDialogueIndex(0);
-    setNpcPhase('composing');
+    if (moodRef.current !== 'greeting') {
+      setDialogueIndex(0);
+      setNpcPhase('composing');
+    }
   }, [isPlaying, currentTrack.title, lang, hasBootSynced]);
 
   const activeDialogues =
@@ -1352,10 +1635,16 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       : 'Wheee~ flying across the network! Drop me anywhere 🛸✨'
     : activeDialogues[activeIndex % activeDialogues.length];
 
-  // State machine for every interactive text (only runs after loading screen has synced):
+  // State machine for every interactive text (only runs after loading screen has synced, and pauses completely while walking):
   // 'paused' (jeda istirahat dialog box) -> 'composing' (Mengetik... •••) -> 'typing' (Typewriter dengan jeda tanda baca) -> 'reading' -> 'paused'
   useEffect(() => {
     if (!hasBootSynced) return;
+
+    // Pause all interactive NPC text while DJ Bot is walking to bottom-left
+    if (isWalking) {
+      setTypedText('');
+      return;
+    }
 
     if (isDragging) {
       setTypedText(fullDialogueText);
@@ -1368,7 +1657,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         setNpcPhase('composing');
         setNpcTalkBounce(true);
         setTimeout(() => setNpcTalkBounce(false), 260);
-      }, 3400);
+      }, 2200);
       return () => clearTimeout(pauseTimer);
     }
 
@@ -1378,7 +1667,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         () => {
           setNpcPhase('typing');
         },
-        mood === 'greeting' ? 950 : mood === 'angry' ? 850 : 1400
+        mood === 'greeting' ? 850 : mood === 'angry' ? 850 : 1400
       );
       return () => clearTimeout(composeTimer);
     }
@@ -1390,7 +1679,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       setTypedText('');
 
       const typeNextChar = () => {
-        if (isCancelled) return;
+        if (isCancelled || isWalkingRef.current) return;
         charIndex += 1;
         setTypedText(fullDialogueText.slice(0, charIndex));
 
@@ -1436,11 +1725,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     if (npcPhase === 'reading') {
       const readTimer = setTimeout(
         () => {
-          // Once the message has been read completely, enter 'paused' (jeda) before the next dialogue box cycle
+          // Once the greeting message has been read, DJ Bot walks from Hero title to the bottom-left corner!
           if (mood === 'greeting') {
-            setMood('normal');
-            setDialogueIndex(0);
-            setNpcPhase('paused');
+            startWalkToBottomLeft();
           } else if (mood === 'dizzy') {
             setMood('normal');
             setDizzyDialogueIndex((prev) => prev + 1);
@@ -1457,15 +1744,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             setNpcPhase('paused');
           }
         },
-        mood === 'greeting' ? 6800 : mood === 'dizzy' ? 4200 : mood === 'angry' ? 4600 : 6200
+        mood === 'greeting' ? 3200 : mood === 'dizzy' ? 4200 : mood === 'angry' ? 4600 : 6200
       );
       return () => clearTimeout(readTimer);
     }
-  }, [npcPhase, fullDialogueText, isDragging, hasBootSynced, mood]);
+  }, [npcPhase, fullDialogueText, isDragging, isWalking, hasBootSynced, mood, startWalkToBottomLeft]);
 
   const handleNextNpcDialogue = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (dragSessionRef.current.movedBeyondThreshold) return;
+    if (dragSessionRef.current.movedBeyondThreshold || isWalking) return;
     robotSound.play('djbot');
     setNpcTalkBounce(true);
     setTimeout(() => setNpcTalkBounce(false), 260);
@@ -1478,14 +1765,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
 
     // If currently in greeting mode and user clicks while composing, skip straight to typing the greeting;
-    // if greeting is already read, advance smoothly to normal dialogues
+    // if greeting is already read, start walking to the bottom-left corner immediately!
     if (mood === 'greeting') {
       if (npcPhase === 'composing') {
         setNpcPhase('typing');
       } else {
-        setMood('normal');
-        setDialogueIndex(0);
-        setNpcPhase('composing');
+        startWalkToBottomLeft();
       }
       return;
     }
@@ -1915,14 +2200,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   isPlaying={isPlaying}
                   isExpanded={isExpanded}
                   isDragging={isDragging}
+                  isWalking={isWalking}
                   mood={mood}
                   step={step}
                 />
               </button>
 
-              {/* Interactive RPG NPC Cloud Dialog Bubble (Positioned Directly Above DJ Bot's Head) */}
+              {/* Interactive RPG NPC Cloud Dialog Bubble (Positioned Directly Above DJ Bot's Head, Paused While Walking) */}
               <AnimatePresence>
-                {(isDragging || npcPhase !== 'paused') && (
+                {!isWalking && (isDragging || npcPhase !== 'paused') && (
                   <motion.div
                     key="npc-cloud-dialog"
                     role="button"

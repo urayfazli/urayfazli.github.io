@@ -21,6 +21,7 @@ import { RetroAudioPlayer } from './components/RetroAudioPlayer';
 import { RunningTextMarquee } from './components/RunningTextMarquee';
 import { NodeSentryCharacter } from './components/CardCharacters';
 import { LoadingScreen } from './components/LoadingScreen';
+import { ScrollMotionBlur } from './components/ScrollMotionBlur';
 import { useLanguage } from './context/LanguageContext';
 
 export default function App() {
@@ -30,8 +31,9 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [selectedNetworkId, setSelectedNetworkId] = useState<string | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [highlightedCard, setHighlightedCard] = useState<string | null>(null);
+  const [highlightedCard, setHighlightedCard] = useState(null as string | null);
   const isNavigatingRef = useRef(false);
+  const mainContentRef = useRef<HTMLElement | null>(null);
 
   const selectedNetwork = selectedNetworkId
     ? networks.find((n) => n.id === selectedNetworkId) || null
@@ -128,6 +130,12 @@ export default function App() {
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
+      {/* Directional Vertical Scroll Motion Blur Engine (Up/Down Scroll) */}
+      <ScrollMotionBlur
+        targetRef={mainContentRef}
+        disabled={isLoading || Boolean(selectedNetworkId) || contactModalOpen}
+      />
+
       {/* Sticky Top Bar Navigation with Scroll Progress Indicator & Animated Rocket */}
       <div
         className={`sticky top-0 z-50 transition-opacity duration-700 ease-out ${
@@ -171,7 +179,7 @@ export default function App() {
         </motion.div>
 
         {/* Main Content Area */}
-        <main className="flex-grow relative z-10">
+        <main ref={mainContentRef} className="flex-grow relative z-10">
           
           {/* 1. Hero Section */}
           <section id="home" className="scroll-mt-20">

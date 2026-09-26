@@ -9,6 +9,19 @@ const TICKER_ITEMS = [
 ];
 
 export const RunningTextMarquee: React.FC = () => {
+  const [isPaused, setIsPaused] = React.useState(() =>
+    typeof document !== 'undefined' && document.body.hasAttribute('data-djbot-walking')
+  );
+
+  React.useEffect(() => {
+    const handleWalkChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isWalking: boolean }>;
+      setIsPaused(Boolean(customEvent.detail?.isWalking));
+    };
+    window.addEventListener('djbot-walk-change', handleWalkChange);
+    return () => window.removeEventListener('djbot-walk-change', handleWalkChange);
+  }, []);
+
   // Render multiple repetitions per half-track so wide viewports are always filled seamlessly
   const repetitions = [0, 1, 2];
 
@@ -60,7 +73,10 @@ export const RunningTextMarquee: React.FC = () => {
       />
 
       {/* Seamless Infinite Marquee Track */}
-      <div className="animate-marquee">
+      <div
+        className="animate-marquee"
+        style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
+      >
         {renderTrackHalf('track-a', false)}
         {renderTrackHalf('track-b', true)}
       </div>

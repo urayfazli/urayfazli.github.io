@@ -82,7 +82,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               Alman
             </motion.h1>
 
-            {/* Step 3: Caramel Doodle Role Badge + Live Validator Telemetry Pill */}
+            {/* Step 3: Caramel Doodle Role Badge */}
             <motion.div
               initial={{ opacity: 0, y: 12, scale: 0.96 }}
               animate={
@@ -95,14 +95,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.24,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="flex flex-wrap items-center gap-3 mb-5"
+              className="flex items-center gap-3 mb-5"
             >
-              <span className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018]">
+              <span
+                id="hero-operator-node-badge"
+                className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018]"
+              >
                 {lang === 'id' ? 'Operator Node' : 'Node Operator'}
-              </span>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#101722]/90 border border-dashed border-[#fbeee0]/35 font-mono text-xs text-[#d6c4b2]">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>99.9% Uptime · Mainnet & Testnet</span>
               </span>
             </motion.div>
 
