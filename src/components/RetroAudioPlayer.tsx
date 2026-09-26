@@ -817,8 +817,8 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       const currentTop = vh - baseBottom - botHeight + clampedY;
       const botCenterX = currentLeft + botWidth / 2;
 
-      // Ensure Expanded Cassette Card (280px on mobile, 310px on desktop) never clips left or right screen edges
-      const cardWidth = vw >= 640 ? 310 : 280;
+      // Ensure Expanded Cassette Card (250px on mobile, 276px on desktop) never clips left or right screen edges
+      const cardWidth = vw >= 640 ? 276 : 250;
       let cardShiftX = 0;
       if (currentLeft + cardWidth > vw - margin) {
         cardShiftX = vw - margin - (currentLeft + cardWidth);
@@ -1369,9 +1369,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   }}
                   transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                   style={{ left: `${viewportInfo.cardShiftX}px` }}
-                  className={`doodle-card absolute z-30 ${
-                    viewportInfo.openDownward ? 'top-full mt-4 sm:mt-5' : 'bottom-full mb-4 sm:mb-5'
-                  } p-3.5 sm:p-4 w-[280px] sm:w-[310px] text-[#fbeee0]`}
+                  className={`doodle-card !bg-[#101722]/75 backdrop-blur-md absolute z-30 ${
+                    viewportInfo.openDownward ? 'top-full mt-3.5 sm:mt-4' : 'bottom-full mb-3.5 sm:mb-4'
+                  } p-3 sm:p-3.5 w-[250px] sm:w-[276px] text-[#fbeee0]`}
                 >
                   {/* Top Masking Tape */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
@@ -1568,262 +1568,245 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                 />
               </button>
 
-              {/* Interactive RPG NPC Cloud Dialog Bubble ("Style Awan" - Seamless 3-Pass Fluffy Cloud Silhouette) */}
+              {/* Interactive RPG NPC Cloud Dialog Bubble ("Style Awan" - Auto-Flips Left/Right with breathing pause & spatial gap) */}
               <AnimatePresence>
-                {(isDragging || npcPhase !== 'paused') && (() => {
-                  const cloudBorderColor =
-                    !isDragging && mood === 'angry'
-                      ? '#f87171'
-                      : isDragging ||
-                        mood === 'greeting' ||
-                        npcPhase === 'composing' ||
-                        npcPhase === 'typing'
-                      ? '#e59b63'
-                      : isPlaying
-                      ? '#34d399'
-                      : '#fbeee0';
-
-                  const cloudFillColor =
-                    !isDragging && mood === 'angry' ? '#1a0f14' : '#101824';
-
-                  const cloudLobePositions = [
-                    'inset-0 rounded-[22px] sm:rounded-[28px]',
-                    '-top-2 sm:-top-3 left-[8%] w-[30%] h-5 sm:h-7 rounded-full',
-                    '-top-3 sm:-top-4 left-[31%] w-[38%] h-7 sm:h-9 rounded-full',
-                    '-top-2 sm:-top-3 right-[8%] w-[30%] h-5 sm:h-7 rounded-full',
-                    '-bottom-1.5 sm:-bottom-2.5 left-[10%] w-[30%] h-4 sm:h-6 rounded-full',
-                    '-bottom-2 sm:-bottom-3 left-[34%] w-[34%] h-5 sm:h-6 rounded-full',
-                    '-bottom-1.5 sm:-bottom-2.5 right-[10%] w-[28%] h-4 sm:h-6 rounded-full',
-                    '-left-2 sm:-left-3 top-[16%] bottom-[16%] w-5 sm:w-7 rounded-full',
-                    '-right-2 sm:-right-3 top-[16%] bottom-[16%] w-5 sm:w-7 rounded-full',
-                  ];
-
-                  return (
-                    <motion.div
-                      key="npc-cloud-dialog"
-                      role="button"
-                      tabIndex={0}
-                      initial={{
-                        opacity: 0,
-                        scale: 0.9,
-                        x: viewportInfo.bubbleOnLeft ? 8 : -8,
-                        y: 4,
-                      }}
-                      animate={{
-                        opacity: 1,
-                        scale: npcTalkBounce ? 1.04 : 1,
-                        x: 0,
-                        y: npcTalkBounce ? -4 : 0,
-                      }}
-                      exit={{
-                        opacity: 0,
-                        scale: 0.9,
-                        x: viewportInfo.bubbleOnLeft ? 8 : -8,
-                        y: 4,
-                      }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-                      onClick={handleNextNpcDialogue}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          handleNextNpcDialogue(e as unknown as React.MouseEvent);
-                        }
-                      }}
-                      style={{ touchAction: 'none' }}
-                      title={
-                        lang === 'id'
-                          ? 'Klik awan dialog untuk pesan NPC berikutnya! ☁️'
-                          : 'Click cloud bubble for next NPC dialogue! ☁️'
+                {(isDragging || npcPhase !== 'paused') && (
+                  <motion.div
+                    key="npc-cloud-dialog"
+                    role="button"
+                    tabIndex={0}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.9,
+                      x: viewportInfo.bubbleOnLeft ? 6 : -6,
+                      y: 3,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: npcTalkBounce ? 1.04 : 1,
+                      x: 0,
+                      y: npcTalkBounce ? -4 : 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      scale: 0.9,
+                      x: viewportInfo.bubbleOnLeft ? 6 : -6,
+                      y: 3,
+                    }}
+                    transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+                    onClick={handleNextNpcDialogue}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleNextNpcDialogue(e as unknown as React.MouseEvent);
                       }
-                      className={`absolute bottom-4 sm:bottom-6 z-20 flex items-center touch-none ${
+                    }}
+                    style={{ touchAction: 'none' }}
+                    title={
+                      lang === 'id'
+                        ? 'Klik awan dialog untuk pesan NPC berikutnya! ☁️'
+                        : 'Click cloud bubble for next NPC dialogue! ☁️'
+                    }
+                    className={`absolute bottom-3 sm:bottom-4 z-20 flex items-center touch-none ${
+                      viewportInfo.bubbleOnLeft
+                        ? 'right-full mr-2 sm:mr-3 flex-row-reverse'
+                        : 'left-full ml-2 sm:ml-3 flex-row'
+                    } ${
+                      isDragging ? 'cursor-grabbing' : 'cursor-pointer'
+                    } select-none group/cloud`}
+                  >
+                    {/* Trailing Little Cloud Puffs connecting DJ Bot to the Main Cloud (Compact & Translucent) */}
+                    <div
+                      className={`flex items-end gap-1 sm:gap-1.5 ${
                         viewportInfo.bubbleOnLeft
-                          ? 'right-full mr-3 sm:mr-4 flex-row-reverse'
-                          : 'left-full ml-3 sm:ml-4 flex-row'
-                      } ${
-                        isDragging ? 'cursor-grabbing' : 'cursor-pointer'
-                      } select-none group/cloud`}
+                          ? 'flex-row-reverse ml-0.5 mr-0.5'
+                          : 'mr-0.5 ml-0.5'
+                      } pointer-events-none z-20`}
                     >
-                      {/* Stepped Thought-Bubble Trail Puffs connecting DJ Bot to the Main Fluffy Cloud */}
-                      <div
-                        className={`flex items-center gap-1.5 sm:gap-2 ${
-                          viewportInfo.bubbleOnLeft
-                            ? 'flex-row-reverse ml-2 sm:ml-3 mr-0.5'
-                            : 'mr-2 sm:mr-3 ml-0.5'
-                        } pointer-events-none z-20`}
-                      >
-                        <span
-                          style={{
-                            backgroundColor: cloudFillColor,
-                            borderColor: cloudBorderColor,
-                          }}
-                          className="w-2 h-2 sm:w-2.5 sm:h-2.5 translate-y-1.5 sm:translate-y-2 rounded-full border-[1.8px] sm:border-2 shadow-[2px_2px_0px_#0b1018] transition-colors duration-200"
-                        />
-                        <span
-                          style={{
-                            backgroundColor: cloudFillColor,
-                            borderColor: cloudBorderColor,
-                          }}
-                          className="w-3 h-3 sm:w-3.5 sm:h-3.5 -translate-y-0.5 sm:-translate-y-1 rounded-full border-[1.8px] sm:border-2 shadow-[2.5px_2.5px_0px_#0b1018] transition-colors duration-200"
-                        />
-                      </div>
-
-                      {/* Main Seamless Fluffy Cloud Container */}
-                      <div
-                        className={`relative px-3.5 py-2.5 sm:px-5 sm:py-3.5 text-left transition-all duration-200 ${
-                          !isDragging && npcPhase === 'composing'
-                            ? 'w-fit min-w-[132px] sm:min-w-[172px] max-w-[164px] sm:max-w-[240px]'
-                            : 'w-[166px] sm:w-[254px]'
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
+                          !isDragging && mood === 'angry'
+                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            : isPlaying
+                            ? 'bg-[#101824]/50 border-emerald-400/75'
+                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                         }`}
-                      >
-                        {/* PASS 1: Unified Cloud Drop Shadow Silhouette */}
-                        <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 translate-x-[3px] translate-y-[4px] sm:translate-x-[4px] sm:translate-y-[5px] z-0"
-                        >
-                          {cloudLobePositions.map((posClass, idx) => (
-                            <span
-                              key={`shadow-${idx}`}
-                              className={`absolute ${posClass} bg-[#0b1018] shadow-[0_0_0_2px_#0b1018]`}
-                            />
-                          ))}
-                        </div>
+                      />
+                      <span
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 -translate-y-1 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
+                          !isDragging && mood === 'angry'
+                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            : isPlaying
+                            ? 'bg-[#101824]/50 border-emerald-400/75'
+                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                        }`}
+                      />
+                    </div>
 
-                        {/* PASS 2: Unified Continuous Cloud Outer Border Silhouette (Zero internal crossing lines) */}
-                        <div
+                    {/* Main Fluffy Cloud Container (Smaller & Translucent with Backdrop Blur) */}
+                    <div
+                      className={`relative px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[16px_20px_15px_18px] sm:rounded-[22px_26px_20px_24px] border sm:border-[1.5px] text-left backdrop-blur-md shadow-[2px_3px_12px_rgba(0,0,0,0.38)] transition-all duration-200 ${
+                        !isDragging && npcPhase === 'composing'
+                          ? 'w-fit min-w-[104px] sm:min-w-[132px] max-w-[134px] sm:max-w-[192px]'
+                          : 'w-[136px] sm:w-[196px]'
+                      } ${
+                        !isDragging && mood === 'angry'
+                          ? 'bg-[#1a0f14]/55 border-red-400/75 text-[#fbeee0]'
+                          : isDragging || mood === 'greeting'
+                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
+                          : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
+                          : isPlaying
+                          ? 'bg-[#101824]/50 border-emerald-400/75 text-[#fbeee0]'
+                          : 'bg-[#101824]/45 border-[#fbeee0]/60 text-[#fbeee0] group-hover/cloud:border-[#e59b63]/80 group-hover/cloud:bg-[#101824]/60'
+                      }`}
+                    >
+                      {/* Decorative Top Cloud Puffs (Smaller & Translucent) */}
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute -top-1.5 left-3 sm:left-4 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                          !isDragging && mood === 'angry'
+                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            : isPlaying
+                            ? 'bg-[#101824]/50 border-emerald-400/75'
+                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                        }`}
+                      />
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none absolute -top-2 left-6 sm:left-8 w-5 sm:w-7 h-2 sm:h-3 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                          !isDragging && mood === 'angry'
+                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            : isPlaying
+                            ? 'bg-[#101824]/50 border-emerald-400/75'
+                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                        }`}
+                      />
+                      {!(!isDragging && npcPhase === 'composing') && (
+                        <span
                           aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 z-[1]"
-                        >
-                          {cloudLobePositions.map((posClass, idx) => (
-                            <span
-                              key={`border-${idx}`}
-                              style={{
-                                backgroundColor: cloudBorderColor,
-                                boxShadow: `0 0 0 2px ${cloudBorderColor}`,
-                              }}
-                              className={`absolute ${posClass} transition-colors duration-200`}
-                            />
-                          ))}
-                        </div>
+                          className={`pointer-events-none absolute -top-1.5 right-3.5 sm:right-5 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                            !isDragging && mood === 'angry'
+                              ? 'bg-[#1a0f14]/55 border-red-400/75'
+                              : isDragging || mood === 'greeting' || npcPhase === 'typing'
+                              ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                              : isPlaying
+                              ? 'bg-[#101824]/50 border-emerald-400/75'
+                              : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                          }`}
+                        />
+                      )}
 
-                        {/* PASS 3: Unified Seamless Cloud Interior Fill + Subtle Sketchbook Highlight Arcs */}
-                        <div
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-0 z-[2]"
-                        >
-                          {cloudLobePositions.map((posClass, idx) => (
-                            <span
-                              key={`fill-${idx}`}
-                              style={{ backgroundColor: cloudFillColor }}
-                              className={`absolute ${posClass} transition-colors duration-200`}
-                            />
-                          ))}
-                          {/* Delicate Comic Cloud Crown Highlight */}
-                          <span className="absolute -top-1.5 sm:-top-2.5 left-[34%] w-[32%] h-3 sm:h-4 rounded-t-full border-t-[1.5px] border-[#fbeee0]/15" />
-                        </div>
-
-                        {/* Top NPC Header Tag inside Cloud (with generous bottom spacing before interactive text) */}
-                        <div className="relative z-10 flex items-center justify-between gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 border-b border-dashed border-[#fbeee0]/20 pb-1 sm:pb-1.5">
-                          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                !isDragging && mood === 'angry'
-                                  ? 'bg-red-400 animate-ping'
-                                  : isDragging || npcPhase === 'composing' || npcPhase === 'typing'
-                                  ? 'bg-[#e59b63] animate-ping'
-                                  : isPlaying
-                                  ? 'bg-emerald-400 animate-ping'
-                                  : 'bg-[#e59b63]'
-                              }`}
-                            />
-                            <span
-                              className={`font-mono text-[7.5px] sm:text-[9px] font-bold uppercase tracking-wider shrink-0 ${
-                                !isDragging && mood === 'angry' ? 'text-red-400' : 'text-[#e59b63]'
-                              }`}
-                            >
-                              DJ BOT
-                            </span>
-                            <span
-                              className={`font-mono text-[7px] sm:text-[8px] px-1 sm:px-1.5 py-0.2 rounded-full truncate ${
-                                !isDragging && mood === 'greeting'
-                                  ? 'bg-[#e59b63]/25 text-[#fbeee0] border border-[#e59b63]/50'
-                                  : !isDragging && mood === 'angry'
-                                  ? 'bg-red-500/25 text-red-300 border border-red-400/40'
-                                  : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
-                                  ? 'bg-[#9d613c]/35 text-[#fbeee0] border border-[#e59b63]/40'
-                                  : isPlaying
-                                  ? 'bg-emerald-500/20 text-emerald-300'
-                                  : 'bg-white/10 text-[#d6c4b2]'
-                              }`}
-                            >
-                              {!isDragging && mood === 'greeting'
-                                ? npcPhase === 'composing' || npcPhase === 'typing'
-                                  ? lang === 'id'
-                                    ? 'MENYAPA...'
-                                    : 'GREETING...'
-                                  : lang === 'id'
-                                  ? 'HALO!'
-                                  : 'HI!'
-                                : !isDragging && mood === 'angry'
-                                ? npcPhase === 'composing' || npcPhase === 'typing'
-                                  ? lang === 'id'
-                                    ? 'NGAMBEK...'
-                                    : 'FUMING...'
-                                  : lang === 'id'
-                                  ? 'MARAH!'
-                                  : 'ANGRY!'
-                                : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
-                                ? lang === 'id'
-                                  ? 'MENGETIK...'
-                                  : 'TYPING...'
+                      {/* Top NPC Header Tag inside Cloud */}
+                      <div className="relative z-10 flex items-center justify-between gap-1 sm:gap-1.5 mb-1 sm:mb-1.5 border-b border-dashed border-[#fbeee0]/15 pb-0.5 sm:pb-1">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              !isDragging && mood === 'angry'
+                                ? 'bg-red-400 animate-ping'
+                                : isDragging || npcPhase === 'composing' || npcPhase === 'typing'
+                                ? 'bg-[#e59b63] animate-ping'
                                 : isPlaying
-                                ? 'PLAY'
-                                : 'IDLE'}
-                            </span>
-                          </div>
-
-                          <span className="font-mono text-[8px] sm:text-[9px] text-[#a39483] group-hover/cloud:text-[#fbeee0] flex items-center gap-0.5 shrink-0">
-                            <span>☁️</span>
-                            <span>▸</span>
+                                ? 'bg-emerald-400 animate-ping'
+                                : 'bg-[#e59b63]'
+                            }`}
+                          />
+                          <span
+                            className={`font-mono text-[7px] sm:text-[8px] font-bold uppercase tracking-wider shrink-0 ${
+                              !isDragging && mood === 'angry' ? 'text-red-400' : 'text-[#e59b63]'
+                            }`}
+                          >
+                            DJ BOT
+                          </span>
+                          <span
+                            className={`font-mono text-[6.5px] sm:text-[7.5px] px-1 py-0.2 rounded-full truncate ${
+                              !isDragging && mood === 'greeting'
+                                ? 'bg-[#e59b63]/20 text-[#fbeee0] border border-[#e59b63]/40'
+                                : !isDragging && mood === 'angry'
+                                ? 'bg-red-500/20 text-red-300 border border-red-400/35'
+                                : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                                ? 'bg-[#9d613c]/30 text-[#fbeee0] border border-[#e59b63]/35'
+                                : isPlaying
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-white/10 text-[#d6c4b2]'
+                            }`}
+                          >
+                            {!isDragging && mood === 'greeting'
+                              ? npcPhase === 'composing' || npcPhase === 'typing'
+                                ? lang === 'id'
+                                  ? 'MENYAPA...'
+                                  : 'GREETING...'
+                                : lang === 'id'
+                                ? 'HALO!'
+                                : 'HI!'
+                              : !isDragging && mood === 'angry'
+                              ? npcPhase === 'composing' || npcPhase === 'typing'
+                                ? lang === 'id'
+                                  ? 'NGAMBEK...'
+                                  : 'FUMING...'
+                                : lang === 'id'
+                                ? 'MARAH!'
+                                : 'ANGRY!'
+                              : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
+                              ? lang === 'id'
+                                ? 'MENGETIK...'
+                                : 'TYPING...'
+                              : isPlaying
+                              ? 'PLAY'
+                              : 'IDLE'}
                           </span>
                         </div>
 
-                        {/* NPC Cloud Dialogue Body: Compact "Sedang mengetik..." Bubble vs Typewriter Text with relaxed spacing */}
-                        <div className="relative z-10 pt-0.5">
-                          {!isDragging && npcPhase === 'composing' ? (
-                            <div className="flex items-center gap-2 sm:gap-2.5 py-1 sm:py-1.5">
-                              <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full bg-[#090d14] border border-[#e59b63]/40 shadow-inner shrink-0">
-                                <span
-                                  className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
-                                  style={{ animationDelay: '0ms' }}
-                                />
-                                <span
-                                  className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
-                                  style={{ animationDelay: '150ms' }}
-                                />
-                                <span
-                                  className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-[#e59b63] animate-bounce"
-                                  style={{ animationDelay: '300ms' }}
-                                />
-                              </span>
-                              <span className="font-hand text-[11px] sm:text-sm text-[#e59b63] tracking-wide whitespace-nowrap">
-                                {lang === 'id' ? 'Mengetik...' : 'Typing...'}
-                              </span>
-                            </div>
-                          ) : (
-                            <p className="font-hand text-[11.5px] sm:text-sm leading-relaxed text-[#fbeee0] tracking-[0.01em] min-h-[2rem] sm:min-h-[2.65rem] flex items-center">
-                              <span>
-                                {typedText}
-                                {npcPhase === 'typing' && typedText.length < fullDialogueText.length && (
-                                  <span className="inline-block w-1 h-2.5 sm:h-3 ml-1 bg-[#e59b63] animate-pulse align-middle" />
-                                )}
-                              </span>
-                            </p>
-                          )}
-                        </div>
+                        <span className="font-mono text-[7.5px] sm:text-[8.5px] text-[#a39483]/90 group-hover/cloud:text-[#fbeee0] flex items-center gap-0.5 shrink-0">
+                          <span>☁️</span>
+                          <span>▸</span>
+                        </span>
                       </div>
-                    </motion.div>
-                  );
-                })()}
+
+                      {/* NPC Cloud Dialogue Body: Compact "Sedang mengetik..." Bubble vs Typewriter Text */}
+                      <div className="relative z-10 pt-0.5">
+                        {!isDragging && npcPhase === 'composing' ? (
+                          <div className="flex items-center gap-1.5 sm:gap-2 py-0.5">
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#090d14]/55 border border-[#e59b63]/35 shadow-inner shrink-0">
+                              <span
+                                className="w-1 h-1 rounded-full bg-[#e59b63] animate-bounce"
+                                style={{ animationDelay: '0ms' }}
+                              />
+                              <span
+                                className="w-1 h-1 rounded-full bg-[#e59b63] animate-bounce"
+                                style={{ animationDelay: '150ms' }}
+                              />
+                              <span
+                                className="w-1 h-1 rounded-full bg-[#e59b63] animate-bounce"
+                                style={{ animationDelay: '300ms' }}
+                              />
+                            </span>
+                            <span className="font-hand text-[10px] sm:text-xs text-[#e59b63] tracking-wide whitespace-nowrap">
+                              {lang === 'id' ? 'Mengetik...' : 'Typing...'}
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="font-hand text-[10.5px] sm:text-xs leading-snug sm:leading-relaxed text-[#fbeee0] tracking-[0.01em] min-h-[1.55rem] sm:min-h-[2.05rem] flex items-center">
+                            <span>
+                              {typedText}
+                              {npcPhase === 'typing' && typedText.length < fullDialogueText.length && (
+                                <span className="inline-block w-1 h-2.5 ml-0.5 bg-[#e59b63] animate-pulse align-middle" />
+                              )}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
             </div>
           </motion.div>
