@@ -1689,11 +1689,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
   const handleMuteToggle = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (volume > 0) {
-      retroAudio.setVolume(0);
-    } else {
-      retroAudio.setVolume(0.28);
-    }
+    retroAudio.toggleMute();
   };
 
   const handleHideWidget = (e?: React.MouseEvent) => {

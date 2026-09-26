@@ -127,6 +127,18 @@ class RobotSoundEngine {
     filter.connect(env);
     env.connect(out);
 
+    carrier.onended = () => {
+      try {
+        carrier.disconnect();
+        modulator.disconnect();
+        modGain.disconnect();
+        filter.disconnect();
+        env.disconnect();
+      } catch {
+        // Ignore disconnect errors
+      }
+    };
+
     carrier.start(startTime);
     modulator.start(startTime);
     carrier.stop(startTime + duration + 0.015);

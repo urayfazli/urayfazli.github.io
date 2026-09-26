@@ -63,12 +63,15 @@ class RetroAudioEngine {
   private htmlAudioTrackId: string | null = null;
   private usingHtmlAudio = false;
   private failedUrls = new Set<string>();
+  private blobUrlCache = new Map<string, string>();
+  private playRequestId = 0;
 
   private isPlaying = false;
   private isShuffle = true; // Default aktif: sistem pemutaran acak (shuffle)
   private shuffleBag: number[] = [];
   private currentTrackIndex = Math.floor(Math.random() * BACKSOUND_TRACKS.length);
   private volume = 0.28; // Default comfortable volume
+  private previousNonZeroVolume = 0.28;
   private stepInterval: number | null = null;
   private currentStep = 0;
   private synthTickCount = 0;
@@ -76,29 +79,34 @@ class RetroAudioEngine {
   private listeners: Array<() => void> = [];
 
   private initContext() {
-    if (!this.ctx) {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.ctx = new AudioCtx();
+    try {
+      if (!this.ctx) {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
+        this.ctx = new AudioCtx();
 
-      // Master lowpass filter for warm, cozy retro sound (softens harsh square waves)
-      this.filterNode = this.ctx.createBiquadFilter();
-      this.filterNode.type = 'lowpass';
-      this.filterNode.frequency.value = 2400;
+        // Master lowpass filter for warm, cozy retro sound (softens harsh square waves)
+        this.filterNode = this.ctx.createBiquadFilter();
+        this.filterNode.type = 'lowpass';
+        this.filterNode.frequency.value = 2400;
 
-      // Master gain
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = this.volume;
+        // Master gain
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = this.volume;
 
-      this.filterNode.connect(this.masterGain);
-      this.masterGain.connect(this.ctx.destination);
-    }
+        this.filterNode.connect(this.masterGain);
+        this.masterGain.connect(this.ctx.destination);
+      }
 
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {
-        // Ignore autoplay suspension outside gesture
-      });
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume().catch(() => {
+          // Ignore autoplay suspension outside gesture
+        });
+      }
+    } catch {
+      // Ignore Web Audio initialization errors
     }
   }
 
@@ -109,95 +117,189 @@ class RetroAudioEngine {
     }
   }
 
-  private destroyHtmlAudio() {
-    if (this.htmlAudio) {
-      try {
-        this.htmlAudio.onended = null;
-        this.htmlAudio.onerror = null;
-        this.htmlAudio.pause();
-        this.htmlAudio.currentTime = 0;
-      } catch {
-        // Ignore cleanup errors
-      }
-      this.htmlAudio = null;
+  private getOrCreateHtmlAudio(): HTMLAudioElement {
+    if (!this.htmlAudio) {
+      const audio = new Audio();
+      audio.loop = false;
+      audio.preload = 'auto';
+      audio.volume = this.volume;
+      audio.muted = this.volume === 0;
+      this.htmlAudio = audio;
     }
-    this.htmlAudioTrackId = null;
-    this.usingHtmlAudio = false;
+    return this.htmlAudio;
   }
 
-  private pauseHtmlAudio() {
+  private pauseHtmlAudio(resetTime = false) {
     if (this.htmlAudio) {
       try {
         this.htmlAudio.pause();
+        if (resetTime && this.htmlAudio.readyState > 0) {
+          this.htmlAudio.currentTime = 0;
+        }
       } catch {
-        // Ignore pause errors
+        // Ignore pause/seek errors
       }
     }
+  }
+
+  /**
+   * Detect true audio MIME type from binary magic bytes (handles MP3 files saved with .wav extension and vice-versa)
+   */
+  private detectMimeTypeFromBuffer(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer.slice(0, 12));
+    if (bytes.length >= 4) {
+      // "ID3" tag -> MP3
+      if (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33) {
+        return 'audio/mpeg';
+      }
+      // MPEG ADTS frame sync -> MP3
+      if (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0) {
+        return 'audio/mpeg';
+      }
+      // "RIFF" header -> WAV
+      if (
+        bytes[0] === 0x52 &&
+        bytes[1] === 0x49 &&
+        bytes[2] === 0x46 &&
+        bytes[3] === 0x46
+      ) {
+        return 'audio/wav';
+      }
+      // "OggS" header -> OGG
+      if (
+        bytes[0] === 0x4f &&
+        bytes[1] === 0x67 &&
+        bytes[2] === 0x67 &&
+        bytes[3] === 0x53
+      ) {
+        return 'audio/ogg';
+      }
+      // "fLaC" header -> FLAC
+      if (
+        bytes[0] === 0x66 &&
+        bytes[1] === 0x4c &&
+        bytes[2] === 0x61 &&
+        bytes[3] === 0x43
+      ) {
+        return 'audio/flac';
+      }
+    }
+    if (
+      bytes.length >= 8 &&
+      bytes[4] === 0x66 &&
+      bytes[5] === 0x74 &&
+      bytes[6] === 0x79 &&
+      bytes[7] === 0x70
+    ) {
+      return 'audio/mp4';
+    }
+    return 'audio/mpeg';
+  }
+
+  /**
+   * Fetch candidate URLs for a track, sniff real MIME type from magic header, and cache as a playable Blob URL
+   */
+  private async resolveBlobUrlForTrack(track: RetroTrack): Promise<string | null> {
+    const candidates = [track.audioSrc, track.fallbackAudioSrc].filter(
+      (u): u is string => Boolean(u)
+    );
+
+    for (const url of candidates) {
+      const cached = this.blobUrlCache.get(url);
+      if (cached) return cached;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const buf = await res.arrayBuffer();
+        if (buf.byteLength < 64) continue;
+        const mime = this.detectMimeTypeFromBuffer(buf);
+        const blobUrl = URL.createObjectURL(new Blob([buf], { type: mime }));
+        this.blobUrlCache.set(url, blobUrl);
+        if (track.audioSrc) {
+          this.blobUrlCache.set(track.audioSrc, blobUrl);
+        }
+        return blobUrl;
+      } catch {
+        // Try next candidate
+      }
+    }
+    return null;
   }
 
   private tryStartOrResumeHtmlAudio(track: RetroTrack): boolean {
-    const src = track.audioSrc;
-    if (!src || this.failedUrls.has(src)) {
-      this.destroyHtmlAudio();
+    const primarySrc = track.audioSrc || track.fallbackAudioSrc;
+    if (!primarySrc || this.failedUrls.has(track.id)) {
+      this.usingHtmlAudio = false;
       return false;
     }
 
-    // Resume existing audio element if it is already loaded for this exact track
-    if (this.htmlAudio && this.htmlAudioTrackId === track.id) {
-      this.htmlAudio.volume = this.volume;
-      this.htmlAudio.loop = false;
-      this.usingHtmlAudio = true;
+    const requestId = ++this.playRequestId;
+    const audio = this.getOrCreateHtmlAudio();
+    audio.volume = this.volume;
+    audio.muted = this.volume === 0;
+    audio.loop = false;
 
-      const resumePromise = this.htmlAudio.play();
+    const cachedBlobUrl =
+      this.blobUrlCache.get(primarySrc) ||
+      (track.fallbackAudioSrc ? this.blobUrlCache.get(track.fallbackAudioSrc) : undefined);
+
+    // Resume existing audio element if it is already loaded for this exact track and has no error
+    if (this.htmlAudioTrackId === track.id && audio.src && !audio.error) {
+      this.usingHtmlAudio = true;
+      const resumePromise = audio.play();
       if (resumePromise !== undefined) {
         resumePromise.catch((err: unknown) => {
-          // Do NOT treat pause() interruption (AbortError) as a broken file!
-          const errName = err instanceof DOMException ? err.name : '';
+          if (requestId !== this.playRequestId) return;
+          const errName = (err as { name?: string })?.name || '';
           if (errName === 'AbortError' || !this.isPlaying) {
             return;
           }
-          this.failedUrls.add(src);
-          this.destroyHtmlAudio();
-          this.notify();
+          if (errName === 'NotAllowedError') {
+            this.isPlaying = false;
+            this.clearStepTimer();
+            this.notify();
+            return;
+          }
+          this.recoverTrackPlaybackWithBlob(track, requestId);
         });
       }
       return true;
     }
 
     try {
-      this.destroyHtmlAudio();
-      const audio = new Audio(src);
-      audio.loop = false; // Disable single-track loop so ended event triggers next/random track
-      audio.volume = this.volume;
-      audio.preload = 'auto';
-
-      audio.onerror = () => {
-        if (this.htmlAudio !== audio) return;
-        this.failedUrls.add(src);
-        this.destroyHtmlAudio();
-        this.notify();
-      };
-
       audio.onended = () => {
-        if (this.htmlAudio !== audio || !this.isPlaying) return;
+        if (!this.isPlaying || this.htmlAudioTrackId !== track.id) return;
         this.nextTrack();
       };
 
-      this.htmlAudio = audio;
+      audio.onerror = () => {
+        if (requestId !== this.playRequestId || !this.isPlaying) return;
+        this.recoverTrackPlaybackWithBlob(track, requestId);
+      };
+
       this.htmlAudioTrackId = track.id;
       this.usingHtmlAudio = true;
+      audio.src = cachedBlobUrl || primarySrc;
+      audio.load();
 
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((err: unknown) => {
-          const errName = err instanceof DOMException ? err.name : '';
-          // Ignore AbortError when user clicks Pause while play() promise is still resolving
-          if (errName === 'AbortError' || !this.isPlaying || this.htmlAudio !== audio) {
+          if (requestId !== this.playRequestId) return;
+          const errName = (err as { name?: string })?.name || '';
+          // Ignore AbortError when user clicks Pause or switches tracks while play() is resolving
+          if (errName === 'AbortError' || !this.isPlaying) {
             return;
           }
-          this.failedUrls.add(src);
-          this.destroyHtmlAudio();
-          this.notify();
+          // If browser blocked autoplay outside user gesture, reset isPlaying cleanly without blacklisting track
+          if (errName === 'NotAllowedError') {
+            this.isPlaying = false;
+            this.clearStepTimer();
+            this.notify();
+            return;
+          }
+          this.recoverTrackPlaybackWithBlob(track, requestId);
         });
       }
       return true;
@@ -205,6 +307,62 @@ class RetroAudioEngine {
       this.usingHtmlAudio = false;
       return false;
     }
+  }
+
+  private recoverTrackPlaybackWithBlob(track: RetroTrack, requestId: number) {
+    this.resolveBlobUrlForTrack(track)
+      .then((blobUrl) => {
+        if (requestId !== this.playRequestId || !this.isPlaying) return;
+
+        if (!blobUrl) {
+          // Both .mp3 and .wav failed to fetch — fall back to 8-bit Web Audio synth
+          this.failedUrls.add(track.id);
+          this.usingHtmlAudio = false;
+          this.initContext();
+          this.notify();
+          return;
+        }
+
+        const audio = this.getOrCreateHtmlAudio();
+        audio.onerror = () => {
+          if (requestId !== this.playRequestId) return;
+          this.failedUrls.add(track.id);
+          this.usingHtmlAudio = false;
+          this.initContext();
+          this.notify();
+        };
+        this.htmlAudioTrackId = track.id;
+        this.usingHtmlAudio = true;
+        audio.src = blobUrl;
+        audio.volume = this.volume;
+        audio.muted = this.volume === 0;
+
+        const retryPromise = audio.play();
+        if (retryPromise !== undefined) {
+          retryPromise.catch((err: unknown) => {
+            if (requestId !== this.playRequestId) return;
+            const errName = (err as { name?: string })?.name || '';
+            if (errName === 'AbortError' || !this.isPlaying) return;
+            if (errName === 'NotAllowedError') {
+              this.isPlaying = false;
+              this.clearStepTimer();
+              this.notify();
+              return;
+            }
+            this.failedUrls.add(track.id);
+            this.usingHtmlAudio = false;
+            this.initContext();
+            this.notify();
+          });
+        }
+      })
+      .catch(() => {
+        if (requestId !== this.playRequestId) return;
+        this.failedUrls.add(track.id);
+        this.usingHtmlAudio = false;
+        this.initContext();
+        this.notify();
+      });
   }
 
   /**
@@ -255,17 +413,20 @@ class RetroAudioEngine {
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const noteGain = this.ctx.createGain();
+    let vibrato: OscillatorNode | null = null;
+    let vibratoGain: GainNode | null = null;
 
     osc.type = type;
     osc.frequency.setValueAtTime(freq, now);
 
     // Subtle retro vibrato for emotional warmth
     if (type === 'square' && freq > 200) {
-      const vibrato = this.ctx.createOscillator();
-      const vibratoGain = this.ctx.createGain();
+      vibrato = this.ctx.createOscillator();
+      vibratoGain = this.ctx.createGain();
       vibrato.frequency.value = 5.5;
       vibratoGain.gain.value = freq * 0.015;
-      vibrato.connect(osc.frequency);
+      vibrato.connect(vibratoGain);
+      vibratoGain.connect(osc.frequency);
       vibrato.start(now);
       vibrato.stop(now + duration);
     }
@@ -273,11 +434,25 @@ class RetroAudioEngine {
     // Classic ADSR envelope
     noteGain.gain.setValueAtTime(0.001, now);
     noteGain.gain.linearRampToValueAtTime(gainLevel, now + 0.02);
-    noteGain.gain.exponentialRampToValueAtTime(gainLevel * decay * 0.4, now + duration * 0.7);
+    noteGain.gain.exponentialRampToValueAtTime(
+      Math.max(0.0002, gainLevel * decay * 0.4),
+      now + duration * 0.7
+    );
     noteGain.gain.linearRampToValueAtTime(0.0001, now + duration);
 
     osc.connect(noteGain);
     noteGain.connect(this.filterNode);
+
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        noteGain.disconnect();
+        if (vibrato) vibrato.disconnect();
+        if (vibratoGain) vibratoGain.disconnect();
+      } catch {
+        // Ignore disconnect errors
+      }
+    };
 
     osc.start(now);
     osc.stop(now + duration + 0.05);
@@ -288,7 +463,7 @@ class RetroAudioEngine {
     if (!this.isPlaying || !this.ctx || !this.filterNode) return;
     try {
       const now = this.ctx.currentTime;
-      const bufferSize = this.ctx.sampleRate * duration;
+      const bufferSize = Math.max(1, Math.floor(this.ctx.sampleRate * duration));
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
@@ -311,6 +486,16 @@ class RetroAudioEngine {
       noiseFilter.connect(noiseGain);
       noiseGain.connect(this.filterNode);
 
+      noise.onended = () => {
+        try {
+          noise.disconnect();
+          noiseFilter.disconnect();
+          noiseGain.disconnect();
+        } catch {
+          // Ignore disconnect errors
+        }
+      };
+
       noise.start(now);
       noise.stop(now + duration);
     } catch {
@@ -325,8 +510,10 @@ class RetroAudioEngine {
     const totalSteps = Math.max(1, track.melody.length);
     const stepDuration = 60 / track.bpm / 2; // Sixteenth note step duration
 
-    // Synthesize 8-bit notes only when not playing an HTML5 audio file (.wav / .mp3)
+    // Synthesize 8-bit notes only when not playing an HTML5 audio file (.mp3 / .wav)
     if (!this.usingHtmlAudio) {
+      this.initContext();
+
       // 1. Play Lead Melody (Square wave)
       const melodyNote = track.melody[this.currentStep % totalSteps];
       const melodyFreq = NOTE_FREQS[melodyNote] || 0;
@@ -374,7 +561,6 @@ class RetroAudioEngine {
   }
 
   public start() {
-    this.initContext();
     if (this.isPlaying) return;
 
     this.clearStepTimer();
@@ -384,7 +570,10 @@ class RetroAudioEngine {
     const stepMs = (60 / track.bpm / 2) * 1000;
 
     // Play or resume audio file from `public/audio/` synchronously inside user gesture
-    this.tryStartOrResumeHtmlAudio(track);
+    const startedHtmlAudio = this.tryStartOrResumeHtmlAudio(track);
+    if (!startedHtmlAudio) {
+      this.initContext();
+    }
 
     // Step timer drives equalizer bars, DJ Bot head-bob, and 8-bit synth fallback
     this.step();
@@ -398,8 +587,9 @@ class RetroAudioEngine {
   public pause() {
     if (!this.isPlaying) return;
     this.isPlaying = false;
+    this.playRequestId += 1;
     this.clearStepTimer();
-    this.pauseHtmlAudio();
+    this.pauseHtmlAudio(false);
 
     if (this.ctx && this.ctx.state === 'running') {
       this.ctx.suspend().catch(() => {
@@ -410,12 +600,19 @@ class RetroAudioEngine {
     this.notify();
   }
 
-  public stop() {
+  private stopForTrackSwitch() {
     this.isPlaying = false;
+    this.playRequestId += 1;
     this.clearStepTimer();
-    this.destroyHtmlAudio();
+    this.pauseHtmlAudio(true);
+    this.htmlAudioTrackId = null;
+    this.usingHtmlAudio = false;
     this.currentStep = 0;
     this.synthTickCount = 0;
+  }
+
+  public stop() {
+    this.stopForTrackSwitch();
 
     if (this.ctx && this.ctx.state === 'running') {
       this.ctx.suspend().catch(() => {
@@ -436,7 +633,7 @@ class RetroAudioEngine {
 
   public nextTrack() {
     const wasPlaying = this.isPlaying;
-    this.stop();
+    this.stopForTrackSwitch();
 
     if (this.isShuffle) {
       this.currentTrackIndex = this.getNextRandomTrackIndex();
@@ -453,7 +650,7 @@ class RetroAudioEngine {
 
   public prevTrack() {
     const wasPlaying = this.isPlaying;
-    this.stop();
+    this.stopForTrackSwitch();
 
     if (this.isShuffle) {
       this.currentTrackIndex = this.getNextRandomTrackIndex();
@@ -470,7 +667,7 @@ class RetroAudioEngine {
   }
 
   public playRandomTrack() {
-    this.stop();
+    this.stopForTrackSwitch();
     this.currentTrackIndex = this.getNextRandomTrackIndex();
     this.start();
   }
@@ -478,7 +675,7 @@ class RetroAudioEngine {
   public selectTrack(index: number) {
     if (index < 0 || index >= this.tracks.length) return;
     const wasPlaying = this.isPlaying;
-    this.stop();
+    this.stopForTrackSwitch();
     this.currentTrackIndex = index;
     if (wasPlaying) {
       this.start();
@@ -509,13 +706,25 @@ class RetroAudioEngine {
 
   public setVolume(val: number) {
     this.volume = Math.max(0, Math.min(1, val));
+    if (this.volume > 0) {
+      this.previousNonZeroVolume = this.volume;
+    }
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
     }
     if (this.htmlAudio) {
       this.htmlAudio.volume = this.volume;
+      this.htmlAudio.muted = this.volume === 0;
     }
     this.notify();
+  }
+
+  public toggleMute() {
+    if (this.volume > 0) {
+      this.setVolume(0);
+    } else {
+      this.setVolume(this.previousNonZeroVolume > 0 ? this.previousNonZeroVolume : 0.28);
+    }
   }
 
   public getVolume() {
@@ -604,6 +813,14 @@ class RetroAudioEngine {
 
       osc.connect(gain);
       gain.connect(ctx.destination);
+      osc.onended = () => {
+        try {
+          osc.disconnect();
+          gain.disconnect();
+        } catch {
+          // Ignore disconnect errors
+        }
+      };
       osc.start(now + offsetSec);
       osc.stop(now + offsetSec + durationSec + 0.015);
     };
