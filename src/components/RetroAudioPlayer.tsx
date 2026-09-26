@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { retroAudio } from '../utils/retroAudioEngine';
-import { RetroCassetteDoodle, RetroSpeakerDoodle, DoodleTape } from './Doodles';
+import { RetroCassetteDoodle, RetroSpeakerDoodle } from './Doodles';
 import { useLanguage } from '../context/LanguageContext';
 
 export type DjBotMood = 'greeting' | 'normal' | 'angry' | 'dizzy';
@@ -857,6 +857,10 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const [npcPhase, setNpcPhase] = useState<'paused' | 'composing' | 'typing' | 'reading'>('composing');
   const [npcTalkBounce, setNpcTalkBounce] = useState(false);
   const dizzyRecoveryTimerRef = useRef<number | null>(null);
+  const moodRef = useRef<DjBotMood>(mood);
+  const npcPhaseRef = useRef<'paused' | 'composing' | 'typing' | 'reading'>(npcPhase);
+  moodRef.current = mood;
+  npcPhaseRef.current = npcPhase;
 
   // Scroll-independent viewport offset (dx, dy from initial bottom-left anchor)
   const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -1243,6 +1247,18 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       const velocityPxPerMs = dy / dt;
 
+      // Do NOT trigger dizzy animation when DJ Bot is greeting (menyapa), angry (marah), or composing/typing (mengetik)
+      const currentMood = moodRef.current;
+      const currentPhase = npcPhaseRef.current;
+      const isGreetingOrAngry = currentMood === 'greeting' || currentMood === 'angry';
+      const isCurrentlyTyping =
+        currentMood !== 'dizzy' && (currentPhase === 'composing' || currentPhase === 'typing');
+
+      if (isGreetingOrAngry || isCurrentlyTyping) {
+        rollingDistance = 0;
+        return;
+      }
+
       // Trigger dizzy/mabuk animation when scrolling rapidly (burst > 420px in 170ms or speed > 1.75px/ms with meaningful distance)
       if (
         !dragSessionRef.current.active &&
@@ -1250,15 +1266,13 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       ) {
         rollingDistance = 0;
 
-        setMood((prevMood) => {
-          if (prevMood !== 'dizzy') {
-            setTypedText('');
-            setNpcPhase('typing');
-            setNpcTalkBounce(true);
-            window.setTimeout(() => setNpcTalkBounce(false), 300);
-          }
-          return 'dizzy';
-        });
+        if (currentMood !== 'dizzy') {
+          setMood('dizzy');
+          setTypedText('');
+          setNpcPhase('typing');
+          setNpcTalkBounce(true);
+          window.setTimeout(() => setNpcTalkBounce(false), 300);
+        }
 
         if (dizzyRecoveryTimerRef.current !== null) {
           window.clearTimeout(dizzyRecoveryTimerRef.current);
@@ -1593,7 +1607,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             transition={{ type: 'spring', stiffness: 420, damping: 32 }}
             className="relative flex items-end"
           >
-            {/* 1. Expanded Retro Cassette Player Doodle Card (Auto-flips below character if dragged near top of screen) */}
+            {/* 1. Expanded Retro Cassette Player Glass Card (Auto-flips below character if dragged near top of screen) */}
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
@@ -1610,24 +1624,33 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   }}
                   transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                   style={{ left: `${viewportInfo.cardShiftX}px` }}
-                  className={`doodle-card !bg-[#101722]/75 backdrop-blur-md absolute z-30 ${
+                  className={`glass-player-card absolute z-30 ${
                     viewportInfo.openDownward ? 'top-full mt-3.5 sm:mt-4' : 'bottom-full mb-3.5 sm:mb-4'
-                  } p-3 sm:p-3.5 w-[250px] sm:w-[276px] text-[#fbeee0]`}
+                  } p-3.5 sm:p-4 w-[254px] sm:w-[280px] text-[#fbeee0] overflow-hidden`}
                 >
-                  {/* Top Masking Tape */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
-                    <DoodleTape className="w-20 h-5" />
+                  {/* Top Specular Glass Reflection Highlight & Ambient Sheen */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 overflow-hidden rounded-[22px]"
+                  >
+                    <div className="absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/55 to-transparent" />
+                    <div className="absolute -top-8 left-1/4 w-1/2 h-16 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent blur-xl" />
                   </div>
 
                   {/* Header: Title bar, Minimize & Hide actions */}
-                  <div className="flex items-center justify-between border-b border-dashed border-[#fbeee0]/20 pb-2 mb-2.5">
+                  <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-2.5 mb-3">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          isPlaying ? 'bg-emerald-400 animate-ping' : 'bg-[#e59b63]'
-                        }`}
-                      />
-                      <span className="font-fredoka text-xs font-semibold tracking-wider text-[#fbeee0] uppercase">
+                      <span className="relative flex h-2 w-2">
+                        {isPlaying && (
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        )}
+                        <span
+                          className={`relative inline-flex rounded-full h-2 w-2 ${
+                            isPlaying ? 'bg-emerald-400' : 'bg-[#e59b63]'
+                          }`}
+                        />
+                      </span>
+                      <span className="font-fredoka text-xs font-semibold tracking-wider text-[#fbeee0] uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
                         DJ BEAT-BOT 8-BIT
                       </span>
                     </div>
@@ -1640,7 +1663,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                             setIsExpanded(false);
                           }
                         }}
-                        className="text-[#d6c4b2] hover:text-[#fbeee0] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
+                        className="text-[#e8dacb] hover:text-white px-1.5 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 transition-all cursor-pointer text-xs font-mono"
                         title="Minimize player"
                         aria-label="Minimize"
                       >
@@ -1650,7 +1673,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       <button
                         type="button"
                         onClick={handleHideWidget}
-                        className="text-[#d6c4b2] hover:text-[#ef4444] px-1.5 py-0.5 rounded-md hover:bg-white/10 cursor-pointer text-xs font-mono"
+                        className="text-[#e8dacb] hover:text-[#ef4444] px-1.5 py-0.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-red-400/40 transition-all cursor-pointer text-xs font-mono"
                         title="Hide DJ character"
                         aria-label="Hide widget"
                       >
@@ -1659,11 +1682,11 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     </div>
                   </div>
 
-                  {/* Track Info Display */}
-                  <div className="px-3 py-2 rounded-xl bg-[#090d14] border-[1.5px] border-dashed border-[#fbeee0]/30 mb-3 flex items-center justify-between">
-                    <div className="overflow-hidden">
-                      <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5">
-                        <span>{currentTrack.title}</span>
+                  {/* Track Info Smoked-Glass Display */}
+                  <div className="relative z-10 px-3 py-2.5 rounded-2xl glass-player-screen mb-3 flex items-center justify-between">
+                    <div className="overflow-hidden min-w-0 flex-1">
+                      <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                        <span className="truncate">{currentTrack.title}</span>
                       </div>
                       <div className="font-mono text-[10px] text-[#e59b63] truncate">
                         {currentTrack.genre} · {currentTrack.bpm} BPM
@@ -1688,15 +1711,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                               height: `${barHeights[barIdx]}%`,
                               transition: 'height 0.12s ease-out',
                             }}
-                            className="w-1 bg-gradient-to-t from-[#9d613c] to-[#22c55e] rounded-t-sm"
+                            className="w-1 bg-gradient-to-t from-[#e59b63] to-[#22c55e] rounded-t-sm shadow-[0_0_6px_rgba(34,197,94,0.35)]"
                           />
                         );
                       })}
                     </div>
                   </div>
 
-                  {/* Playback Controls */}
-                  <div className="flex items-center justify-between gap-2 mb-3">
+                  {/* Playback Glass Controls */}
+                  <div className="relative z-10 flex items-center justify-between gap-2 mb-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -1704,7 +1727,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                           retroAudio.prevTrack();
                         }
                       }}
-                      className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
+                      className="glass-pill p-2.5 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer"
                       title="Previous Track"
                       aria-label="Previous track"
                     >
@@ -1716,7 +1739,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     <button
                       type="button"
                       onClick={handleToggle}
-                      className="flex-1 py-2 px-3 rounded-[14px_10px_15px_11px] bg-[#9d613c] hover:bg-[#b06f44] border-2 border-[#fbeee0] shadow-[3px_3px_0px_#0b1018] active:scale-95 text-[#fbeee0] font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                      className="glass-pill-active flex-1 py-2 px-3 rounded-xl active:scale-95 text-white font-fredoka text-xs font-semibold tracking-wide flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:border-white/60 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
                       title={isPlaying ? 'Pause retro music' : 'Play retro music'}
                       aria-label={isPlaying ? 'Pause' : 'Play'}
                     >
@@ -1744,7 +1767,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                           retroAudio.nextTrack();
                         }
                       }}
-                      className="doodle-subcard p-2 text-[#fbeee0] active:scale-95 transition-transform cursor-pointer"
+                      className="glass-pill p-2.5 rounded-xl text-[#fbeee0] hover:text-white hover:border-white/40 active:scale-95 transition-all cursor-pointer"
                       title="Next Track"
                       aria-label="Next track"
                     >
@@ -1758,12 +1781,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   <div
                     onMouseDown={(e) => e.stopPropagation()}
                     onTouchStart={(e) => e.stopPropagation()}
-                    className="flex items-center gap-2 pt-1 border-t border-dashed border-[#fbeee0]/15"
+                    className="relative z-10 flex items-center gap-2 pt-2 border-t border-white/15"
                   >
                     <button
                       type="button"
                       onClick={handleMuteToggle}
-                      className="text-[#d6c4b2] hover:text-white cursor-pointer shrink-0"
+                      className="text-[#e8dacb] hover:text-white cursor-pointer shrink-0 transition-colors"
                       title={volume === 0 ? 'Unmute' : 'Mute'}
                       aria-label="Toggle mute"
                     >
@@ -1777,9 +1800,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       value={volume}
                       onChange={handleVolumeChange}
                       aria-label="Volume slider"
-                      className="w-full h-1.5 bg-[#090d14] rounded-lg appearance-none cursor-pointer accent-[#e59b63]"
+                      className="w-full h-1.5 bg-white/15 border border-white/20 rounded-full appearance-none cursor-pointer accent-[#e59b63]"
                     />
-                    <span className="font-mono text-[10px] text-[#d6c4b2] w-7 text-right">
+                    <span className="font-mono text-[10px] text-[#e8dacb] w-7 text-right">
                       {Math.round(volume * 100)}%
                     </span>
                   </div>
@@ -2076,7 +2099,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             </div>
           </motion.div>
         ) : (
-          /* 3. Round & Transparent Restore Button when widget is hidden (also draggable) */
+          /* 3. Round Frosted Glass Restore Button when widget is hidden (also draggable) */
           <motion.button
             key="hidden-restore-badge"
             type="button"
@@ -2084,12 +2107,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.6 }}
-            className={`relative w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-md transition-all duration-300 ${
+            className={`glass-player-card relative w-11 h-11 !rounded-full flex items-center justify-center transition-all duration-300 ${
               isDragging ? 'cursor-grabbing scale-110' : 'cursor-grab hover:scale-110 active:scale-95'
             } ${
               isPlaying
-                ? 'bg-[#101723]/35 border border-emerald-400/50 text-[#fbeee0] hover:bg-[#101723]/65 hover:border-emerald-400 shadow-[0_4px_16px_rgba(34,197,94,0.2)]'
-                : 'bg-[#101723]/25 border border-[#fbeee0]/25 text-[#fbeee0]/75 hover:text-[#fbeee0] hover:bg-[#101723]/55 hover:border-[#e59b63]/70 shadow-lg'
+                ? '!border-emerald-400/60 text-[#fbeee0] hover:!border-emerald-400'
+                : 'text-[#fbeee0]/85 hover:text-[#fbeee0] hover:!border-white/45'
             }`}
             title={isPlaying ? 'BGM Playing — Click to show DJ Bot' : 'Click to show DJ Bot BGM Player'}
             aria-label="Restore BGM Player Widget"

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import { HeroSection } from './components/HeroSection';
 import { AboutCard } from './components/AboutCard';
@@ -26,7 +26,6 @@ export default function App() {
   const { lang, networks } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [selectedNetworkId, setSelectedNetworkId] = useState<string | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -109,12 +108,6 @@ export default function App() {
 
   const handleStartReveal = () => {
     setIsRevealed(true);
-    setTimeout(() => {
-      setShowWelcomeBanner(true);
-    }, 450);
-    setTimeout(() => {
-      setShowWelcomeBanner(false);
-    }, 4650);
   };
 
   const handleLoadingFinish = () => {
@@ -131,39 +124,15 @@ export default function App() {
         />
       )}
 
-      {/* Post-Loading Welcome Doodle HUD Toast */}
-      <AnimatePresence>
-        {showWelcomeBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -28, scale: 0.88, rotate: -2 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotate: -1 }}
-            exit={{ opacity: 0, y: -18, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 360, damping: 22 }}
-            onClick={() => setShowWelcomeBanner(false)}
-            className="fixed top-20 right-4 sm:right-8 z-50 cursor-pointer select-none px-4 py-2 rounded-[16px_11px_18px_12px] bg-[#101722]/95 border-2 border-[#fbeee0] shadow-[4px_4px_0px_#9d613c] flex items-center gap-2.5 backdrop-blur-md"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
-            <div className="text-left">
-              <span className="block font-mono text-[10px] uppercase tracking-wider text-emerald-300">
-                {lang === 'id' ? '✓ SEMUA NODE SINKRON (100%)' : '✓ ALL NODES SYNCED (100%)'}
-              </span>
-              <span className="font-hand text-sm sm:text-base text-[#fbeee0]">
-                {lang === 'id'
-                  ? 'Selamat datang di Validator Sketchbook Uray! ✨'
-                  : "Welcome to Uray's Validator Sketchbook! ✨"}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
 
       {/* Sticky Top Bar Navigation with Scroll Progress Indicator & Animated Rocket */}
       <div
-        className={`sticky top-0 z-50 transition-opacity duration-200 ${
-          isRevealed ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`sticky top-0 z-50 transition-opacity duration-700 ease-out ${
+          isRevealed
+            ? 'opacity-100'
+            : 'opacity-0 pointer-events-none'
         }`}
       >
         <Navbar
@@ -173,19 +142,20 @@ export default function App() {
         />
       </div>
 
-      {/* Main Content Wrapper Visible Directly Behind the Shattering Screen Shards */}
+      {/* Smooth Cross-Dissolve & Gentle Elevation Glide Wrapper on Web Entrance */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.985 }}
+        initial={{ opacity: 0, y: 18, scale: 0.985 }}
         animate={
           isRevealed
             ? {
                 opacity: 1,
+                y: 0,
                 scale: 1,
               }
-            : { opacity: 0, scale: 0.985 }
+            : { opacity: 0, y: 18, scale: 0.985 }
         }
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        style={{ transformOrigin: '50% 45vh' }}
+        transition={{ duration: 0.95, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: '50% 35vh' }}
         className={`flex flex-col flex-grow relative z-10 ${
           isLoading ? 'will-change-transform' : ''
         }`}

@@ -56,27 +56,27 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
         {/* Social Connect Doodle Subcards */}
         <div className="space-y-3.5">
           {/* 1. GitHub Button */}
-          <div className="doodle-subcard group flex items-center justify-between p-3.5 sm:px-4">
+          <div className="doodle-subcard group flex items-center justify-between gap-2.5 p-3.5 sm:px-4">
             <a
               href={SOCIAL_DATA.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 flex-grow focus:outline-none"
+              className="flex items-center gap-3 min-w-0 flex-1 focus:outline-none"
             >
-              <div className="p-2 rounded-xl bg-[#182230] text-[#fbeee0] border-[1.5px] border-[#fbeee0]/60 group-hover:bg-[#9d613c] group-hover:text-white group-hover:rotate-[-4deg] transition-all">
+              <div className="shrink-0 p-2 rounded-xl bg-[#182230] text-[#fbeee0] border-[1.5px] border-[#fbeee0]/60 group-hover:bg-[#9d613c] group-hover:text-white group-hover:rotate-[-4deg] transition-all">
                 <GitHubIcon className="w-5 h-5" />
               </div>
-              <div>
-                <span className="block text-xs font-hand text-[#e59b63] text-sm leading-tight">
+              <div className="min-w-0 flex-1">
+                <span className="block font-hand text-[#e59b63] text-sm leading-tight truncate">
                   {lang === 'id' ? 'Repositori GitHub' : 'GitHub Repository'}
                 </span>
-                <span className="font-mono text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white">
+                <span className="block font-mono text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white truncate">
                   {SOCIAL_DATA.github}
                 </span>
               </div>
             </a>
 
-            <div className="flex items-center gap-1.5">
+            <div className="shrink-0 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={(e) => handleCopy(e, SOCIAL_DATA.githubUrl, 'github')}
@@ -104,27 +104,27 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
           </div>
 
           {/* 2. X / Twitter Button */}
-          <div className="doodle-subcard group flex items-center justify-between p-3.5 sm:px-4">
+          <div className="doodle-subcard group flex items-center justify-between gap-2.5 p-3.5 sm:px-4">
             <a
               href={SOCIAL_DATA.twitterUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 flex-grow focus:outline-none"
+              className="flex items-center gap-3 min-w-0 flex-1 focus:outline-none"
             >
-              <div className="p-2 rounded-xl bg-[#182230] text-[#fbeee0] border-[1.5px] border-[#fbeee0]/60 group-hover:bg-[#9d613c] group-hover:text-white group-hover:rotate-[4deg] transition-all">
+              <div className="shrink-0 p-2 rounded-xl bg-[#182230] text-[#fbeee0] border-[1.5px] border-[#fbeee0]/60 group-hover:bg-[#9d613c] group-hover:text-white group-hover:rotate-[4deg] transition-all">
                 <XIcon className="w-4 h-4 m-0.5" />
               </div>
-              <div>
-                <span className="block text-xs font-hand text-[#e59b63] text-sm leading-tight">
+              <div className="min-w-0 flex-1">
+                <span className="block font-hand text-[#e59b63] text-sm leading-tight truncate">
                   X (Twitter)
                 </span>
-                <span className="font-mono text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white">
+                <span className="block font-mono text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white truncate">
                   {SOCIAL_DATA.twitter}
                 </span>
               </div>
             </a>
 
-            <div className="flex items-center gap-1.5">
+            <div className="shrink-0 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={(e) => handleCopy(e, SOCIAL_DATA.twitter, 'twitter')}
@@ -154,29 +154,34 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
           {/* 3. Direct Message / Contact Trigger */}
           <button
             type="button"
-            onClick={onOpenContact}
-            className="doodle-subcard w-full flex items-center justify-between p-3.5 sm:px-4 !bg-[#9d613c]/20 hover:!bg-[#9d613c]/30 text-left group cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              onOpenContact();
+            }}
+            className="doodle-subcard group w-full flex items-center justify-between gap-2.5 p-3.5 sm:px-4 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] active:scale-[0.99] touch-manipulation"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-[#9d613c] text-white border-[1.5px] border-[#fbeee0] group-hover:rotate-[-4deg] transition-transform">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="shrink-0 p-2 rounded-xl bg-[#9d613c] text-white border-[1.5px] border-[#fbeee0] group-hover:bg-[#b06f44] group-hover:rotate-[-4deg] transition-all">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div>
-                <span className="block font-hand text-sm text-[#fbeee0] leading-tight">
+              <div className="min-w-0 flex-1">
+                <span className="block font-hand text-sm text-[#e59b63] leading-tight">
                   {lang === 'id'
                     ? 'Pertanyaan Validator / Kolaborasi'
                     : 'Validator Inquiry / Collaboration'}
                 </span>
-                <span className="font-fredoka text-sm sm:text-base font-medium text-[#fbeee0]">
+                <span className="block font-fredoka text-sm sm:text-base font-medium text-[#fbeee0] group-hover:text-white transition-colors leading-snug mt-0.5">
                   {lang === 'id' ? 'Kirim Pesan Langsung ✎' : 'Send Direct Message ✎'}
                 </span>
               </div>
             </div>
-            <span className="text-[#fbeee0] font-hand text-lg group-hover:translate-x-1 transition-transform">
-              →
-            </span>
+            <div className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-[#182230] group-hover:bg-[#9d613c] border border-dashed border-[#fbeee0]/40 group-hover:border-[#fbeee0] text-[#fbeee0] group-hover:text-white transition-all">
+              <span className="font-hand text-lg leading-none group-hover:translate-x-0.5 transition-transform">
+                →
+              </span>
+            </div>
           </button>
         </div>
       </div>

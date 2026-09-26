@@ -455,11 +455,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={`w-full transition-all duration-300 relative ${
-        scrolled
-          ? 'py-2.5 backdrop-blur-xl bg-[#0f141d]/92 border-b border-[#9d613c]/30 shadow-xl shadow-black/50'
-          : 'py-4 backdrop-blur-md bg-[#0f141d]/82 border-b border-white/5'
+        scrolled ? 'py-2.5 glass-navbar-scrolled' : 'py-3.5 glass-navbar'
       }`}
     >
+      {/* Top Specular Glass Reflection Highlight & Ambient Sheen */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        <div className="absolute -top-10 left-1/4 w-1/2 h-20 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent blur-xl" />
+      </div>
+
       {/* 120fps Spring-Physics Scroll Progress Rail + Interactive Anti-AI-Slop Validator Rocket */}
       <div
         ref={railRef}
@@ -469,7 +476,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             ? 'Klik jalur untuk meluncur ke posisi halaman'
             : 'Click track to launch to page position'
         }
-        className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-[#090d14]/90 cursor-pointer z-50 overflow-visible"
+        className="absolute bottom-0 left-0 right-0 h-[3.5px] bg-white/10 cursor-pointer z-50 overflow-visible"
         role="progressbar"
         aria-label="Page scroll progress"
         aria-valuemin={0}
@@ -515,7 +522,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between relative z-10">
         {/* Brand Zone: Mini Chibi Avatar + Name with Micro-Animations */}
         <a
           href="#home"
@@ -526,10 +533,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             setMobileMenuOpen(false);
             onNavigate('home');
           }}
-          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] rounded-full pr-2 cursor-pointer select-none transition-transform duration-200 active:scale-95 touch-manipulation"
+          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] rounded-full pr-2 cursor-pointer select-none transition-transform duration-200 active:scale-95 touch-manipulation"
         >
           <div className="relative">
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#9d613c]/70 group-hover:border-[#9d613c] transition-all duration-300 bg-[#17212e] shadow-md flex-shrink-0 group-hover:shadow-[#9d613c]/30 group-hover:shadow-lg">
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/30 group-hover:border-[#e59b63] transition-all duration-300 bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_4px_12px_rgba(0,0,0,0.3)] flex-shrink-0 group-hover:shadow-[#e59b63]/30 group-hover:shadow-lg">
               <motion.img
                 src={ASSET_IMAGES.avatar}
                 alt="Uray Fazli Alman Avatar"
@@ -547,18 +554,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           </div>
 
           <div className="flex flex-col">
-            <span className="font-fredoka text-lg sm:text-xl font-medium tracking-wide text-[#fbeee0] group-hover:text-white transition-colors truncate max-w-[170px] xs:max-w-none">
+            <span className="font-fredoka text-lg sm:text-xl font-medium tracking-wide text-[#fbeee0] group-hover:text-white transition-colors truncate max-w-[170px] xs:max-w-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
               Uray Fazli Alman
             </span>
-            <span className="text-[10px] uppercase tracking-wider font-mono text-[#9d613c] group-hover:text-[#c48255] transition-colors -mt-1 hidden sm:block">
+            <span className="text-[10px] uppercase tracking-wider font-mono text-[#e59b63] group-hover:text-[#fbeee0] transition-colors -mt-1 hidden sm:block">
               {lang === 'id' ? 'Operator Node & Engineer' : 'Node Operator & Engineer'}
             </span>
           </div>
         </a>
 
-        {/* Center Zone: Navigation Links with Smooth Animated Sliding Active Pill */}
+        {/* Center Zone: Navigation Links with Smooth Animated Sliding Glass Pill */}
         <nav
-          className="hidden md:flex items-center gap-1 bg-[#141b25]/90 border border-white/10 p-1.5 rounded-full shadow-inner backdrop-blur-md relative"
+          className="hidden md:flex items-center gap-1 glass-pill p-1.5 rounded-full relative"
           onMouseLeave={() => setHoveredTab(null)}
         >
           {navItems.map((item) => {
@@ -572,23 +579,25 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                 onClick={(e) => handleItemClick(e, item)}
                 onMouseEnter={() => setHoveredTab(item.id)}
                 className={`relative px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer select-none focus:outline-none ${
-                  isActive ? 'text-white font-semibold' : 'text-[#d7c6b5] hover:text-[#fbeee0]'
+                  isActive
+                    ? 'text-white font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]'
+                    : 'text-[#e8dacb] hover:text-white'
                 }`}
               >
-                {/* Active Sliding Pill Indicator */}
+                {/* Active Sliding Tinted Glass Pill Indicator */}
                 {isActive && (
                   <motion.span
                     layoutId="navbarActivePill"
-                    className="absolute inset-0 bg-gradient-to-r from-[#9d613c] to-[#b97746] rounded-full shadow-md shadow-[#9d613c]/30 z-0 pointer-events-none"
+                    className="absolute inset-0 glass-pill-active rounded-full z-0 pointer-events-none"
                     transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                   />
                 )}
 
-                {/* Hover Pill Background Glow */}
+                {/* Hover Glass Pill Background Glow */}
                 {isHovered && !isActive && (
                   <motion.span
                     layoutId="navbarHoverPill"
-                    className="absolute inset-0 bg-white/10 rounded-full z-0 pointer-events-none"
+                    className="absolute inset-0 bg-white/[0.12] border border-white/20 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28)] rounded-full z-0 pointer-events-none"
                     transition={{ type: 'spring', stiffness: 420, damping: 35 }}
                   />
                 )}
@@ -601,11 +610,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
 
         {/* Right Zone: Language Toggle (ID / EN) & Social Links */}
         <div className="hidden sm:flex items-center gap-2.5">
-          {/* Interactive ID / EN Language Switcher Pill */}
+          {/* Interactive ID / EN Language Switcher Glass Pill */}
           <div
             role="group"
             aria-label="Language switcher"
-            className="flex items-center bg-[#141b25]/90 border border-white/10 p-1 rounded-full shadow-sm backdrop-blur-md"
+            className="flex items-center glass-pill p-1 rounded-full"
           >
             {(['id', 'en'] as const).map((code) => {
               const isSelected = lang === code;
@@ -616,8 +625,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                   onClick={() => setLang(code)}
                   className={`relative px-2.5 py-1 rounded-full text-xs font-mono uppercase tracking-wider cursor-pointer transition-colors select-none ${
                     isSelected
-                      ? 'text-white font-bold'
-                      : 'text-[#a39483] hover:text-[#fbeee0]'
+                      ? 'text-white font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]'
+                      : 'text-[#d7c6b5] hover:text-white'
                   }`}
                   title={code === 'id' ? 'Bahasa Indonesia' : 'English'}
                   aria-pressed={isSelected}
@@ -625,7 +634,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                   {isSelected && (
                     <motion.span
                       layoutId="langToggleDesktopPill"
-                      className="absolute inset-0 rounded-full bg-gradient-to-r from-[#9d613c] to-[#b97746] shadow-xs z-0"
+                      className="absolute inset-0 rounded-full glass-pill-active z-0"
                       transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                     />
                   )}
@@ -637,7 +646,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
 
           <motion.div
             whileHover={{ scale: 1.03 }}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-white/10 bg-[#141b25]/90 text-[#d7c6b5] shadow-sm backdrop-blur-md hover:border-[#9d613c]/40 transition-colors"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full glass-pill text-[#e8dacb] hover:border-white/40 transition-colors"
           >
             <motion.a
               href={SOCIAL_DATA.githubUrl}
@@ -646,12 +655,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
               aria-label="GitHub @urayfazli"
               whileHover={{ scale: 1.2, rotate: -8, color: '#ffffff' }}
               whileTap={{ scale: 0.9 }}
-              className="p-1 rounded-full text-[#d7c6b5] hover:text-white transition-colors touch-manipulation"
+              className="p-1 rounded-full text-[#e8dacb] hover:text-white transition-colors touch-manipulation"
               title="GitHub: @urayfazli"
             >
               <GitHubIcon className="w-4.5 h-4.5" />
             </motion.a>
-            <span className="w-px h-3.5 bg-white/15" aria-hidden="true" />
+            <span className="w-px h-3.5 bg-white/25" aria-hidden="true" />
             <motion.a
               href={SOCIAL_DATA.twitterUrl}
               target="_blank"
@@ -659,7 +668,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
               aria-label="X @urayfazli17"
               whileHover={{ scale: 1.2, rotate: 8, color: '#ffffff' }}
               whileTap={{ scale: 0.9 }}
-              className="p-1 rounded-full text-[#d7c6b5] hover:text-white transition-colors touch-manipulation"
+              className="p-1 rounded-full text-[#e8dacb] hover:text-white transition-colors touch-manipulation"
               title="X.com: @urayfazli17"
             >
               <XIcon className="w-4 h-4" />
@@ -669,11 +678,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
 
         {/* Mobile Language Toggle + Hamburger Button */}
         <div className="flex md:hidden items-center gap-2">
-          {/* Compact Mobile ID / EN Toggle */}
+          {/* Compact Mobile ID / EN Glass Toggle */}
           <div
             role="group"
             aria-label="Language switcher"
-            className="flex sm:hidden items-center bg-[#141b25]/90 border border-white/10 p-0.5 rounded-full"
+            className="flex sm:hidden items-center glass-pill p-0.5 rounded-full"
           >
             {(['id', 'en'] as const).map((code) => {
               const isSelected = lang === code;
@@ -684,8 +693,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                   onClick={() => setLang(code)}
                   className={`relative px-2 py-1 rounded-full text-[11px] font-mono uppercase cursor-pointer transition-colors ${
                     isSelected
-                      ? 'bg-[#9d613c] text-white font-bold'
-                      : 'text-[#a39483] hover:text-[#fbeee0]'
+                      ? 'glass-pill-active text-white font-bold'
+                      : 'text-[#d7c6b5] hover:text-white'
                   }`}
                 >
                   {code.toUpperCase()}
@@ -697,7 +706,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2.5 rounded-xl bg-[#141b25] border border-white/10 text-[#fbeee0] hover:text-white hover:border-[#9d613c]/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] shadow-sm cursor-pointer transition-transform active:scale-90 touch-manipulation"
+            className="p-2.5 rounded-xl glass-pill text-[#fbeee0] hover:text-white hover:border-white/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] cursor-pointer transition-transform active:scale-90 touch-manipulation"
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
           >
@@ -719,7 +728,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         </div>
       </div>
 
-      {/* Floating Mobile Drawer Menu */}
+      {/* Floating Mobile Glass Drawer Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -727,7 +736,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="md:hidden absolute top-full left-0 right-0 z-50 bg-[#0c121c]/98 backdrop-blur-3xl border-b border-[#9d613c]/30 shadow-2xl shadow-black/80"
+            className="md:hidden absolute top-full left-0 right-0 z-50 glass-drawer"
           >
             <div className="px-4 pt-3 pb-6 space-y-2 max-w-7xl mx-auto">
               {navItems.map((item) => {
@@ -739,8 +748,8 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                     onClick={() => handleMobileClick(item)}
                     className={`block w-full text-left px-4 py-3 rounded-xl text-base font-medium transition-all cursor-pointer touch-manipulation select-none active:scale-[0.98] ${
                       isActive
-                        ? 'bg-gradient-to-r from-[#9d613c] to-[#b97746] text-white font-semibold shadow-md shadow-[#9d613c]/30'
-                        : 'text-[#d7c6b5] hover:text-white hover:bg-white/5 active:bg-white/10'
+                        ? 'glass-pill-active text-white font-semibold'
+                        : 'text-[#e8dacb] hover:text-white hover:bg-white/10 active:bg-white/15 border border-transparent hover:border-white/15'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -753,23 +762,23 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                 );
               })}
 
-              <div className="flex items-center justify-around pt-4 mt-2 border-t border-white/10 px-2">
+              <div className="flex items-center justify-around pt-4 mt-2 border-t border-white/15 px-2">
                 <a
                   href={SOCIAL_DATA.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-[#fbeee0] hover:text-[#9d613c] font-medium bg-[#141b25] px-4 py-2.5 rounded-full border border-white/5 active:scale-95 transition-all touch-manipulation"
+                  className="flex items-center gap-2 text-sm text-[#fbeee0] hover:text-white font-medium glass-pill px-4 py-2.5 rounded-full active:scale-95 transition-all touch-manipulation"
                 >
-                  <GitHubIcon className="w-4.5 h-4.5 text-[#9d613c]" />
+                  <GitHubIcon className="w-4.5 h-4.5 text-[#e59b63]" />
                   <span>@urayfazli</span>
                 </a>
                 <a
                   href={SOCIAL_DATA.twitterUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-[#fbeee0] hover:text-[#9d613c] font-medium bg-[#141b25] px-4 py-2.5 rounded-full border border-white/5 active:scale-95 transition-all touch-manipulation"
+                  className="flex items-center gap-2 text-sm text-[#fbeee0] hover:text-white font-medium glass-pill px-4 py-2.5 rounded-full active:scale-95 transition-all touch-manipulation"
                 >
-                  <XIcon className="w-4 h-4 text-[#9d613c]" />
+                  <XIcon className="w-4 h-4 text-[#e59b63]" />
                   <span>@urayfazli17</span>
                 </a>
               </div>
