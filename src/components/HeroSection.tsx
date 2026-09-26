@@ -36,27 +36,23 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <section
-      id="home"
-      className="relative pt-6 pb-16 md:pt-12 md:pb-24 overflow-hidden scroll-mt-28"
-    >
+    <div className="relative pt-6 pb-12 md:pt-12 md:pb-16 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-          {/* Left Column: Greeting, Title, Tagline, Socials */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          {/* Left Column: Greeting, Title, Tagline, Socials & Primary CTA */}
           <div className="lg:col-span-6 z-10 flex flex-col items-start text-left">
             {/* Step 1: "Hi, I'm" with cute hand-drawn rays */}
             <motion.div
-              initial={{ opacity: 0, y: 20, rotate: -4 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={
                 isLoaded
-                  ? { opacity: 1, y: 0, rotate: 0 }
-                  : { opacity: 0, y: 20, rotate: -4 }
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 14 }
               }
               transition={{
-                type: 'spring',
-                stiffness: 300,
-                damping: 22,
+                duration: 0.55,
                 delay: 0.08,
+                ease: [0.16, 1, 0.3, 1],
               }}
               className="flex items-center gap-2 mb-2"
             >
@@ -68,52 +64,54 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Step 2: Giant Title: Uray Fazli Alman */}
             <motion.h1
-              initial={{ opacity: 0, y: 34, scale: 0.94 }}
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
               animate={
                 isLoaded
                   ? { opacity: 1, y: 0, scale: 1 }
-                  : { opacity: 0, y: 34, scale: 0.94 }
+                  : { opacity: 0, y: 20, scale: 0.97 }
               }
               transition={{
-                type: 'spring',
-                stiffness: 260,
-                damping: 22,
-                delay: 0.18,
+                duration: 0.65,
+                delay: 0.15,
+                ease: [0.16, 1, 0.3, 1],
               }}
-              className="font-fredoka text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-[#fbeee0] leading-[1.08] mb-4"
+              className="font-fredoka text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-[#fbeee0] leading-[1.06] mb-4"
             >
               Uray Fazli
               <br />
               Alman
             </motion.h1>
 
-            {/* Step 3: Caramel Doodle Badge: Node Operator */}
+            {/* Step 3: Caramel Doodle Role Badge + Live Validator Telemetry Pill */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.7, rotate: -6 }}
+              initial={{ opacity: 0, y: 12, scale: 0.96 }}
               animate={
                 isLoaded
-                  ? { opacity: 1, scale: 1, rotate: 0 }
-                  : { opacity: 0, scale: 0.7, rotate: -6 }
+                  ? { opacity: 1, y: 0, scale: 1 }
+                  : { opacity: 0, y: 12, scale: 0.96 }
               }
               transition={{
-                type: 'spring',
-                stiffness: 380,
-                damping: 18,
-                delay: 0.3,
+                duration: 0.55,
+                delay: 0.24,
+                ease: [0.16, 1, 0.3, 1],
               }}
-              className="mb-5"
+              className="flex flex-wrap items-center gap-3 mb-5"
             >
-              <span className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018] hover:bg-[#b06f44] hover:-translate-y-0.5 transition-all cursor-default">
+              <span className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018]">
                 {lang === 'id' ? 'Operator Node' : 'Node Operator'}
+              </span>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#101722]/90 border border-dashed border-[#fbeee0]/35 font-mono text-xs text-[#d6c4b2]">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>99.9% Uptime · Mainnet & Testnet</span>
               </span>
             </motion.div>
 
             {/* Step 4: Tagline with Typing Animation (starts only after loading finishes!) */}
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-              transition={{ duration: 0.4, delay: 0.38 }}
-              className="min-h-[4rem] sm:min-h-[3.75rem] max-w-md mb-8 flex items-center"
+              initial={{ opacity: 0, y: 12 }}
+              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              transition={{ duration: 0.45, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="min-h-[4rem] sm:min-h-[3.75rem] max-w-lg mb-7 flex items-center"
             >
               {isLoaded && (
                 <TypingText
@@ -131,74 +129,75 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               )}
             </motion.div>
 
-            {/* Step 5: Social Action Doodle Buttons */}
-            <div className="flex flex-wrap items-center gap-3.5 sm:gap-4">
+            {/* Step 5: Primary Explore CTA & Social Action Doodle Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={
+                isLoaded
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 14 }
+              }
+              transition={{
+                duration: 0.55,
+                delay: 0.42,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="flex flex-wrap items-center gap-3 sm:gap-3.5"
+            >
+              {/* Explore Node Ops CTA */}
+              <button
+                type="button"
+                onClick={onScrollDown}
+                className="doodle-subcard group flex items-center gap-2.5 px-5 py-2.5 !bg-[#9d613c] hover:!bg-[#b06f44] text-white font-medium text-sm sm:text-base tracking-wide cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fbeee0]"
+              >
+                <span>{lang === 'id' ? 'Eksplorasi Node' : 'Explore Nodes'}</span>
+                <span className="font-mono text-sm group-hover:translate-y-0.5 transition-transform">
+                  ↓
+                </span>
+              </button>
+
               {/* GitHub Button */}
-              <motion.a
+              <a
                 href={SOCIAL_DATA.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={
-                  isLoaded
-                    ? { opacity: 1, y: 0, scale: 1 }
-                    : { opacity: 0, y: 20, scale: 0.9 }
-                }
-                transition={{
-                  type: 'spring',
-                  stiffness: 320,
-                  damping: 20,
-                  delay: 0.48,
-                }}
-                className="doodle-subcard group flex items-center gap-3 px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                className="doodle-subcard group flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
                 <GitHubIcon className="w-5 h-5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[-6deg] transition-transform" />
-                <span className="font-medium text-sm sm:text-base tracking-wide">
+                <span className="font-mono text-xs sm:text-sm tracking-wide">
                   {SOCIAL_DATA.github}
                 </span>
-              </motion.a>
+              </a>
 
               {/* X.com Button */}
-              <motion.a
+              <a
                 href={SOCIAL_DATA.twitterUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                animate={
-                  isLoaded
-                    ? { opacity: 1, y: 0, scale: 1 }
-                    : { opacity: 0, y: 20, scale: 0.9 }
-                }
-                transition={{
-                  type: 'spring',
-                  stiffness: 320,
-                  damping: 20,
-                  delay: 0.58,
-                }}
-                className="doodle-subcard group flex items-center gap-3 px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                className="doodle-subcard group flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
-                <XIcon className="w-4.5 h-4.5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[6deg] transition-transform" />
-                <span className="font-medium text-sm sm:text-base tracking-wide">
+                <XIcon className="w-4 h-4 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[6deg] transition-transform" />
+                <span className="font-mono text-xs sm:text-sm tracking-wide">
                   {SOCIAL_DATA.twitter}
                 </span>
-              </motion.a>
-            </div>
+              </a>
+            </motion.div>
 
             {/* Subtle doodle star near text */}
             <motion.div
-              initial={{ opacity: 0, scale: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={
-                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+                isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }
               }
-              transition={{ type: 'spring', delay: 0.7 }}
-              className="mt-8 ml-2"
+              transition={{ duration: 0.5, delay: 0.55 }}
+              className="mt-6 ml-2 hidden sm:block"
             >
-              <DoodleStar className="w-6 h-6 text-[#9d613c] animate-twinkle" />
+              <DoodleStar className="w-5 h-5 text-[#9d613c] animate-twinkle" />
             </motion.div>
           </div>
 
-          {/* Right Column: Cute Chibi Character, Speech Bubble, Doodles */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center">
+          {/* Right Column: Cute Chibi Character, Solar System Orrery, Speech Bubble */}
+          <div className="lg:col-span-6 relative flex flex-col items-center justify-center py-4 sm:py-6">
             {/* Floating Sparkle Stars */}
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -312,119 +311,326 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
 
                 {/* =====================================================================
-                    PERIMETER LOOPING FLIGHT SYSTEM (ANTI-AI-SLOP PAPER PLANE & ROCKET)
-                    Continuous C² tangent-smooth orbital & gliding paths around the
-                    Photo Profile Card with hand-drafted sketchbook telemetry trails
+                    SOLAR SYSTEM & PLANETARY ORRERY LOOPING SYSTEM (ANTI-AI-SLOP)
+                    3 Keplerian perimeter orbits with Helios Sun crest, Mercury, Venus,
+                    Terra + orbiting Luna moon, Mars, Saturn (double-ringed gas giant) +
+                    Titan moon, Jupiter, plus the Validator Rocket & Origami Paper Plane
                    ===================================================================== */}
                 <svg
-                  viewBox="0 0 560 560"
+                  viewBox="0 0 600 600"
                   fill="none"
                   aria-hidden="true"
-                  className="absolute -inset-5 xs:-inset-6 sm:-inset-8 lg:-inset-10 w-[calc(100%+2.5rem)] xs:w-[calc(100%+3rem)] sm:w-[calc(100%+4rem)] lg:w-[calc(100%+5rem)] h-[calc(100%+2.5rem)] xs:h-[calc(100%+3rem)] sm:h-[calc(100%+4rem)] lg:h-[calc(100%+5rem)] pointer-events-none overflow-visible z-20 select-none"
+                  className="absolute -inset-6 xs:-inset-7 sm:-inset-10 lg:-inset-12 w-[calc(100%+3rem)] xs:w-[calc(100%+3.5rem)] sm:w-[calc(100%+5rem)] lg:w-[calc(100%+6rem)] h-[calc(100%+3rem)] xs:h-[calc(100%+3.5rem)] sm:h-[calc(100%+5rem)] lg:h-[calc(100%+6rem)] pointer-events-none overflow-visible z-20 select-none"
                 >
-                  {/* Hand-Drafted Corner Registration Crosshairs & Telemetry Notes */}
-                  <g opacity="0.55" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round">
-                    {/* Top-Left Crosshair */}
-                    <line x1="34" y1="40" x2="46" y2="40" />
-                    <line x1="40" y1="34" x2="40" y2="46" />
-                    {/* Bottom-Right Crosshair */}
-                    <line x1="514" y1="520" x2="526" y2="520" />
-                    <line x1="520" y1="514" x2="520" y2="526" />
-                    {/* Bottom-Left Waypoint Ring */}
-                    <circle cx="44" cy="516" r="3.5" stroke="#FBEEE0" strokeDasharray="2 2" />
+                  {/* Astronomical Orrery Calibration Ticks & Ecliptic Crosshairs */}
+                  <g opacity="0.55" stroke="#E59B63" strokeWidth="1.3" strokeLinecap="round">
+                    {/* Top-Right & Bottom-Left Astrometric Crosshairs */}
+                    <line x1="546" y1="48" x2="558" y2="48" />
+                    <line x1="552" y1="42" x2="552" y2="54" />
+                    <line x1="42" y1="552" x2="54" y2="552" />
+                    <line x1="48" y1="546" x2="48" y2="558" />
+                    {/* Bottom-Right Orbital Node Ring */}
+                    <circle cx="550" cy="550" r="4" stroke="#FBEEE0" strokeDasharray="2 2" />
                   </g>
 
-                  {/* -------------------------------------------------------------------
-                      ORBIT 1 (+4° TILT): VALIDATOR ROCKET CLOCKWISE PERIMETER LOOP
-                     ------------------------------------------------------------------- */}
-                  <g transform="rotate(4 280 280)">
-                    {/* Hand-Drawn Dashed Orbital Track */}
-                    <path
-                      d="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
-                      stroke="#9D613C"
-                      strokeWidth="1.6"
-                      strokeDasharray="6 8"
-                      strokeLinecap="round"
-                      opacity="0.5"
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        values="0;-56"
-                        dur="2.8s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
-
-                    {/* Trailing Orbital Telemetry Beacon Dot (Opposite Phase) */}
+                  {/* Helios Solar Beacon (Top-Left Perihelion Anchor with Rotating Corona) */}
+                  <g transform="translate(46, 46)">
+                    {/* Pulsing Solar Corona Halo */}
+                    <circle r="14" fill="#E59B63" fillOpacity="0.16">
+                      <animate attributeName="r" values="12;16.5;12" dur="3.2s" repeatCount="indefinite" />
+                      <animate attributeName="fill-opacity" values="0.12;0.26;0.12" dur="3.2s" repeatCount="indefinite" />
+                    </circle>
+                    {/* Rotating 8-Point Solar Rays */}
                     <g>
-                      <circle r="2.4" fill="#22C55E" stroke="#0B1018" strokeWidth="1.2" />
-                      <circle r="4.5" stroke="#22C55E" strokeWidth="0.9" opacity="0.45">
-                        <animate
-                          attributeName="r"
-                          values="2.6;6.2;2.6"
-                          dur="1.8s"
-                          repeatCount="indefinite"
-                        />
-                        <animate
-                          attributeName="opacity"
-                          values="0.6;0;0.6"
-                          dur="1.8s"
-                          repeatCount="indefinite"
-                        />
-                      </circle>
-                      <animateMotion
-                        path="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
-                        dur="13.5s"
-                        begin="-6.75s"
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0"
+                        to="360"
+                        dur="18s"
                         repeatCount="indefinite"
-                        rotate="auto"
                       />
+                      <line x1="0" y1="-13.5" x2="0" y2="-10.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
+                      <line x1="0" y1="10.5" x2="0" y2="13.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
+                      <line x1="-13.5" y1="0" x2="-10.5" y2="0" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
+                      <line x1="10.5" y1="0" x2="13.5" y2="0" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
+                      <line x1="-9.5" y1="-9.5" x2="-7.4" y2="-7.4" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
+                      <line x1="7.4" y1="7.4" x2="9.5" y2="9.5" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
+                      <line x1="9.5" y1="-9.5" x2="7.4" y2="-7.4" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
+                      <line x1="-7.4" y1="7.4" x2="-9.5" y2="9.5" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
                     </g>
-
-                    {/* Bespoke Anti-AI-Slop Validator Rocket Riding Orbit 1 (Compact Scale) */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
-                      <g transform="scale(0.52) translate(-39, -22)">
-                        <SketchbookOrbitRocketDoodle />
-                      </g>
-                      <animateMotion
-                        path="M 280,16 C 478,16 544,82 544,280 C 544,478 478,544 280,544 C 82,544 16,478 16,280 C 16,82 82,16 280,16 Z"
-                        dur="13.5s"
-                        repeatCount="indefinite"
-                        rotate="auto"
-                      />
-                    </g>
+                    {/* Solar Photosphere Core */}
+                    <circle r="7.5" fill="#E59B63" stroke="#0B1018" strokeWidth="1.8" />
+                    <circle r="4.5" fill="#FBEEE0" />
                   </g>
 
                   {/* -------------------------------------------------------------------
-                      ORBIT 2 (-6° TILT): ORIGAMI PAPER PLANE COUNTER-CLOCKWISE GLIDE LOOP
+                      ORBIT 1 (INNER TERRESTRIAL BELT — CLOCKWISE, 11.5s PERIOD)
+                      Planets: Mercury (Cratered World) & Venus (Golden Cloud Sphere)
                      ------------------------------------------------------------------- */}
-                  <g transform="rotate(-6 280 280)">
-                    {/* Fine Sketchbook Wind-Current Dotted Trail */}
+                  <g transform="rotate(2 300 300)">
                     <path
-                      d="M 280,32 C 94,32 32,94 32,280 C 32,466 94,528 280,528 C 466,528 528,466 528,280 C 528,94 466,32 280,32 Z"
+                      d="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
                       stroke="#FBEEE0"
-                      strokeWidth="1.2"
-                      strokeDasharray="3 7"
+                      strokeWidth="1.1"
+                      strokeDasharray="2 7"
                       strokeLinecap="round"
-                      opacity="0.35"
+                      opacity="0.32"
                     >
                       <animate
                         attributeName="stroke-dashoffset"
-                        values="0;-40"
+                        values="0;-36"
                         dur="2.4s"
                         repeatCount="indefinite"
                       />
                     </path>
 
-                    {/* Bespoke Anti-AI-Slop Origami Paper Plane Gliding on Orbit 2 (Compact Scale) */}
+                    {/* Planet 1: Mercury (Compact Cratered Terrestrial Sphere) */}
+                    <g style={{ filter: 'drop-shadow(0px 2px 3px rgba(11, 16, 24, 0.85))' }}>
+                      <circle r="5.5" fill="#DEC6B0" stroke="#0B1018" strokeWidth="1.6" />
+                      <path d="M 1.5,-5.2 A 5.5,5.5 0 0,1 1.5,5.2 A 4,5.3 0 0,0 1.5,-5.2 Z" fill="#9D613C" opacity="0.65" />
+                      <circle cx="-1.8" cy="-1.2" r="1.1" fill="#9D613C" />
+                      <circle cx="0.8" cy="2" r="0.8" fill="#9D613C" />
+                      <animateMotion
+                        path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
+                        dur="11.5s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+
+                    {/* Planet 2: Venus (Golden Amber Cloud-Banded World — Opposite Phase) */}
+                    <g style={{ filter: 'drop-shadow(0px 2px 4px rgba(11, 16, 24, 0.85))' }}>
+                      <circle r="9" fill="#E59B63" fillOpacity="0.18" />
+                      <circle r="6.8" fill="#E59B63" stroke="#0B1018" strokeWidth="1.7" />
+                      <path d="M -5.2,-2 Q 0,-3.8 5.2,-1.5" stroke="#FBEEE0" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+                      <path d="M -4.8,2 Q 0,0.4 4.8,2.2" stroke="#9D613C" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+                      <circle cx="-2.2" cy="-2.4" r="1.1" fill="#FBEEE0" />
+                      <animateMotion
+                        path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
+                        dur="11.5s"
+                        begin="-5.75s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+                  </g>
+
+                  {/* -------------------------------------------------------------------
+                      ORBIT 2 (MIDDLE ECLIPTIC BELT — COUNTER-CLOCKWISE, 15.5s PERIOD)
+                      Planets: Terra + Orbiting Luna Moon, Mars, & Origami Paper Plane
+                     ------------------------------------------------------------------- */}
+                  <g transform="rotate(-5 300 300)">
+                    <path
+                      d="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
+                      stroke="#9D613C"
+                      strokeWidth="1.4"
+                      strokeDasharray="5 8"
+                      strokeLinecap="round"
+                      opacity="0.45"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        values="0;-52"
+                        dur="2.8s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+
+                    {/* Planet 3: Terra (Earth) + Active Orbiting Luna Moon */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 5px rgba(11, 16, 24, 0.88))' }}>
+                      {/* Luna Sub-Orbit Track */}
+                      <circle r="13.5" stroke="#FBEEE0" strokeWidth="0.9" strokeDasharray="2 3" opacity="0.5" />
+                      {/* Orbiting Luna Moon */}
+                      <g>
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="0"
+                          to="360"
+                          dur="2.8s"
+                          repeatCount="indefinite"
+                        />
+                        <circle cx="13.5" cy="0" r="2.5" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.2" />
+                      </g>
+                      {/* Terra Globe */}
+                      <circle r="8.2" fill="#1E3A5F" stroke="#0B1018" strokeWidth="1.8" />
+                      <circle r="7.2" fill="#38BDF8" fillOpacity="0.88" />
+                      {/* Emerald Continents */}
+                      <path
+                        d="M -4,-3.5 C -1.5,-4.5 1,-2.5 0.5,0 C 0,2 -3,3.5 -4.8,1.5 Z"
+                        fill="#22C55E"
+                      />
+                      <path
+                        d="M 2.2,-1.5 C 4.5,-2 5.8,0.5 4.5,3.2 C 3.2,4.5 1.5,3 2.2,0.5 Z"
+                        fill="#22C55E"
+                      />
+                      {/* Polar Cloud Cap */}
+                      <path d="M -3.5,-6 A 6.5,6.5 0 0,1 3.5,-6" stroke="#FBEEE0" strokeWidth="1.4" strokeLinecap="round" />
+                      <animateMotion
+                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
+                        dur="15.5s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+
+                    {/* Planet 4: Mars (Red-Terracotta Oxide Planet — Opposite Phase) */}
+                    <g style={{ filter: 'drop-shadow(0px 2px 4px rgba(11, 16, 24, 0.85))' }}>
+                      <circle r="6.4" fill="#C85A32" stroke="#0B1018" strokeWidth="1.7" />
+                      {/* Martian Canyon Belt & North Polar Ice Cap */}
+                      <path d="M -4.2,0.8 Q 0,2.4 4.2,0.2" stroke="#7C2D12" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+                      <path d="M -2.6,-5.2 A 5.5,5.5 0 0,1 2.6,-5.2" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
+                      <circle cx="-1.8" cy="-1.6" r="1" fill="#E59B63" />
+                      <animateMotion
+                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
+                        dur="15.5s"
+                        begin="-7.75s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+
+                    {/* Origami Paper Plane Gliding on Orbit 2 */}
                     <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
-                      <g transform="scale(0.48) translate(-46, -26)">
+                      <g transform="scale(0.45) translate(-46, -26)">
                         <SketchbookPaperPlaneDoodle />
                       </g>
                       <animateMotion
-                        path="M 280,32 C 94,32 32,94 32,280 C 32,466 94,528 280,528 C 466,528 528,466 528,280 C 528,94 466,32 280,32 Z"
-                        dur="16s"
-                        begin="-4s"
+                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
+                        dur="15.5s"
+                        begin="-3.8s"
+                        repeatCount="indefinite"
+                        rotate="auto"
+                      />
+                    </g>
+                  </g>
+
+                  {/* -------------------------------------------------------------------
+                      ORBIT 3 (OUTER JOVIAN GAS GIANT BELT — CLOCKWISE, 21s PERIOD)
+                      Planets: Saturn (Double-Ringed Gas Giant + Titan), Jupiter, & Rocket
+                     ------------------------------------------------------------------- */}
+                  <g transform="rotate(5 300 300)">
+                    <path
+                      d="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
+                      stroke="#E59B63"
+                      strokeWidth="1.2"
+                      strokeDasharray="8 10"
+                      strokeLinecap="round"
+                      opacity="0.38"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        values="0;-72"
+                        dur="3.6s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+
+                    {/* Planet 5: Saturn (Ringed Gas Giant with Cassini Division & Titan Moon) */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 6px rgba(11, 16, 24, 0.9))' }}>
+                      {/* Orbiting Titan Moon */}
+                      <g>
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="360"
+                          to="0"
+                          dur="4.2s"
+                          repeatCount="indefinite"
+                        />
+                        <circle cx="19" cy="0" r="2.1" fill="#E59B63" stroke="#0B1018" strokeWidth="1.1" />
+                      </g>
+
+                      <g transform="rotate(-22)">
+                        {/* Back Half of Planetary Rings (Behind Sphere) */}
+                        <path
+                          d="M -16.5,0 A 16.5,5.8 0 0,1 16.5,0"
+                          stroke="#9D613C"
+                          strokeWidth="2.6"
+                          fill="none"
+                        />
+                        <path
+                          d="M -13.5,0 A 13.5,4.4 0 0,1 13.5,0"
+                          stroke="#FBEEE0"
+                          strokeWidth="1.2"
+                          opacity="0.7"
+                          fill="none"
+                        />
+
+                        {/* Saturn Planetary Sphere */}
+                        <circle r="8.6" fill="#E59B63" stroke="#0B1018" strokeWidth="1.8" />
+                        {/* Atmospheric Bands */}
+                        <path d="M -7.4,-2.8 Q 0,-4.2 7.4,-2.8" stroke="#FBEEE0" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+                        <path d="M -7.8,0.5 Q 0,-0.8 7.8,0.5" stroke="#9D613C" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+                        <path d="M -6.8,3.6 Q 0,2.4 6.8,3.6" stroke="#FBEEE0" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+
+                        {/* Front Half of Planetary Rings (Crossing in Front of Sphere) */}
+                        <path
+                          d="M 16.5,0 A 16.5,5.8 0 0,1 -16.5,0"
+                          stroke="#FBEEE0"
+                          strokeWidth="2.8"
+                          strokeLinecap="round"
+                          fill="none"
+                        />
+                        <path
+                          d="M 13.5,0 A 13.5,4.4 0 0,1 -13.5,0"
+                          stroke="#E59B63"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          fill="none"
+                        />
+                      </g>
+
+                      <animateMotion
+                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
+                        dur="21s"
+                        begin="-2s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+
+                    {/* Planet 6: Jupiter (Banded Storm Giant with Great Red Spot & Io Moon) */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 6px rgba(11, 16, 24, 0.9))' }}>
+                      {/* Orbiting Galilean Moon Io */}
+                      <g>
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          from="0"
+                          to="360"
+                          dur="3.1s"
+                          repeatCount="indefinite"
+                        />
+                        <circle cx="14.5" cy="0" r="2.1" fill="#22C55E" stroke="#0B1018" strokeWidth="1.1" />
+                      </g>
+                      {/* Jupiter Sphere */}
+                      <circle r="9.4" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.8" />
+                      {/* Equatorial Storm Belts */}
+                      <path d="M -8.2,-3.2 H 8.2" stroke="#9D613C" strokeWidth="2.2" strokeLinecap="round" />
+                      <path d="M -8.5,0.6 H 8.5" stroke="#E59B63" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M -7.4,4.2 H 7.4" stroke="#9D613C" strokeWidth="1.6" strokeLinecap="round" />
+                      {/* Great Red Spot */}
+                      <ellipse cx="2.6" cy="2.1" rx="2.6" ry="1.6" fill="#C85A32" stroke="#0B1018" strokeWidth="0.9" />
+                      <animateMotion
+                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
+                        dur="21s"
+                        begin="-12.5s"
+                        repeatCount="indefinite"
+                        rotate="0"
+                      />
+                    </g>
+
+                    {/* Validator Rocket Cruising Along Outer Orbit 3 */}
+                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
+                      <g transform="scale(0.48) translate(-39, -22)">
+                        <SketchbookOrbitRocketDoodle />
+                      </g>
+                      <animateMotion
+                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
+                        dur="21s"
+                        begin="-7.2s"
                         repeatCount="indefinite"
                         rotate="auto"
                       />
@@ -436,35 +642,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Scroll Down Affordance on bottom right */}
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
-              transition={{ duration: 0.45, delay: 0.78 }}
-              className="hidden lg:flex flex-col items-center gap-1.5 absolute -bottom-10 right-0 cursor-pointer group"
+              initial={{ opacity: 0, y: 12 }}
+              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              transition={{ duration: 0.45, delay: 0.65 }}
+              className="hidden lg:flex flex-col items-center gap-1 absolute -bottom-4 right-0 cursor-pointer group"
               onClick={onScrollDown}
             >
-              <div className="w-6 h-10 rounded-full border-2 border-[#fbeee0]/70 flex items-start justify-center p-1.5 group-hover:border-[#e59b63] transition-colors">
-                <div className="w-1.5 h-2.5 rounded-full bg-[#fbeee0] animate-bounce" />
+              <div className="w-5 h-8 rounded-full border-[1.5px] border-[#fbeee0]/70 flex items-start justify-center p-1 group-hover:border-[#e59b63] transition-colors">
+                <div className="w-1.5 h-2 rounded-full bg-[#fbeee0] animate-bounce" />
               </div>
-              <span className="text-xs font-hand tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
-                {lang === 'id' ? 'Gulir ke Bawah' : 'Scroll Down'}
+              <span className="text-[11px] font-hand tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
+                {lang === 'id' ? 'Gulir' : 'Scroll'}
               </span>
-              <svg
-                className="w-4 h-4 text-[#fbeee0] group-hover:translate-y-1 transition-transform"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
             </motion.div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };

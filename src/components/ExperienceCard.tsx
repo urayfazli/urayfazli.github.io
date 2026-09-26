@@ -52,7 +52,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
         </div>
 
         {/* 3 Network Doodle Subcards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
           {networks.map((net) => {
             const handleKeyDown = (e: React.KeyboardEvent) => {
               if (e.key === 'Enter' || e.key === ' ') {
@@ -77,16 +77,17 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
               >
                 <div>
                   {/* Network Logo + Custom Animated Network Droid Character */}
-                  <div className="mb-4 flex items-center justify-between gap-2">
-                    <div className="p-2 rounded-xl bg-[#17212e] border-[1.8px] border-[#fbeee0]/60 group-hover:border-[#e59b63] group-hover:rotate-[-3deg] transition-all duration-300">
+                  <div className="mb-3.5 flex items-center justify-between gap-2">
+                    <div className="p-2 rounded-xl bg-[#17212e] border-[1.8px] border-[#fbeee0]/60 group-hover:border-[#e59b63] group-hover:rotate-[-3deg] transition-all duration-300 shrink-0">
                       {net.logoType === 'aptos' && <AptosLogo className="w-8 h-8 sm:w-9 sm:h-9" />}
                       {net.logoType === 'sei' && <SeiLogo className="w-8 h-8 sm:w-9 sm:h-9" />}
                       {net.logoType === 'subquery' && <SubQueryLogo className="w-8 h-8 sm:w-9 sm:h-9" />}
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <NetworkDroidCharacter type={net.logoType} />
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#fbeee0] bg-[#9d613c]/30 px-2 py-0.5 rounded-md border border-dashed border-[#fbeee0]/50">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-emerald-300 bg-[#0b1018]/90 px-2 py-0.5 rounded-md border border-dashed border-emerald-400/45">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         {net.status}
                       </span>
                     </div>
@@ -96,7 +97,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                   <h3 className="font-fredoka text-lg font-medium text-[#fbeee0] group-hover:text-white transition-colors leading-snug mb-0.5">
                     {net.name}
                   </h3>
-                  <p className="text-xs font-hand text-[#e59b63] text-sm mb-2">
+                  <p className="font-hand text-base text-[#e59b63] leading-snug mb-1.5">
                     {net.role}
                   </p>
                   <p className="text-[11px] text-[#bba998] font-mono mb-3 truncate">
@@ -104,11 +105,13 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                   </p>
                 </div>
 
-                {/* Bottom Metrics Preview & Interactive Prompt */}
-                <div className="pt-3 border-t-[1.5px] border-dashed border-[#fbeee0]/20 flex items-center justify-between text-[11px] font-mono text-[#d8c7b6]">
-                  <span>99.9% Uptime</span>
-                  <span className="font-hand text-sm text-[#e59b63] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                    {lang === 'id' ? 'Detail →' : 'Inspect →'}
+                {/* Bottom Authentic Hardware & Telemetry Preview */}
+                <div className="pt-3 border-t-[1.5px] border-dashed border-[#fbeee0]/20 flex items-center justify-between gap-2 text-[11px] font-mono text-[#d8c7b6]">
+                  <span className="truncate tabular-nums text-[#c9b7a6]" title={`${net.hardware.cpu} · ${net.hardware.ram}`}>
+                    {net.hardware.ram.split(' ')[0]} RAM · {net.hardware.bandwidth.split(' ')[0]}
+                  </span>
+                  <span className="font-hand text-sm text-[#e59b63] group-hover:translate-x-0.5 transition-transform flex items-center gap-1 shrink-0">
+                    {lang === 'id' ? 'Spesifikasi →' : 'Specs →'}
                   </span>
                 </div>
               </div>

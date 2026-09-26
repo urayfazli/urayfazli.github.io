@@ -53,12 +53,41 @@ export const AboutCard: React.FC = () => {
         <TechnicalSkills />
       </div>
 
-      {/* Bottom hand-drawn wavy underline & sketch note */}
-      <div className="relative z-10 mt-6 flex items-center justify-between pt-2">
-        <WavyUnderline className="w-24 sm:w-28 h-5 text-[#fbeee0]/85 group-hover:text-[#e59b63] transition-colors" />
-        <span className="font-hand text-base text-[#e59b63] rotate-[-3deg] bg-[#0d131c] px-2.5 py-0.5 rounded-lg border border-dashed border-[#fbeee0]/40">
-          #DEV_UNIT_01 ✎
-        </span>
+      {/* Bottom Infrastructure Specs Strip & Hand-Drawn Sketch Note */}
+      <div className="relative z-10 mt-6 pt-3.5 border-t border-[#fbeee0]/15 space-y-3">
+        <div className="grid grid-cols-3 divide-x divide-[#fbeee0]/15 text-[11px] font-mono text-[#d6c4b2]">
+          <div className="pr-2.5">
+            <span className="block text-[10px] uppercase tracking-wider text-[#9a8978]">
+              {lang === 'id' ? 'Arsitektur' : 'Architecture'}
+            </span>
+            <span className="text-[#fbeee0] font-medium truncate block mt-0.5">
+              Bare-Metal · NVMe RAID
+            </span>
+          </div>
+          <div className="px-2.5">
+            <span className="block text-[10px] uppercase tracking-wider text-[#9a8978]">
+              {lang === 'id' ? 'Keamanan' : 'Security'}
+            </span>
+            <span className="text-[#fbeee0] font-medium truncate block mt-0.5">
+              Sentry + WireGuard VPN
+            </span>
+          </div>
+          <div className="pl-2.5">
+            <span className="block text-[10px] uppercase tracking-wider text-[#9a8978]">
+              {lang === 'id' ? 'Observabilitas' : 'Observability'}
+            </span>
+            <span className="text-[#fbeee0] font-medium truncate block mt-0.5">
+              Prometheus · PagerDuty
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <WavyUnderline className="w-24 sm:w-28 h-5 text-[#fbeee0]/85 group-hover:text-[#e59b63] transition-colors" />
+          <span className="font-hand text-base text-[#e59b63] rotate-[-2deg] bg-[#0d131c] px-2.5 py-0.5 rounded-lg border border-dashed border-[#fbeee0]/40">
+            #DEV_UNIT_01 ✎
+          </span>
+        </div>
       </div>
     </div>
   );

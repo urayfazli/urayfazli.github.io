@@ -324,7 +324,7 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
         |
       </span>
 
-      {/* Counter Content with Hand-crafted Icon & Odometer Style */}
+      {/* Counter Content with Hand-crafted Icon & Tabular Odometer Style */}
       <div className="flex items-center gap-2">
         <svg
           viewBox="0 0 20 20"
@@ -341,15 +341,15 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
           <circle cx="10" cy="10" r="1" fill="#101723" />
         </svg>
 
-        <span className="text-xs sm:text-sm text-[#d6c4b2] font-sans tracking-wide">
+        <span className="text-xs text-[#d6c4b2] font-mono tracking-wide">
           Visitors:
         </span>
 
-        {/* Live Count Number with soft pulse animation on increment */}
+        {/* Live Count Number with tabular numerals & soft pulse animation on increment */}
         <span
-          className={`font-mono font-bold text-xs sm:text-sm tracking-wider text-[#fbeee0] px-2 py-0.5 rounded bg-[#0a0f17] border transition-all duration-300 ${
+          className={`font-mono tabular-nums font-bold text-xs sm:text-sm tracking-wider text-[#fbeee0] px-2 py-0.5 rounded bg-[#0a0f17] border transition-all duration-300 ${
             hasNewIncrement
-              ? 'text-[#86efac] scale-110 border-[#22c55e]/60 shadow-[0_0_8px_rgba(34,197,94,0.35)]'
+              ? 'text-[#86efac] scale-105 border-[#22c55e]/60 shadow-[0_0_8px_rgba(34,197,94,0.35)]'
               : 'border-white/10'
           }`}
         >

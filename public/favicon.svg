@@ -1,130 +1,74 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#141C28" />
-      <stop offset="100%" stop-color="#090D14" />
-    </linearGradient>
-    <linearGradient id="rim" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E59B63" stop-opacity="0.8" />
-      <stop offset="50%" stop-color="#9D613C" stop-opacity="0.45" />
-      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.9" />
-    </linearGradient>
-    <linearGradient id="hull" x1="20" y1="12" x2="46" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FBEEE0" />
-      <stop offset="100%" stop-color="#DEC6B0" />
-    </linearGradient>
-    <linearGradient id="copper" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#E59B63" />
-      <stop offset="100%" stop-color="#9D613C" />
-    </linearGradient>
-    <linearGradient id="plume" x1="26" y1="38" x2="10" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FBEEE0" />
-      <stop offset="45%" stop-color="#E59B63" />
-      <stop offset="100%" stop-color="#9D613C" stop-opacity="0" />
-    </linearGradient>
-  </defs>
+  <!--
+    Anti-AI-Slop Precision Emblem Favicon — Uray Fazli Alman (Validator Node & Celestial Orrery)
+    Engineered on a pixel-aligned 64x64 grid with high-contrast flat ink planes for 16px/32px clarity.
+  -->
 
-  <!-- Hardware Module Chassis -->
-  <rect width="64" height="64" rx="14" fill="url(#bg)" />
-  <rect x="2" y="2" width="60" height="60" rx="12" fill="none" stroke="url(#rim)" stroke-width="2" />
-  <rect x="6" y="6" width="52" height="52" rx="9" fill="#0B0F17" fill-opacity="0.65" />
+  <!-- Outer Obsidian Hardware Bezel -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0B1018" stroke="#FBEEE0" stroke-width="2.5" />
+  <rect x="6" y="6" width="52" height="52" rx="10" fill="#121A26" stroke="#9D613C" stroke-width="1.2" stroke-dasharray="4 3" />
 
-  <!-- Subtle Technical Telemetry Grid Marks -->
-  <circle cx="15" cy="16" r="1.2" fill="#E59B63" fill-opacity="0.65">
-    <animate attributeName="opacity" values="0.3;1;0.3" dur="2.2s" repeatCount="indefinite" />
-  </circle>
-  <circle cx="49" cy="47" r="1.2" fill="#FBEEE0" fill-opacity="0.5">
-    <animate attributeName="opacity" values="0.9;0.25;0.9" dur="1.8s" repeatCount="indefinite" />
-  </circle>
-  <path d="M12 49L19 42" stroke="#9D613C" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 3" opacity="0.6" />
-
-  <!-- Animated Aerospace Validator Rocket (45-deg Orbital Ascent) -->
-  <g transform="translate(32 32) rotate(45) translate(-32 -32)">
-    <g>
-      <animateTransform
-        attributeName="transform"
-        type="translate"
-        values="0 0.8; 0 -1.2; 0 0.8"
-        dur="1.4s"
-        repeatCount="indefinite"
-      />
-
-      <!-- Animated Thruster Plume Outer Cone -->
-      <path
-        d="M27.5 44L32 57L36.5 44H27.5Z"
-        fill="url(#plume)"
-      >
-        <animate
-          attributeName="d"
-          values="M27.5 44L32 56L36.5 44H27.5Z;M26.5 44L32 60L37.5 44H26.5Z;M27.5 44L32 56L36.5 44H27.5Z"
-          dur="0.32s"
-          repeatCount="indefinite"
-        />
-      </path>
-
-      <!-- Animated Thruster Inner Core -->
-      <path
-        d="M29.5 44L32 51.5L34.5 44H29.5Z"
-        fill="#FBEEE0"
-      >
-        <animate
-          attributeName="d"
-          values="M29.5 44L32 50.5L34.5 44H29.5Z;M29 44L32 53.5L35 44H29Z;M29.5 44L32 50.5L34.5 44H29.5Z"
-          dur="0.24s"
-          repeatCount="indefinite"
-        />
-      </path>
-
-      <!-- Swept Delta Stabilizer Fins (Terracotta Bronze) -->
-      <path
-        d="M24 31L16 39.5L17.5 43L25 39.5V31Z"
-        fill="url(#copper)"
-        stroke="#0B0F17"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-      <path
-        d="M40 31L48 39.5L46.5 43L39 39.5V31Z"
-        fill="url(#copper)"
-        stroke="#0B0F17"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-
-      <!-- Stepped Engine Nozzle Bell -->
-      <path
-        d="M27 39.5H37L38.5 44H25.5L27 39.5Z"
-        fill="#9D613C"
-        stroke="#0B0F17"
-        stroke-width="1.6"
-        stroke-linejoin="round"
-      />
-
-      <!-- Main Fuselage Body (Warm Sketchbook Cream) -->
-      <path
-        d="M32 9C26.5 15.5 24.5 23.5 24.5 33.5V39.5H39.5V33.5C39.5 23.5 37.5 15.5 32 9Z"
-        fill="url(#hull)"
-        stroke="#0B0F17"
-        stroke-width="1.8"
-        stroke-linejoin="round"
-      />
-
-      <!-- Nosecone Tip (Terracotta Copper) -->
-      <path
-        d="M32 9C28.8 12.8 26.8 16.8 25.8 21H38.2C37.2 16.8 35.2 12.8 32 9Z"
-        fill="url(#copper)"
-      />
-      <line x1="25.6" y1="21" x2="38.4" y2="21" stroke="#0B0F17" stroke-width="1.6" />
-
-      <!-- Center dorsal fin / structural seam -->
-      <line x1="32" y1="33.5" x2="32" y2="41" stroke="#0B0F17" stroke-width="1.8" stroke-linecap="round" />
-
-      <!-- Validator Telemetry Avionics Porthole (Live Emerald Node Indicator) -->
-      <circle cx="32" cy="27.5" r="4.6" fill="#0B0F17" />
-      <circle cx="32" cy="27.5" r="3.1" fill="#22C55E">
-        <animate attributeName="r" values="2.9;3.3;2.9" dur="1.6s" repeatCount="indefinite" />
-      </circle>
-      <circle cx="30.9" cy="26.4" r="1" fill="#DCFCE7" />
-    </g>
+  <!-- Back Half of Tilted Planetary Ring (Behind Isometric Node Core) -->
+  <g transform="rotate(-24 32 32)">
+    <path
+      d="M 7 32 A 25 9.5 0 0 1 57 32"
+      stroke="#9D613C"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      fill="none"
+    />
   </g>
+
+  <!-- Center Isometric Validator Genesis Block (3-Plane Architectural Cube) -->
+  <!-- Top Rhombus Face -->
+  <polygon
+    points="32,15 46,23 32,31 18,23"
+    fill="#FBEEE0"
+    stroke="#0B1018"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+  <!-- Left Isometric Face -->
+  <polygon
+    points="18,23 32,31 32,47 18,39"
+    fill="#E59B63"
+    stroke="#0B1018"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+  <!-- Right Isometric Face -->
+  <polygon
+    points="32,31 46,23 46,39 32,47"
+    fill="#9D613C"
+    stroke="#0B1018"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+
+  <!-- Front Half of Tilted Planetary Ring (Crosses in front of Isometric Core) -->
+  <g transform="rotate(-24 32 32)">
+    <path
+      d="M 57 32 A 25 9.5 0 0 1 7 32"
+      stroke="#FBEEE0"
+      stroke-width="2.6"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <path
+      d="M 53 34.5 A 22 8 0 0 1 11 34.5"
+      stroke="#E59B63"
+      stroke-width="1.4"
+      stroke-dasharray="3 3"
+      stroke-linecap="round"
+      fill="none"
+    />
+
+    <!-- Orbiting Planet on the Ring -->
+    <circle cx="11" cy="34.5" r="4.2" fill="#E59B63" stroke="#0B1018" stroke-width="1.8" />
+    <circle cx="10" cy="33.5" r="1.2" fill="#FBEEE0" />
+  </g>
+
+  <!-- Active Consensus Emerald Telemetry Node (Top-Right Satellite) -->
+  <circle cx="49" cy="15" r="4.5" fill="#22C55E" stroke="#0B1018" stroke-width="2" />
+  <circle cx="47.8" cy="13.8" r="1.2" fill="#DCFCE7" />
 </svg>

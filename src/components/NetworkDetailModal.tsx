@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { NetworkInfo } from '../types';
-import { AptosLogo, SeiLogo, SubQueryLogo } from './Doodles';
+import { AptosLogo, SeiLogo, SubQueryLogo, DoodleTape } from './Doodles';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NetworkDetailModalProps {
@@ -25,152 +26,200 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
     };
   }, [network, onClose]);
 
-  if (!network) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md animate-fade-in"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl rounded-3xl bg-[#141d2a] border border-[#2b394e] p-6 sm:p-8 shadow-2xl overflow-y-auto max-h-[90vh] text-[#fbeee0]"
-      >
-        {/* Close Button */}
-        <button
+    <AnimatePresence>
+      {network && (
+        <motion.div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="network-modal-title"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md overflow-y-auto"
           onClick={onClose}
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-[#d8c7b6] hover:text-white flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c]"
-          aria-label="Close modal"
         >
-          ✕
-        </button>
-
-        {/* Header with Network Icon & Title */}
-        <div className="flex items-start gap-4 mb-6">
-          <div className="flex-shrink-0">
-            {network.logoType === 'aptos' && <AptosLogo className="w-14 h-14" />}
-            {network.logoType === 'sei' && <SeiLogo className="w-14 h-14" />}
-            {network.logoType === 'subquery' && <SubQueryLogo className="w-14 h-14" />}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase px-2.5 py-0.5 rounded-full bg-[#9d613c]/30 text-[#fbeee0] border border-[#9d613c]/50">
-                {network.role}
-              </span>
-              <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                {network.status}
-              </span>
-            </div>
-            <h3 className="font-fredoka text-2xl sm:text-3xl font-medium text-[#fbeee0] mt-1">
-              {network.name}
-            </h3>
-            <p className="text-sm text-[#bba998]">{network.category}</p>
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-[#e2d5c8] text-sm sm:text-base leading-relaxed mb-6">
-          {network.description}
-        </p>
-
-        {/* Hardware Specifications Grid */}
-        <div className="mb-6 p-4 rounded-2xl bg-[#0f1520] border border-white/5">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#b97746] mb-3 font-semibold">
-            {lang === 'id'
-              ? 'Spesifikasi Node & Infrastruktur Dedicated'
-              : 'Dedicated Node Specs & Infrastructure'}
-          </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">
-                {lang === 'id' ? 'Prosesor' : 'Processor'}
-              </div>
-              <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.cpu}</div>
-            </div>
-            <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">
-                {lang === 'id' ? 'Memori' : 'Memory'}
-              </div>
-              <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.ram}</div>
-            </div>
-            <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">
-                {lang === 'id' ? 'Penyimpanan' : 'Storage'}
-              </div>
-              <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.storage}</div>
-            </div>
-            <div className="bg-[#141c28] p-2.5 rounded-xl border border-white/5">
-              <div className="text-[#a89786] font-mono text-[11px]">Bandwidth</div>
-              <div className="font-medium text-[#fbeee0] mt-0.5">{network.hardware.bandwidth}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Key Highlights / Operator Responsibilities */}
-        <div className="mb-6">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#b97746] mb-3 font-semibold">
-            {lang === 'id' ? 'Sorotan Operasional' : 'Operational Highlights'}
-          </h4>
-          <ul className="space-y-2">
-            {network.highlights.map((item, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#e2d5c8]">
-                <span className="text-[#9d613c] mt-0.5 font-bold">✓</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* DevOps & Node Runner Tools */}
-        <div className="mb-8">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-[#b97746] mb-2.5 font-semibold">
-            DevOps Stack
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {network.tools.map((tool) => (
-              <span
-                key={tool}
-                className="px-3 py-1 rounded-full text-xs font-mono bg-[#1b2536] text-[#fbeee0] border border-[#2d3a4f]"
-              >
-                {tool}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Action Links */}
-        <div className="pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <a
-              href={network.websiteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-[#9d613c] hover:bg-[#b06f44] text-white text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-            >
-              {lang === 'id' ? 'Situs Resmi ↗' : 'Official Website ↗'}
-            </a>
-            {network.explorerUrl && (
-              <a
-                href={network.explorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#fbeee0] text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c]"
-              >
-                Block Explorer ↗
-              </a>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="text-xs text-[#bba998] hover:text-[#fbeee0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] px-2 py-1 rounded-lg"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="doodle-card relative w-full max-w-2xl p-6 sm:p-8 text-[#fbeee0] my-auto max-h-[90vh] overflow-y-auto"
           >
-            {lang === 'id' ? 'Tutup jendela' : 'Close window'}
-          </button>
-        </div>
-      </div>
-    </div>
+            {/* Top Sketchbook Tape */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-1.5deg] pointer-events-none z-20">
+              <DoodleTape className="w-24 h-5" />
+            </div>
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 h-9 rounded-full bg-[#0e1520] hover:bg-[#9d613c] border border-[#fbeee0]/40 hover:border-[#fbeee0] text-[#d8c7b6] hover:text-white flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] z-20"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+
+            <div className="relative z-10">
+              {/* Header with Network Icon & Title */}
+              <div className="flex items-start gap-4 mb-5 pr-10">
+                <div className="shrink-0 p-2.5 rounded-2xl bg-[#0e1520] border-[1.8px] border-[#fbeee0]/60">
+                  {network.logoType === 'aptos' && <AptosLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
+                  {network.logoType === 'sei' && <SeiLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
+                  {network.logoType === 'subquery' && <SubQueryLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                    <span className="uppercase tracking-wider text-[#e59b63] font-semibold">
+                      {network.role}
+                    </span>
+                    <span className="text-[#fbeee0]/25">·</span>
+                    <span className="text-emerald-400 inline-flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      {network.status}
+                    </span>
+                  </div>
+                  <h3
+                    id="network-modal-title"
+                    className="font-fredoka text-2xl sm:text-3xl font-medium text-[#fbeee0] mt-0.5"
+                  >
+                    {network.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm font-mono text-[#bba998] mt-0.5">
+                    {network.category}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-[#f0e4d6] text-sm sm:text-base leading-relaxed mb-6 pl-3.5 border-l-2 border-dashed border-[#9d613c]/75">
+                {network.description}
+              </p>
+
+              {/* Anti-AI-Slop Hairline Tabular Hardware Specifications Strip */}
+              <div className="mb-6 rounded-xl bg-[#0a0f17] border border-[#fbeee0]/20 overflow-hidden">
+                <div className="px-4 py-2 bg-[#101826] border-b border-[#fbeee0]/15 flex items-center justify-between">
+                  <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] font-semibold">
+                    {lang === 'id'
+                      ? 'Spesifikasi Perangkat Keras & Infrastruktur'
+                      : 'Dedicated Node Hardware & Infrastructure'}
+                  </h4>
+                  <span className="text-[10px] font-mono text-emerald-400 tabular-nums">
+                    SLA 99.9%
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#fbeee0]/15 text-xs font-mono">
+                  <div className="p-3">
+                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                      {lang === 'id' ? 'Prosesor' : 'Processor'}
+                    </div>
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                      {network.hardware.cpu}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                      {lang === 'id' ? 'Memori' : 'Memory'}
+                    </div>
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                      {network.hardware.ram}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                      {lang === 'id' ? 'Penyimpanan' : 'Storage'}
+                    </div>
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                      {network.hardware.storage}
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                      Bandwidth
+                    </div>
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                      {network.hardware.bandwidth}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Highlights / Operator Responsibilities */}
+              <div className="mb-6">
+                <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] mb-3 font-semibold">
+                  {lang === 'id' ? 'Tanggung Jawab & Sorotan Operasional' : 'Operational Highlights'}
+                </h4>
+                <ul className="space-y-2">
+                  {network.highlights.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2.5 text-xs sm:text-sm text-[#e8dacb]"
+                    >
+                      <span className="text-emerald-400 font-mono mt-0.5 font-bold">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* DevOps & Node Runner Stack (Hairline Inline Metadata instead of Pill Soup) */}
+              <div className="mb-6 pt-4 border-t border-dashed border-[#fbeee0]/20">
+                <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] mb-2 font-semibold">
+                  DevOps & Observability Stack
+                </h4>
+                <div className="flex flex-wrap items-center gap-y-1.5 text-xs font-mono text-[#fbeee0]">
+                  {network.tools.map((tool, index) => (
+                    <React.Fragment key={tool}>
+                      <span className="px-2.5 py-1 rounded-md bg-[#0e1520] border border-[#fbeee0]/20 text-[#fbeee0]">
+                        {tool}
+                      </span>
+                      {index < network.tools.length - 1 && (
+                        <span className="mx-1.5 text-[#9d613c]" aria-hidden="true">
+                          ·
+                        </span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Links */}
+              <div className="pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <a
+                    href={network.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="doodle-subcard px-4 py-2 !bg-[#9d613c] hover:!bg-[#b06f44] text-white text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    {lang === 'id' ? 'Situs Resmi ↗' : 'Official Website ↗'}
+                  </a>
+                  {network.explorerUrl && (
+                    <a
+                      href={network.explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doodle-subcard px-4 py-2 text-[#fbeee0] hover:text-white text-xs sm:text-sm font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                    >
+                      Block Explorer ↗
+                    </a>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="text-xs font-mono text-[#bba998] hover:text-[#fbeee0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] px-3 py-1.5 rounded-lg border border-transparent hover:border-[#fbeee0]/25"
+                >
+                  {lang === 'id' ? 'Tutup [ESC]' : 'Close [ESC]'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

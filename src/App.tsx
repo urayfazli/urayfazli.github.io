@@ -182,16 +182,16 @@ export default function App() {
             />
           </section>
 
-          {/* 2. About Section */}
+          {/* 2. About & Node Operations Bento Section */}
           <section
             id="about"
-            className={`py-12 md:py-20 relative scroll-mt-20 transition-all duration-500 ${
+            className={`py-8 md:py-12 relative scroll-mt-20 transition-all duration-500 ${
               highlightedCard === 'about' ? 'bg-[#9d613c]/5' : ''
             }`}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-stretch">
                 
                 {/* Main Bio Card */}
                 <div className="lg:col-span-7 flex flex-col">
@@ -202,8 +202,8 @@ export default function App() {
 
                 {/* Infrastructure Philosophy & Stats Side Card */}
                 <div className="lg:col-span-5 flex flex-col">
-                  <RevealOnScroll delay={150} ready={isRevealed} className="h-full flex flex-col">
-                  <div className="doodle-card doodle-card-alt p-6 sm:p-8 flex flex-col justify-between h-full">
+                  <RevealOnScroll delay={120} ready={isRevealed} className="h-full flex flex-col">
+                  <div className="doodle-card doodle-card-alt p-5 sm:p-8 flex flex-col justify-between h-full">
                     {/* Top Sketchbook Tape */}
                     <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rotate-[2deg] pointer-events-none z-20">
                       <DoodleTape className="w-24 sm:w-28 h-6" />
@@ -304,16 +304,16 @@ export default function App() {
           </div>
         </section>
 
-        {/* 3. Experience Section */}
+        {/* 3. Experience & Connect Bento Section */}
         <section
           id="experience"
-          className={`py-12 md:py-20 relative scroll-mt-20 transition-all duration-500 ${
+          className={`pt-6 pb-14 md:pt-8 md:pb-20 relative scroll-mt-20 transition-all duration-500 ${
             highlightedCard === 'experience' ? 'bg-[#9d613c]/5' : ''
           }`}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 lg:gap-8 items-stretch">
               
               {/* Experience Validator Cards */}
               <div className="lg:col-span-8 flex flex-col">
@@ -324,7 +324,7 @@ export default function App() {
 
               {/* Connect Card */}
               <div id="connect" className="lg:col-span-4 flex flex-col scroll-mt-20">
-                <RevealOnScroll delay={150} ready={isRevealed} className="h-full flex flex-col">
+                <RevealOnScroll delay={120} ready={isRevealed} className="h-full flex flex-col">
                   <ConnectCard onOpenContact={() => setContactModalOpen(true)} />
                 </RevealOnScroll>
               </div>
