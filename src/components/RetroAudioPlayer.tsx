@@ -962,7 +962,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       }
 
       setViewportInfo((prev) => {
-        const openDownward = prev.openDownward ? currentTop < 280 : currentTop < 245;
+        const openDownward = prev.openDownward ? currentTop < 350 : currentTop < 310;
         const bubbleOnLeft = prev.bubbleOnLeft
           ? botCenterX > vw * 0.46
           : botCenterX > vw * 0.54;
@@ -1644,7 +1644,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   transition={{ type: 'spring', stiffness: 400, damping: 28 }}
                   style={{ left: `${viewportInfo.cardShiftX}px` }}
                   className={`glass-player-card absolute z-30 ${
-                    viewportInfo.openDownward ? 'top-full mt-3.5 sm:mt-4' : 'bottom-full mb-3.5 sm:mb-4'
+                    viewportInfo.openDownward
+                      ? 'top-full mt-3.5 sm:mt-4'
+                      : 'bottom-full mb-[82px] sm:mb-[96px]'
                   } p-3.5 sm:p-4 w-[254px] sm:w-[280px] text-[#fbeee0] overflow-hidden`}
                 >
                   {/* Top Specular Glass Reflection Highlight & Ambient Sheen */}
@@ -1918,7 +1920,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                 />
               </button>
 
-              {/* Interactive RPG NPC Cloud Dialog Bubble ("Style Awan" - Auto-Flips Left/Right with breathing pause & spatial gap) */}
+              {/* Interactive RPG NPC Cloud Dialog Bubble (Positioned Directly Above DJ Bot's Head) */}
               <AnimatePresence>
                 {(isDragging || npcPhase !== 'paused') && (
                   <motion.div
@@ -1927,21 +1929,18 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     tabIndex={0}
                     initial={{
                       opacity: 0,
-                      scale: 0.9,
-                      x: viewportInfo.bubbleOnLeft ? 6 : -6,
-                      y: 3,
+                      scale: 0.92,
+                      y: 6,
                     }}
                     animate={{
                       opacity: 1,
                       scale: npcTalkBounce ? 1.04 : 1,
-                      x: 0,
                       y: npcTalkBounce ? -4 : 0,
                     }}
                     exit={{
                       opacity: 0,
-                      scale: 0.9,
-                      x: viewportInfo.bubbleOnLeft ? 6 : -6,
-                      y: 3,
+                      scale: 0.92,
+                      y: 6,
                     }}
                     transition={{ type: 'spring', stiffness: 380, damping: 26 }}
                     onClick={handleNextNpcDialogue}
@@ -1957,20 +1956,20 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                         ? 'Klik awan dialog untuk pesan NPC berikutnya! ☁️'
                         : 'Click cloud bubble for next NPC dialogue! ☁️'
                     }
-                    className={`absolute bottom-3 sm:bottom-4 z-20 flex items-center touch-none ${
+                    className={`absolute bottom-full mb-1.5 sm:mb-2 z-20 flex flex-col-reverse touch-none ${
                       viewportInfo.bubbleOnLeft
-                        ? 'right-full mr-2 sm:mr-3 flex-row-reverse'
-                        : 'left-full ml-2 sm:ml-3 flex-row'
+                        ? 'right-0 items-end'
+                        : 'left-0 items-start'
                     } ${
                       isDragging ? 'cursor-grabbing' : 'cursor-pointer'
                     } select-none group/cloud`}
                   >
-                    {/* Trailing Little Cloud Puffs connecting DJ Bot to the Main Cloud (Compact & Translucent) */}
+                    {/* Vertical Little Cloud Puffs rising from top of DJ Bot's Head to the Main Cloud */}
                     <div
-                      className={`flex items-end gap-1 sm:gap-1.5 ${
+                      className={`flex flex-col-reverse items-center gap-0.5 mt-0.5 ${
                         viewportInfo.bubbleOnLeft
-                          ? 'flex-row-reverse ml-0.5 mr-0.5'
-                          : 'mr-0.5 ml-0.5'
+                          ? 'mr-6 sm:mr-8'
+                          : 'ml-6 sm:ml-8'
                       } pointer-events-none z-20`}
                     >
                       <span
@@ -1987,7 +1986,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                         }`}
                       />
                       <span
-                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 -translate-y-1 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
                           !isDragging && mood === 'angry'
                             ? 'bg-[#1a0f14]/55 border-red-400/75'
                             : !isDragging && mood === 'dizzy'

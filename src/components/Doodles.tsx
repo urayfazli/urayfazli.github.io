@@ -76,14 +76,14 @@ export const SpeechBubble: React.FC<{
         {text}
       </span>
 
-      {/* Bubble Tail */}
+      {/* Bubble Tail Centered */}
       <svg
-        className="absolute -bottom-3.5 right-6 w-5 h-4 text-[#fbeee0]"
+        className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-5 h-4 text-[#fbeee0]"
         viewBox="0 0 20 16"
         fill="currentColor"
         aria-hidden="true"
       >
-        <path d="M2 0C6 6 12 12 18 16C15 11 15 5 16 0H2Z" />
+        <path d="M4 0L10 15L16 0H4Z" />
       </svg>
     </div>
   </div>

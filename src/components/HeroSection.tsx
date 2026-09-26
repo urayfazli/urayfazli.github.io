@@ -230,7 +230,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <DoodleStar className="w-5 h-5 text-[#fbeee0] animate-twinkle [animation-delay:1.8s]" />
             </motion.div>
 
-            {/* Speech Bubble: "Node Operator" smooth fade-in above character */}
+            {/* Speech Bubble: "Node Operator" smooth fade-in directly above character's head */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={
@@ -243,7 +243,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.34,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="absolute -top-6 sm:-top-8 right-4 sm:right-8 z-30 animate-float-slow will-change-[transform,opacity]"
+              className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-30 animate-float-slow will-change-[transform,opacity]"
             >
               <SpeechBubble text={lang === 'id' ? 'Operator Node' : 'Node Operator'} />
             </motion.div>

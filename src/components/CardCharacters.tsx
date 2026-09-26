@@ -50,7 +50,7 @@ export const AboutCoderCharacter: React.FC = () => {
       }}
       className="relative inline-flex items-center select-none cursor-pointer group/char focus:outline-none will-change-[transform,opacity]"
     >
-      {/* Interactive Speech Bubble */}
+      {/* Interactive Speech Bubble Above Character Head */}
       <AnimatePresence>
         {excited && (
           <motion.div
@@ -58,9 +58,13 @@ export const AboutCoderCharacter: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -top-8 right-0 sm:-left-20 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[-2deg] z-20 pointer-events-none"
+            className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] z-20 pointer-events-none"
           >
             <span className="text-emerald-400">●</span> building web3... ✎
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#0b1018] border-r-2 border-b-2 border-[#fbeee0] rotate-45"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -319,9 +323,13 @@ export const NodeSentryCharacter: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-emerald-300 shadow-[3px_3px_0px_#9d613c] rotate-[2deg] z-20 pointer-events-none"
+            className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-emerald-300 shadow-[3px_3px_0px_#9d613c] z-20 pointer-events-none"
           >
             ✓ ZERO SLASHING • 99.9%
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#0b1018] border-r-2 border-b-2 border-[#fbeee0] rotate-45"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -667,9 +675,13 @@ export const ExperienceForgeCharacter: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[-2deg] z-20 pointer-events-none"
+            className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] z-20 pointer-events-none"
           >
             ⛓ blocks validated!
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#0b1018] border-r-2 border-b-2 border-[#fbeee0] rotate-45"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -782,9 +794,13 @@ export const ConnectMessengerCharacter: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute -top-8 right-0 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] rotate-[2deg] z-20 pointer-events-none"
+            className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-[14px_10px_15px_11px] bg-[#0b1018] border-2 border-[#fbeee0] text-xs font-hand tracking-wide text-[#fbeee0] shadow-[3px_3px_0px_#9d613c] z-20 pointer-events-none"
           >
             gm ser! let&apos;s connect ✉
+            <span
+              aria-hidden="true"
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#0b1018] border-r-2 border-b-2 border-[#fbeee0] rotate-45"
+            />
           </motion.div>
         )}
       </AnimatePresence>
