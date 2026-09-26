@@ -4,14 +4,20 @@ import { retroAudio } from '../utils/retroAudioEngine';
 import { robotSound } from '../utils/robotSoundEngine';
 import { RetroCassetteDoodle, RetroSpeakerDoodle } from './Doodles';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  NPC_GREETING_DIALOGUE_ID,
+  NPC_GREETING_DIALOGUE_EN,
+  NPC_ANGRY_DIALOGUES_ID,
+  NPC_ANGRY_DIALOGUES_EN,
+  NPC_DIZZY_DIALOGUES_ID,
+  NPC_DIZZY_DIALOGUES_EN,
+  NPC_IDLE_DIALOGUES_ID,
+  NPC_IDLE_DIALOGUES_EN,
+  getNpcPlayDialogues,
+} from '../data/backsoundData';
 
 export type DjBotMood = 'greeting' | 'normal' | 'angry' | 'dizzy';
 
-/**
- * Rigged Multi-Part Animated DJ Character for the BGM Widget Button
- * Grooves, bobs head, waves hello on initial visit, gets hilariously angry when user stays too long,
- * gets dizzy/motion-sick when the user scrolls too fast, and reacts playfully when dragged across the screen.
- */
 const BGMCharacterAvatar: React.FC<{
   isPlaying: boolean;
   isExpanded: boolean;
@@ -26,18 +32,12 @@ const BGMCharacterAvatar: React.FC<{
 
   return (
     <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
-      {/* Floating Emotes: Angry Steam or Musical Notes ♫ */}
       <AnimatePresence>
         {isAngry && (
           <motion.span
             key="angry-steam"
             initial={{ opacity: 0, y: 4 }}
-            animate={{
-              opacity: [0, 0.95, 0],
-              y: [-2, -20],
-              x: [-8, -16],
-              scale: [0.7, 1.15],
-            }}
+            animate={{ opacity: [0, 0.95, 0], y: [-2, -20], x: [-8, -16], scale: [0.7, 1.15] }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
             className="absolute top-0 left-1 text-xs sm:text-sm z-20"
@@ -75,12 +75,7 @@ const BGMCharacterAvatar: React.FC<{
                 scale: [0.7, 1.15, 0.85],
               }}
               exit={{ opacity: 0 }}
-              transition={{
-                duration: 1.8,
-                delay: 0.6,
-                repeat: Infinity,
-                ease: 'easeOut',
-              }}
+              transition={{ duration: 1.8, delay: 0.6, repeat: Infinity, ease: 'easeOut' }}
               className="absolute top-0 right-1 font-hand text-base sm:text-lg text-emerald-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20"
             >
               ♫
@@ -94,7 +89,7 @@ const BGMCharacterAvatar: React.FC<{
         className="w-full h-full overflow-visible drop-shadow-[0_8px_14px_rgba(0,0,0,0.7)]"
         fill="none"
       >
-        {/* Ground Shadow (shrinks slightly when lifted/dragged, pulses with footsteps when walking) */}
+        {/* Ground Shadow */}
         <motion.ellipse
           cx="55"
           cy="108"
@@ -109,9 +104,7 @@ const BGMCharacterAvatar: React.FC<{
               : { scaleX: 1, opacity: 0.75 }
           }
           transition={
-            isWalking
-              ? { duration: 0.34, repeat: Infinity, ease: 'easeInOut' }
-              : undefined
+            isWalking ? { duration: 0.34, repeat: Infinity, ease: 'easeInOut' } : undefined
           }
         />
 
@@ -144,17 +137,12 @@ const BGMCharacterAvatar: React.FC<{
                 y: [0, -3, -6],
                 scale: [0.4, 1.1, 0.6],
               }}
-              transition={{
-                duration: 0.48,
-                delay: 0.24,
-                repeat: Infinity,
-                ease: 'easeOut',
-              }}
+              transition={{ duration: 0.48, delay: 0.24, repeat: Infinity, ease: 'easeOut' }}
             />
           </g>
         )}
 
-        {/* Ambient Pulse Ring on Ground when Playing, Angry, or Dizzy */}
+        {/* Ambient Pulse Ring on Ground */}
         {(isPlaying || isAngry || isDizzy) && !isWalking && (
           <motion.ellipse
             cx="55"
@@ -202,7 +190,7 @@ const BGMCharacterAvatar: React.FC<{
           }}
           style={{ transformOrigin: '55px 82px' }}
         >
-          {/* Cute Chibi Feet (walk with alternating stride when isWalking, dangle when dragged, stomp when angry!) */}
+          {/* Chibi Feet */}
           <motion.rect
             x="36"
             y="96"
@@ -264,7 +252,7 @@ const BGMCharacterAvatar: React.FC<{
             strokeWidth="2"
           />
 
-          {/* Front Chest Boombox / Turntable Deck */}
+          {/* Front Chest Boombox Deck */}
           <rect
             x="31"
             y="72"
@@ -289,7 +277,7 @@ const BGMCharacterAvatar: React.FC<{
           />
           <circle cx="41" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
 
-          {/* Center Mini Equalizer / Cassette Window */}
+          {/* Center Mini Equalizer */}
           <rect
             x="50"
             y="78"
@@ -348,36 +336,16 @@ const BGMCharacterAvatar: React.FC<{
             isDragging
               ? { y: -7, rotate: [-5, 5, -5] }
               : isWalking
-              ? {
-                  x: [-2, 1, -2],
-                  y: [0, -4, 0],
-                  rotate: [-5, -1, -5],
-                }
+              ? { x: [-2, 1, -2], y: [0, -4, 0], rotate: [-5, -1, -5] }
               : isDizzy
-              ? {
-                  x: [-4.5, 5, -3.5, 4.5, -4.5],
-                  y: [1, -3, 2, -2, 1],
-                  rotate: [-13, 14, -11, 13, -13],
-                }
+              ? { x: [-4.5, 5, -3.5, 4.5, -4.5], y: [1, -3, 2, -2, 1], rotate: [-13, 14, -11, 13, -13] }
               : isAngry
-              ? {
-                  y: [0, -3.5, 0],
-                  rotate: [-3.5, 3.5, -3.5],
-                }
+              ? { y: [0, -3.5, 0], rotate: [-3.5, 3.5, -3.5] }
               : isGreeting
-              ? {
-                  y: [0, -4, 0],
-                  rotate: [-5, 5, -5],
-                }
+              ? { y: [0, -4, 0], rotate: [-5, 5, -5] }
               : isPlaying
-              ? {
-                  y: [0, -5, 0],
-                  rotate: [-4, 4, -4],
-                }
-              : {
-                  y: [0, -2.5, 0],
-                  rotate: [-1, 1, -1],
-                }
+              ? { y: [0, -5, 0], rotate: [-4, 4, -4] }
+              : { y: [0, -2.5, 0], rotate: [-1, 1, -1] }
           }
           transition={{
             duration: isDragging
@@ -398,7 +366,7 @@ const BGMCharacterAvatar: React.FC<{
           }}
           style={{ transformOrigin: '55px 42px' }}
         >
-          {/* Orbiting Halo of Stars When Dizzy/Mabuk */}
+          {/* Orbiting Halo When Dizzy */}
           {isDizzy && (
             <motion.g
               animate={{ x: [-3, 3, -3], rotate: [-6, 6, -6] }}
@@ -438,24 +406,14 @@ const BGMCharacterAvatar: React.FC<{
             </motion.g>
           )}
 
-          {/* Thick Caramel Headphone Band */}
+          {/* Headphone Band & Top Antenna */}
           <path
             d="M19 39C19 17 34 7 55 7C76 7 91 17 91 39"
             stroke={isAngry ? '#EF4444' : isDizzy ? '#A3E635' : '#E59B63'}
             strokeWidth="5.5"
             strokeLinecap="round"
           />
-
-          {/* Top Antenna */}
-          <line
-            x1="55"
-            y1="7"
-            x2="55"
-            y2="-1"
-            stroke="#FBEEE0"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
+          <line x1="55" y1="7" x2="55" y2="-1" stroke="#FBEEE0" strokeWidth="2.2" strokeLinecap="round" />
           <motion.circle
             cx="55"
             cy="-2"
@@ -471,39 +429,10 @@ const BGMCharacterAvatar: React.FC<{
             transition={{ duration: isAngry || isDizzy ? 0.35 : 0.7, repeat: Infinity }}
           />
 
-          {/* Left & Right Cushioned DJ Earcups */}
-          <rect
-            x="12"
-            y="28"
-            width="11"
-            height="24"
-            rx="5.5"
-            fill={isAngry ? '#991B1B' : '#9D613C'}
-            stroke="#FBEEE0"
-            strokeWidth="2"
-          />
-          <rect
-            x="87"
-            y="28"
-            width="11"
-            height="24"
-            rx="5.5"
-            fill={isAngry ? '#991B1B' : '#9D613C'}
-            stroke="#FBEEE0"
-            strokeWidth="2"
-          />
-
-          {/* Main CRT Head Shell */}
-          <rect
-            x="22"
-            y="14"
-            width="66"
-            height="46"
-            rx="14"
-            fill="#FBEEE0"
-            stroke="#141C28"
-            strokeWidth="2.2"
-          />
+          {/* Earcups & Main CRT Head Shell */}
+          <rect x="12" y="28" width="11" height="24" rx="5.5" fill={isAngry ? '#991B1B' : '#9D613C'} stroke="#FBEEE0" strokeWidth="2" />
+          <rect x="87" y="28" width="11" height="24" rx="5.5" fill={isAngry ? '#991B1B' : '#9D613C'} stroke="#FBEEE0" strokeWidth="2" />
+          <rect x="22" y="14" width="66" height="46" rx="14" fill="#FBEEE0" stroke="#141C28" strokeWidth="2.2" />
           <rect
             x="24"
             y="16"
@@ -514,8 +443,6 @@ const BGMCharacterAvatar: React.FC<{
             stroke={isAngry ? '#EF4444' : isDizzy ? '#A3E635' : '#9D613C'}
             strokeWidth="1.5"
           />
-
-          {/* Dark CRT Face Visor */}
           <rect
             x="29"
             y="21"
@@ -526,53 +453,25 @@ const BGMCharacterAvatar: React.FC<{
             stroke={isAngry ? '#7F1D1D' : isDizzy ? '#4D7C0F' : '#26364D'}
             strokeWidth="1.6"
           />
+          <path d="M33 25H43L38 32H32V26C32 25.4 32.4 25 33 25Z" fill="#FFFFFF" fillOpacity="0.12" />
 
-          {/* Glass Glint */}
-          <path
-            d="M33 25H43L38 32H32V26C32 25.4 32.4 25 33 25Z"
-            fill="#FFFFFF"
-            fillOpacity="0.12"
-          />
-
-          {/* Dynamic Visor Face: Dragged vs Walking vs Dizzy vs Angry vs Greeting vs Jamming vs Idle */}
+          {/* Dynamic CRT Visor Face */}
           {isDragging ? (
             <g>
-              {/* Excited Starry/Wide Eyes > < when being dragged */}
-              <path
-                d="M37 31L45 35L37 39"
-                stroke="#22C55E"
-                strokeWidth="2.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M73 31L65 35L73 39"
-                stroke="#22C55E"
-                strokeWidth="2.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <path d="M37 31L45 35L37 39" stroke="#22C55E" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M73 31L65 35L73 39" stroke="#22C55E" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx="55" cy="43" r="3.2" fill="#E59B63" />
             </g>
           ) : isWalking ? (
             <g>
-              {/* Cheerful Marching Eyes Looking Toward Bottom-Left */}
               <rect x="36.5" y="30.5" width="6.5" height="9" rx="3.2" fill="#22C55E" />
               <rect x="61.5" y="30.5" width="6.5" height="9" rx="3.2" fill="#22C55E" />
-              {/* Warm Cheeks */}
               <rect x="32.5" y="40" width="5" height="2.4" rx="1.2" fill="#E59B63" />
               <rect x="70.5" y="40" width="5" height="2.4" rx="1.2" fill="#E59B63" />
-              {/* Happy Marching / Whistling Smile */}
-              <path
-                d="M48 43C50.5 46.5 57.5 46.5 60 43"
-                stroke="#FBEEE0"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-              />
+              <path d="M48 43C50.5 46.5 57.5 46.5 60 43" stroke="#FBEEE0" strokeWidth="2.2" strokeLinecap="round" />
             </g>
           ) : isDizzy ? (
             <g>
-              {/* Left Spinning Spiral Eye (@) */}
               <motion.g
                 animate={{ rotate: 360 }}
                 transition={{ duration: 0.75, repeat: Infinity, ease: 'linear' }}
@@ -586,7 +485,6 @@ const BGMCharacterAvatar: React.FC<{
                   fill="none"
                 />
               </motion.g>
-              {/* Right Counter-Spinning Spiral Eye (@) */}
               <motion.g
                 animate={{ rotate: -360 }}
                 transition={{ duration: 0.75, repeat: Infinity, ease: 'linear' }}
@@ -600,10 +498,8 @@ const BGMCharacterAvatar: React.FC<{
                   fill="none"
                 />
               </motion.g>
-              {/* Queasy Greenish Motion-Sick Cheeks */}
               <rect x="32.5" y="40.5" width="5.5" height="2.5" rx="1.2" fill="#84CC16" />
               <rect x="72" y="40.5" width="5.5" height="2.5" rx="1.2" fill="#84CC16" />
-              {/* Wobbly Nauseous Wavy Mouth (〰️) */}
               <motion.path
                 d="M44 45.5C46.5 42 49 49 51.5 45.5C54 42 56.5 49 59 45.5C61.5 42 64 49 66 45.5"
                 stroke="#FBEEE0"
@@ -616,32 +512,12 @@ const BGMCharacterAvatar: React.FC<{
             </g>
           ) : isAngry ? (
             <g>
-              {/* Fierce Slanted Angry Eyebrows \ / */}
-              <line
-                x1="36"
-                y1="28"
-                x2="48"
-                y2="33"
-                stroke="#EF4444"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-              />
-              <line
-                x1="74"
-                y1="28"
-                x2="62"
-                y2="33"
-                stroke="#EF4444"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-              />
-              {/* Glowing Red Angry Eyes */}
+              <line x1="36" y1="28" x2="48" y2="33" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round" />
+              <line x1="74" y1="28" x2="62" y2="33" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round" />
               <rect x="39" y="33" width="7" height="6" rx="2" fill="#EF4444" />
               <rect x="64" y="33" width="7" height="6" rx="2" fill="#EF4444" />
-              {/* Angry Red Blush */}
               <rect x="33" y="40" width="5.5" height="2.5" rx="1.2" fill="#EF4444" />
               <rect x="71.5" y="40" width="5.5" height="2.5" rx="1.2" fill="#EF4444" />
-              {/* Grumpy Jagged Mouth */}
               <path
                 d="M46 46L50.5 42.5L55 46L59.5 42.5L64 46"
                 stroke="#FBEEE0"
@@ -652,60 +528,22 @@ const BGMCharacterAvatar: React.FC<{
             </g>
           ) : isGreeting ? (
             <g>
-              {/* Welcoming Cheerful Arcs ^ ^ */}
-              <path
-                d="M37 35C39.5 29.5 45 29.5 47.5 35"
-                stroke="#E59B63"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-              />
-              <path
-                d="M62.5 35C65 29.5 70.5 29.5 73 35"
-                stroke="#E59B63"
-                strokeWidth="2.8"
-                strokeLinecap="round"
-              />
-              {/* Warm Cheeks */}
+              <path d="M37 35C39.5 29.5 45 29.5 47.5 35" stroke="#E59B63" strokeWidth="2.8" strokeLinecap="round" />
+              <path d="M62.5 35C65 29.5 70.5 29.5 73 35" stroke="#E59B63" strokeWidth="2.8" strokeLinecap="round" />
               <rect x="33" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
               <rect x="71.5" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
-              {/* Big Open Welcoming Smile */}
-              <path
-                d="M48 41C50.5 47 59.5 47 62 41Z"
-                fill="#E59B63"
-                stroke="#FBEEE0"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
+              <path d="M48 41C50.5 47 59.5 47 62 41Z" fill="#E59B63" stroke="#FBEEE0" strokeWidth="1.8" strokeLinejoin="round" />
             </g>
           ) : isPlaying ? (
             <g>
-              {/* Happy Jamming Arcs ^ ^ */}
-              <path
-                d="M37 35C39.5 30 45 30 47.5 35"
-                stroke="#22C55E"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <path
-                d="M62.5 35C65 30 70.5 30 73 35"
-                stroke="#22C55E"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              {/* Warm Blush Cheeks */}
+              <path d="M37 35C39.5 30 45 30 47.5 35" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" />
+              <path d="M62.5 35C65 30 70.5 30 73 35" stroke="#22C55E" strokeWidth="3" strokeLinecap="round" />
               <rect x="33" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
               <rect x="71.5" y="39" width="5.5" height="2.5" rx="1.2" fill="#E59B63" />
-              {/* Singing / Jamming Smile */}
-              <path
-                d="M49 41C51.5 46 58.5 46 61 41"
-                stroke="#FBEEE0"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-              />
+              <path d="M49 41C51.5 46 58.5 46 61 41" stroke="#FBEEE0" strokeWidth="2.4" strokeLinecap="round" />
             </g>
           ) : (
             <g>
-              {/* Blinking Idle LED Eyes */}
               <motion.rect
                 x="39"
                 y="30"
@@ -714,11 +552,7 @@ const BGMCharacterAvatar: React.FC<{
                 rx="3.2"
                 fill="#E59B63"
                 animate={{ scaleY: [1, 1, 0.12, 1] }}
-                transition={{
-                  duration: 2.8,
-                  repeat: Infinity,
-                  times: [0, 0.46, 0.5, 1],
-                }}
+                transition={{ duration: 2.8, repeat: Infinity, times: [0, 0.46, 0.5, 1] }}
               />
               <motion.rect
                 x="64.5"
@@ -728,24 +562,14 @@ const BGMCharacterAvatar: React.FC<{
                 rx="3.2"
                 fill="#E59B63"
                 animate={{ scaleY: [1, 1, 0.12, 1] }}
-                transition={{
-                  duration: 2.8,
-                  repeat: Infinity,
-                  times: [0, 0.46, 0.5, 1],
-                }}
+                transition={{ duration: 2.8, repeat: Infinity, times: [0, 0.46, 0.5, 1] }}
               />
-              {/* Cute Little Smile */}
-              <path
-                d="M50 43C52 45.5 58 45.5 60 43"
-                stroke="#FBEEE0"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
+              <path d="M50 43C52 45.5 58 45.5 60 43" stroke="#FBEEE0" strokeWidth="2" strokeLinecap="round" />
             </g>
           )}
         </motion.g>
 
-        {/* Animated Chibi Hands (Swing in stride on Walking, Hold Head on Dizzy, Wave on Greeting, Shake Fists on Angry!) */}
+        {/* Animated Chibi Hands */}
         <motion.circle
           cx={isWalking ? 23 : isDizzy ? 16 : isAngry ? 19 : isPlaying ? 18 : 26}
           cy={isWalking ? 74 : isDizzy ? 34 : isAngry ? 54 : isPlaying ? 44 : 78}
@@ -772,25 +596,14 @@ const BGMCharacterAvatar: React.FC<{
           }}
         />
 
-        {/* Waving Motion Lines when Greeting */}
         {isGreeting && (
           <motion.g
             initial={{ opacity: 0 }}
             animate={{ opacity: [0.3, 0.95, 0.3] }}
             transition={{ duration: 0.45, repeat: Infinity }}
           >
-            <path
-              d="M99 20C103 23 104 28 102 33"
-              stroke="#E59B63"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-            <path
-              d="M103 17C108 21 109 28 106 35"
-              stroke="#FBEEE0"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-            />
+            <path d="M99 20C103 23 104 28 102 33" stroke="#E59B63" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M103 17C108 21 109 28 106 35" stroke="#FBEEE0" strokeWidth="1.4" strokeLinecap="round" />
           </motion.g>
         )}
 
@@ -799,7 +612,17 @@ const BGMCharacterAvatar: React.FC<{
           cy={isWalking ? 74 : isDizzy ? 34 : isGreeting ? 30 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
-          stroke={isWalking ? '#22C55E' : isDizzy ? '#A3E635' : isGreeting ? '#E59B63' : isAngry ? '#EF4444' : '#9D613C'}
+          stroke={
+            isWalking
+              ? '#22C55E'
+              : isDizzy
+              ? '#A3E635'
+              : isGreeting
+              ? '#E59B63'
+              : isAngry
+              ? '#EF4444'
+              : '#9D613C'
+          }
           strokeWidth="1.8"
           animate={
             isDragging
@@ -822,110 +645,13 @@ const BGMCharacterAvatar: React.FC<{
           }}
         />
 
-        {/* Small Indicator Badge on Corner */}
         {isExpanded && (
-          <circle
-            cx="88"
-            cy="16"
-            r="6"
-            fill="#9D613C"
-            stroke="#FBEEE0"
-            strokeWidth="1.5"
-          />
+          <circle cx="88" cy="16" r="6" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1.5" />
         )}
       </svg>
     </div>
   );
 };
-
-const NPC_GREETING_DIALOGUE_ID =
-  'Halo ser! Selamat datang di web Uray! Yuk nyalain BGM sambil berburu airdrop & testnet! 🎧✨';
-
-const NPC_GREETING_DIALOGUE_EN =
-  "Hello ser! Welcome to Uray's web! Turn on the BGM while hunting airdrops & testnets! 🎧✨";
-
-const NPC_ANGRY_DIALOGUES_ID = [
-  '😤 Woi ser! Betah amat bengong di web ini lama-lama?! Jangan cuma rebahan, sana upgrade skill atau garap testnet dulu! ⚡',
-  '😤 Udah lama banget mantengin layar! Kalau lagi nganggur jangan pasrah aja, ayo gerak cari peluang & klaim airdrop! 🪂',
-  '🔥 CPU aku sampe ngebul liat kamu diem bae! Yuk produktif—klik kontak Uray atau nyalain musik biar semangat! 🎧',
-];
-
-const NPC_ANGRY_DIALOGUES_EN = [
-  '😤 Hey ser! Why are you spacing out on this page so long?! Stop slacking—go upgrade your skills or grind testnets! ⚡',
-  '😤 Staring at the screen forever?! If you are between jobs, do not just sit there—go hunt opportunities & airdrops! 🪂',
-  '🔥 My CPU is overheating watching you idle! Get productive—collab with Uray or play a track to boost your energy! 🎧',
-];
-
-const NPC_DIZZY_DIALOGUES_ID = [
-  '😵‍💫 Aduh pusing ser! Scroll-nya pelan-pelan napa, berasa naik candle meme coin pump & dump! 🤢',
-  '😵 Waduh mabuk darat nih! Jangan ngebut-ngebut scroll-nya ser, mata CRT aku sampe muter-muter!',
-  '🤢 Goyang dombret! Pelan dikit ser scroll-nya, sensor gyro aku sampe oleng nih! ⚡',
-];
-
-const NPC_DIZZY_DIALOGUES_EN = [
-  '😵‍💫 Whoa dizzy ser! Slow down the scroll—feels like riding a meme coin pump & dump candle! 🤢',
-  '😵 Ugh motion sickness! Do not speed-scroll so fast ser, my CRT eyes are spinning!',
-  '🤢 Whoa easy there! Scroll a bit slower ser, my gyro sensors are totally wobbling! ⚡',
-];
-
-const NPC_IDLE_DIALOGUES_ID = [
-  'gm ser! Sudah klaim faucet & garap testnet hari ini belum? 💧⛓️',
-  'Ngaku pemburu cuan, tapi tiap hari cuma scroll layar sambil rebahan? Bangun woi, nasib gak berubah kalau cuma bengong! 🛋️⚡',
-  'Lagi nganggur bukan berarti gagal ser! Gunakan waktu luangmu buat upgrade skill, riset Web3, dan bangun portofolio! 💪🚀',
-  'Dompet siap, node validator nyala... tinggal tunggu snapshot airdrop! 🪂✨',
-  'Pengangguran elit: sibuk ngetawain meme coin orang, giliran disuruh belajar skill baru & kirim CV malah alasan besok aja! 📉😤',
-  'Semua builder hebat pernah mulai dari nol! Hari ini belum dapet kerja? Tetap konsisten belajar & garap peluang, rejeki gak kemana! 🌱✨',
-  'Psst... klik aku buat nyalain BGM sambil hunting meme coin 100x! 🐸🚀',
-  'Rebahan terus sampe bantal gepeng gak bakal bikin dompet tebal ser! Kurangin ngeluh, tambahin eksekusi! 🛑🔥',
-  'Jangan minder status pengangguran! Satu skill baru yang kamu pelajari hari ini bisa jadi tiket menuju kebebasan finansial besok! 🎯💎',
-  'Lagi pantau floor price NFT atau sibuk nge-bridge ke testnet baru? 🖼️🌉',
-  'Jangan cuma nunggu keajaiban atau airdrop jatuh dari langit kalau usaha aja masih setengah-setengah! 🤨⏳',
-  'Capek ditolak kerja? Istirahat sebentar sambil dengerin beat 8-bit, lalu bangkit lagi lebih kuat! Kamu pasti tembus! 🎧🔥',
-  'Jangan lupa interaksi on-chain biar gak kena filter sybil pas airdrop! 🛡️🪂',
-  'Market crypto lagi sideways? Santai, nyalain musik 8-bit dulu ser! 🎧📈',
-];
-
-const NPC_IDLE_DIALOGUES_EN = [
-  'gm ser! Have you claimed your faucet & farmed testnets today? 💧⛓️',
-  'Calling yourself a profit hunter while just doomscrolling in bed all day? Wake up ser, nothing changes if you do nothing! 🛋️⚡',
-  'Being unemployed right now does not mean you failed! Use your free time to upgrade skills, research Web3, and build a portfolio! 💪🚀',
-  'Wallet ready, validator node synced... just waiting for the airdrop snapshot! 🪂✨',
-  'Unemployed habit: laughing at meme coins all day, but when it is time to learn a new skill or send CVs, "maybe tomorrow"! 📉😤',
-  'Every great builder started from zero! No job offer yet? Stay consistent learning & grinding opportunities—your breakthrough is coming! 🌱✨',
-  'Psst... click me to play 8-bit BGM while hunting 100x meme coins! 🐸🚀',
-  'Flattening your pillow all day will not fatten your wallet ser! Less complaining, more executing! 🛑🔥',
-  'Do not feel down about being between jobs! One new skill learned today could be your ticket to financial freedom tomorrow! 🎯💎',
-  'Watching NFT floor prices or bridging to a new incentivized testnet? 🖼️🌉',
-  'Stop waiting for miracles or airdrops to fall from the sky if you barely put in half the effort! 🤨⏳',
-  'Tired of job rejections? Rest a bit to this 8-bit beat, then rise back stronger! Your time to shine will come! 🎧🔥',
-  'Keep those on-chain txns active so you never miss the next big airdrop! 🛡️🪂',
-  'Crypto market crabbing? Chill out and turn on some chiptune beats! 🎧📈',
-];
-
-const getNpcPlayDialogues = (trackTitle: string, bpm: number, lang: 'id' | 'en') =>
-  lang === 'id'
-    ? [
-        `🎵 Spin: ${trackTitle} (${bpm} BPM) — musik wajib para pemburu airdrop & pejuang karir! 🪂`,
-        'Masih nganggur tapi cuma rebahan? Ayo bangun ser, jadikan beat 8-bit ini bensin buat belajar skill baru hari ini! 🔥💻',
-        'Vibes 8-bit bikin garap task testnet, klaim faucet & poles portofolio makin anti-ngantuk! 💧⚡',
-        'Jangan biarin status pengangguran bikin mental drop! Terus asah skill, bangun karya, dan buktikan kamu bisa sukses! 💪🚀',
-        'Meme coin boleh pump & dump, tapi semangat cari cuan & uptime node validator harus tetap 99.9%! 🐸🔥',
-        'Sindiran buat yang suka nunda-nunda: kapan mau finansial freedom kalau buka laptop aja males-malesan?! 😤📈',
-        'Sambil dengerin beat ini, semoga lamaran kerjamu tembus & wallet kamu JP airdrop tier S+! 🪂💰',
-        'Gas fee lagi murah nih ser, waktunya mint NFT, push transaksi testnet, dan tetap produktif! 🖼️⛽',
-        'WAGMI! Mau market bearish atau lagi berjuang cari kerja, kita pasti bakal sampai di puncak! 🚀🎶',
-      ]
-    : [
-        `🎵 Spinning: ${trackTitle} (${bpm} BPM) — official soundtrack for airdrop hunters & career grinders! 🪂`,
-        'Unemployed and still just lying in bed? Get up ser, let this 8-bit beat fuel you to learn a high-income skill today! 🔥💻',
-        '8-bit synth vibes make grinding testnet tasks, faucets & polishing your portfolio 10x faster! 💧⚡',
-        'Do not let unemployment break your spirit! Keep sharpening your skills, ship projects, and prove them all wrong! 💪🚀',
-        'Meme coins may pump & dump, but your hustle & validator uptime stay locked at 99.9%! 🐸🔥',
-        'Friendly roast: how do you expect financial freedom if you keep procrastinating every single day?! 😤📈',
-        'Manifesting a dream job offer and an S-tier airdrop allocation for you while this beat plays! 🪂💰',
-        'Gas fees are low ser—perfect time to mint NFTs, push testnet txns, and stay productive! 🖼️⛽',
-        'WAGMI! Bear market or job hunting season, keep grinding and we are all gonna make it! 🚀🎶',
-      ];
 
 interface RetroAudioPlayerProps {
   isReady?: boolean;
@@ -943,7 +669,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const [isDragging, setIsDragging] = useState(false);
   const [isWalking, setIsWalking] = useState(false);
 
-  // Interactive NPC Dialogue State (Paused -> Sedang Mengetik -> Typewriter with punctuation pauses -> Reading) + Mood ('greeting' | 'normal' | 'angry' | 'dizzy')
   const [hasBootSynced, setHasBootSynced] = useState(false);
   const [mood, setMood] = useState<DjBotMood>('greeting');
   const [dialogueIndex, setDialogueIndex] = useState(0);
@@ -952,6 +677,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   const [typedText, setTypedText] = useState('');
   const [npcPhase, setNpcPhase] = useState<'paused' | 'composing' | 'typing' | 'reading'>('composing');
   const [npcTalkBounce, setNpcTalkBounce] = useState(false);
+
   const dizzyRecoveryTimerRef = useRef<number | null>(null);
   const walkRafRef = useRef<number | null>(null);
   const isWalkingRef = useRef<boolean>(false);
@@ -962,7 +688,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   npcPhaseRef.current = npcPhase;
   isWalkingRef.current = isWalking;
 
-  // Scroll-independent viewport offset (dx, dy from initial bottom-left anchor)
   const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [viewportInfo, setViewportInfo] = useState<{
     openDownward: boolean;
@@ -1014,10 +739,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     return unsubscribe;
   }, []);
 
-  /**
-   * Clamp DJ Bot offset so the character can be dragged freely across 100% of the screen
-   * (left, right, top, bottom) while auto-flipping the cloud bubble and keeping the cassette card inside the viewport.
-   */
   const clampAndInspectBounds = useCallback(
     (rawX: number, rawY: number) => {
       const vw = window.innerWidth;
@@ -1030,15 +751,11 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       const botWidth = botEl ? botEl.offsetWidth || defaultBotW : defaultBotW;
       const botHeight = botEl ? botEl.offsetHeight || defaultBotH : defaultBotH;
 
-      // Base anchor is bottom: 16px (or 20px), left: 16px (or 20px)
       const baseLeft = vw >= 640 ? 20 : 16;
       const baseBottom = vw >= 640 ? 20 : 16;
 
-      // Minimum & maximum allowed X translation relative to baseLeft
       const minX = -(baseLeft - margin);
       const maxX = Math.max(minX, vw - botWidth - baseLeft - margin);
-
-      // Minimum & maximum allowed Y translation relative to baseBottom (negative Y moves upward)
       const maxY = baseBottom - margin;
       const minY = Math.min(maxY, -(vh - botHeight - baseBottom - margin));
 
@@ -1049,7 +766,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       const currentTop = vh - baseBottom - botHeight + clampedY;
       const botCenterX = currentLeft + botWidth / 2;
 
-      // Ensure Expanded Cassette Card (250px on mobile, 276px on desktop) never clips left or right screen edges
       const cardWidth = vw >= 640 ? 276 : 250;
       let cardShiftX = 0;
       if (currentLeft + cardWidth > vw - margin) {
@@ -1082,10 +798,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     [isWidgetVisible]
   );
 
-  /**
-   * Compute offset so DJ Bot stands on the right side vertically aligned ("sejajar")
-   * with the "Operator Node" badge (#hero-operator-node-badge) during initial greeting.
-   */
   const computeHeroAnchorOffset = useCallback(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
@@ -1105,7 +817,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     if (badgeEl) {
       const badgeRect = badgeEl.getBoundingClientRect();
       const badgeCenterY = badgeRect.top + badgeRect.height / 2;
-      // Align DJ Bot's center vertically with the "Operator Node" badge
       topTarget = badgeCenterY - botHeight * 0.52;
     }
 
@@ -1114,9 +825,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     return clampAndInspectBounds(rawX, rawY);
   }, [clampAndInspectBounds, isWidgetVisible]);
 
-  /**
-   * Broadcast walking state so ALL interactive text on the page pauses while DJ Bot walks.
-   */
   const setGlobalWalkState = useCallback((walking: boolean) => {
     isWalkingRef.current = walking;
     setIsWalking(walking);
@@ -1134,10 +842,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
   }, []);
 
-  /**
-   * Smoothly walk DJ Bot from its Hero Greeting position (next to "Halo, saya Uray Fazli Alman")
-   * down to the bottom-left home corner ({ x: 0, y: 0 }), pausing all interactive text during the walk.
-   */
   const startWalkToBottomLeft = useCallback(() => {
     if (botStageRef.current !== 'hero_greeting') {
       setMood('normal');
@@ -1159,7 +863,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     const walkStartTime = performance.now();
 
     const stepWalkFrame = (now: number) => {
-      // If user grabs/drags DJ Bot mid-walk, hand control to drag session immediately
       if (dragSessionRef.current.active) {
         botStageRef.current = 'home_or_free';
         setGlobalWalkState(false);
@@ -1169,7 +872,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       const elapsed = now - walkStartTime;
       const t = Math.min(1, Math.max(0, elapsed / walkDurationMs));
-      // Smooth sinusoidal ease-in-out stride
       const eased = 0.5 - 0.5 * Math.cos(Math.PI * t);
 
       const curX = startX + (targetPos.x - startX) * eased;
@@ -1215,7 +917,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   }, []);
 
-  // Re-clamp on window resize/scroll or keep synced to Hero anchor while in initial greeting stage
   useEffect(() => {
     const syncBounds = () => {
       if (botStageRef.current === 'hero_greeting' && !dragSessionRef.current.active) {
@@ -1244,7 +945,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   }, [clampAndInspectBounds, computeHeroAnchorOffset, isExpanded, isWidgetVisible]);
 
-  // Global window-level Mouse & Touch drag listeners (immune to child button focus, fast cursor motion, and mobile scroll cancellation)
   useEffect(() => {
     const updateDragPosition = (clientX: number, clientY: number, originalEvent?: Event) => {
       const session = dragSessionRef.current;
@@ -1254,7 +954,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       const dy = clientY - session.startClientY;
       const distance = Math.hypot(dx, dy);
 
-      // 5px threshold cleanly separates an intentional drag from a tap/click on buttons
       if (!session.movedBeyondThreshold && distance > 5) {
         session.movedBeyondThreshold = true;
         if (botStageRef.current !== 'home_or_free') {
@@ -1312,7 +1011,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     const handleWindowMouseMove = (e: MouseEvent) => {
       const session = dragSessionRef.current;
       if (!session.active || session.mode !== 'mouse') return;
-      // If mouse button was released outside window, end session cleanly
       if (e.buttons === 0) {
         finishDragSession();
         return;
@@ -1349,7 +1047,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       if (session.touchId !== null) {
         for (let i = 0; i < e.touches.length; i += 1) {
           if (e.touches[i].identifier === session.touchId) {
-            return; // Tracked finger is still on screen
+            return;
           }
         }
       }
@@ -1371,7 +1069,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       window.removeEventListener('touchcancel', handleWindowTouchEnd);
       window.removeEventListener('blur', finishDragSession);
     };
-  }, [clampAndInspectBounds]);
+  }, [clampAndInspectBounds, setGlobalWalkState]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -1418,8 +1116,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   };
 
-  // Block synthetic button clicks on the avatar/bubble immediately after releasing a drag gesture,
-  // while never blocking explicit player control buttons inside the card
   const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (target.closest('[data-player-control="true"]')) return;
@@ -1429,11 +1125,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
   };
 
-  // 1. Synchronize Greeting Action at Hero Anchor AFTER Loading Screen finishes (when isReady becomes true)
   useEffect(() => {
     if (!isReady) return;
 
-    // Continuously track #dj-bot-hero-anchor during the 1s post-loading hero entrance glide
     let trackRaf = 0;
     const trackStart = performance.now();
     const syncHeroAnchorDuringEntrance = (now: number) => {
@@ -1451,7 +1145,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
     trackRaf = requestAnimationFrame(syncHeroAnchorDuringEntrance);
 
-    // Slight 350ms post-reveal delay so DJ Bot pops in & waves right next to "Halo, saya Uray Fazli Alman"
     const bootGreetingSyncTimer = setTimeout(() => {
       if (botStageRef.current === 'hero_greeting' && !dragSessionRef.current.active) {
         const initialPos = computeHeroAnchorOffset();
@@ -1473,8 +1166,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   }, [isReady, computeHeroAnchorOffset]);
 
-  // 2. Trigger a brief Angry burst when staying on the website for a long time (every 65s in normal mode),
-  // and enforce a hard safety cap (8.5s max) so DJ Bot never stays angry for too long
   useEffect(() => {
     if (!hasBootSynced || isWalking) return;
 
@@ -1500,9 +1191,8 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       return () => clearTimeout(maxAngryDurationTimer);
     }
-  }, [hasBootSynced, mood]);
+  }, [hasBootSynced, mood, isWalking]);
 
-  // 3. Fast Scroll Velocity Detector -> Triggers 'dizzy' (pusing/mabuk) mood when user scrolls too fast!
   useEffect(() => {
     if (!hasBootSynced) return;
 
@@ -1520,7 +1210,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       lastScrollY = currentY;
       lastScrollTime = now;
 
-      // Ignore tiny scroll ticks
       if (dy < 12) return;
 
       rollingDistance += dy;
@@ -1533,7 +1222,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       const velocityPxPerMs = dy / dt;
 
-      // Do NOT trigger dizzy animation when DJ Bot is walking, greeting (menyapa), angry (marah), or composing/typing (mengetik)
       const currentMood = moodRef.current;
       const currentPhase = npcPhaseRef.current;
       const isGreetingOrAngry =
@@ -1546,7 +1234,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         return;
       }
 
-      // Trigger dizzy/mabuk animation when scrolling rapidly (burst > 420px in 170ms or speed > 1.75px/ms with meaningful distance)
       if (
         !dragSessionRef.current.active &&
         ((dy > 85 && velocityPxPerMs > 1.75) || rollingDistance > 420)
@@ -1565,14 +1252,14 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
           window.clearTimeout(dizzyRecoveryTimerRef.current);
         }
         dizzyRecoveryTimerRef.current = window.setTimeout(() => {
-          setMood((currentMood) => {
-            if (currentMood === 'dizzy') {
+          setMood((m) => {
+            if (m === 'dizzy') {
               setDizzyDialogueIndex((prev) => prev + 1);
               setDialogueIndex((prev) => prev + 1);
               setNpcPhase('paused');
               return 'normal';
             }
-            return currentMood;
+            return m;
           });
           dizzyRecoveryTimerRef.current = null;
         }, 4600);
@@ -1592,10 +1279,8 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     };
   }, [hasBootSynced]);
 
-  // Reset dialogue index to 0 and trigger "Sedang mengetik..." when switching Play/Idle, track, or language
   useEffect(() => {
     if (!hasBootSynced || isWalkingRef.current) return;
-    // If user starts playing music while DJ Bot is angry, switch to normal play mode
     if (isPlaying) {
       setMood((prev) => (prev === 'angry' ? 'normal' : prev));
     }
@@ -1635,12 +1320,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       : 'Wheee~ flying across the network! Drop me anywhere 🛸✨'
     : activeDialogues[activeIndex % activeDialogues.length];
 
-  // State machine for every interactive text (only runs after loading screen has synced, and pauses completely while walking):
-  // 'paused' (jeda istirahat dialog box) -> 'composing' (Mengetik... •••) -> 'typing' (Typewriter dengan jeda tanda baca) -> 'reading' -> 'paused'
   useEffect(() => {
     if (!hasBootSynced) return;
 
-    // Pause all interactive NPC text while DJ Bot is walking to bottom-left
     if (isWalking) {
       setTypedText('');
       return;
@@ -1667,7 +1349,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         () => {
           setNpcPhase('typing');
         },
-        mood === 'greeting' ? 850 : mood === 'angry' ? 850 : 1400
+        mood === 'greeting' || mood === 'angry' ? 850 : 1400
       );
       return () => clearTimeout(composeTimer);
     }
@@ -1691,7 +1373,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         const justTypedChar = fullDialogueText[charIndex - 1];
         const nextChar = fullDialogueText[charIndex] || '';
 
-        // Natural speech/reading pause ("jeda") on punctuation marks inside interactive text
         let delay = mood === 'angry' || mood === 'dizzy' ? 20 : 28;
         if (
           (justTypedChar === '.' || justTypedChar === '!' || justTypedChar === '?') &&
@@ -1711,7 +1392,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         timeoutId = window.setTimeout(typeNextChar, delay);
       };
 
-      // Brief initial pause before first character appears after "Mengetik..."
       timeoutId = window.setTimeout(typeNextChar, 90);
 
       return () => {
@@ -1725,7 +1405,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     if (npcPhase === 'reading') {
       const readTimer = setTimeout(
         () => {
-          // Once the greeting message has been read, DJ Bot walks from Hero title to the bottom-left corner!
           if (mood === 'greeting') {
             startWalkToBottomLeft();
           } else if (mood === 'dizzy') {
@@ -1734,7 +1413,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             setDialogueIndex((prev) => prev + 1);
             setNpcPhase('paused');
           } else if (mood === 'angry') {
-            // Calm down automatically after 1 angry message so DJ Bot doesn't stay angry too long
             setMood('normal');
             setAngryDialogueIndex((prev) => prev + 1);
             setDialogueIndex((prev) => prev + 1);
@@ -1757,15 +1435,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     setNpcTalkBounce(true);
     setTimeout(() => setNpcTalkBounce(false), 260);
 
-    // If currently typing, first click completes the full sentence so user can read it immediately
     if (npcPhase === 'typing') {
       setTypedText(fullDialogueText);
       setNpcPhase('reading');
       return;
     }
 
-    // If currently in greeting mode and user clicks while composing, skip straight to typing the greeting;
-    // if greeting is already read, start walking to the bottom-left corner immediately!
     if (mood === 'greeting') {
       if (npcPhase === 'composing') {
         setNpcPhase('typing');
@@ -1775,7 +1450,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       return;
     }
 
-    // If currently in dizzy mode, clicking calms DJ Bot back to normal mode
     if (mood === 'dizzy') {
       if (dizzyRecoveryTimerRef.current !== null) {
         window.clearTimeout(dizzyRecoveryTimerRef.current);
@@ -1788,7 +1462,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       return;
     }
 
-    // If currently in angry mode, clicking after composing immediately calms DJ Bot down to normal mode
     if (mood === 'angry') {
       if (npcPhase === 'composing') {
         setNpcPhase('typing');
@@ -1801,8 +1474,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       return;
     }
 
-    // If currently showing "Sedang mengetik..." or paused, skip straight to typing/composing;
-    // otherwise advance to the next dialogue with "Sedang mengetik..."
     if (npcPhase === 'composing') {
       setNpcPhase('typing');
     } else if (npcPhase === 'paused') {
@@ -1850,7 +1521,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
   };
 
   const handleCharacterClick = () => {
-    // Ignore click if user was just dragging the character around
     if (dragSessionRef.current.movedBeyondThreshold) return;
 
     robotSound.play('djbot');
@@ -1879,6 +1549,17 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     }
     setIsExpanded((prev) => !prev);
   };
+
+  const cloudAccentStyle =
+    !isDragging && mood === 'angry'
+      ? 'bg-[#1a0f14]/55 border-red-400/75'
+      : !isDragging && mood === 'dizzy'
+      ? 'bg-[#141f18]/55 border-lime-400/75'
+      : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
+      ? 'bg-[#101824]/50 border-[#e59b63]/75'
+      : isPlaying
+      ? 'bg-[#101824]/50 border-emerald-400/75'
+      : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80';
 
   return (
     <div
@@ -1911,7 +1592,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
             className="relative flex items-end will-change-[transform,opacity]"
           >
-            {/* 1. Expanded Retro Cassette Player Glass Card (Auto-flips below character if dragged near top of screen) */}
+            {/* Expanded Retro Cassette Player Glass Card */}
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
@@ -1934,7 +1615,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       : 'bottom-full mb-[82px] sm:mb-[96px]'
                   } p-3.5 sm:p-4 w-[254px] sm:w-[280px] text-[#fbeee0] overflow-hidden`}
                 >
-                  {/* Top Specular Glass Reflection Highlight & Ambient Sheen */}
                   <div
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-0 overflow-hidden rounded-[22px]"
@@ -1943,7 +1623,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     <div className="absolute -top-8 left-1/4 w-1/2 h-16 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent blur-xl" />
                   </div>
 
-                  {/* Header: Title bar, Minimize & Hide actions */}
                   <div className="relative z-10 flex items-center justify-between border-b border-white/15 pb-2.5 mb-3">
                     <div className="flex items-center gap-2">
                       <span className="relative flex h-2 w-2">
@@ -1989,7 +1668,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     </div>
                   </div>
 
-                  {/* Track Info Smoked-Glass Display */}
                   <div className="relative z-10 px-3 py-2.5 rounded-2xl glass-player-screen mb-3 flex items-center justify-between">
                     <div className="overflow-hidden min-w-0 flex-1">
                       <div className="font-fredoka text-sm text-[#fbeee0] font-medium truncate flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
@@ -2016,7 +1694,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       </div>
                     </div>
 
-                    {/* Dynamic Equalizer Bars */}
                     <div className="flex items-end gap-1 h-5 w-8 shrink-0 justify-end pl-2">
                       {[0, 1, 2, 3].map((barIdx) => {
                         const barHeights = isPlaying
@@ -2041,7 +1718,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     </div>
                   </div>
 
-                  {/* Playback Glass Controls */}
                   <div className="relative z-10 flex items-center justify-between gap-1.5 mb-3">
                     <button
                       type="button"
@@ -2108,7 +1784,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       </svg>
                     </button>
 
-                    {/* Shuffle / Random Playback Mode Toggle Button */}
                     <button
                       type="button"
                       data-player-control="true"
@@ -2148,7 +1823,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                     </button>
                   </div>
 
-                  {/* Volume Slider Bar */}
                   <div
                     data-player-control="true"
                     onMouseDown={(e) => e.stopPropagation()}
@@ -2183,7 +1857,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
               )}
             </AnimatePresence>
 
-            {/* 2. Draggable Animated DJ Character + Interactive NPC Dialogue Box */}
+            {/* Draggable Animated DJ Character + Interactive NPC Dialogue Box */}
             <div className="relative flex items-end group">
               <button
                 ref={botButtonRef}
@@ -2206,28 +1880,19 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                 />
               </button>
 
-              {/* Interactive RPG NPC Cloud Dialog Bubble (Positioned Directly Above DJ Bot's Head, Paused While Walking) */}
               <AnimatePresence>
                 {!isWalking && (isDragging || npcPhase !== 'paused') && (
                   <motion.div
                     key="npc-cloud-dialog"
                     role="button"
                     tabIndex={0}
-                    initial={{
-                      opacity: 0,
-                      scale: 0.92,
-                      y: 6,
-                    }}
+                    initial={{ opacity: 0, scale: 0.92, y: 6 }}
                     animate={{
                       opacity: 1,
                       scale: npcTalkBounce ? 1.04 : 1,
                       y: npcTalkBounce ? -4 : 0,
                     }}
-                    exit={{
-                      opacity: 0,
-                      scale: 0.92,
-                      y: 6,
-                    }}
+                    exit={{ opacity: 0, scale: 0.92, y: 6 }}
                     transition={{ type: 'spring', stiffness: 380, damping: 26 }}
                     onClick={handleNextNpcDialogue}
                     onKeyDown={(e) => {
@@ -2243,116 +1908,44 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                         : 'Click cloud bubble for next NPC dialogue! ☁️'
                     }
                     className={`absolute bottom-full mb-1.5 sm:mb-2 z-20 flex flex-col-reverse touch-none ${
-                      viewportInfo.bubbleOnLeft
-                        ? 'right-0 items-end'
-                        : 'left-0 items-start'
-                    } ${
-                      isDragging ? 'cursor-grabbing' : 'cursor-pointer'
-                    } select-none group/cloud`}
+                      viewportInfo.bubbleOnLeft ? 'right-0 items-end' : 'left-0 items-start'
+                    } ${isDragging ? 'cursor-grabbing' : 'cursor-pointer'} select-none group/cloud`}
                   >
-                    {/* Vertical Little Cloud Puffs rising from top of DJ Bot's Head to the Main Cloud */}
                     <div
                       className={`flex flex-col-reverse items-center gap-0.5 mt-0.5 ${
-                        viewportInfo.bubbleOnLeft
-                          ? 'mr-6 sm:mr-8'
-                          : 'ml-6 sm:ml-8'
+                        viewportInfo.bubbleOnLeft ? 'mr-6 sm:mr-8' : 'ml-6 sm:ml-8'
                       } pointer-events-none z-20`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
-                          !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
-                            : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
-                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
-                            : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
-                        }`}
+                        className={`w-1.5 h-1.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${cloudAccentStyle}`}
                       />
                       <span
-                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
-                          !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
-                            : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
-                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
-                            : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
-                        }`}
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${cloudAccentStyle}`}
                       />
                     </div>
 
-                    {/* Main Fluffy Cloud Container (Smaller & Translucent with Backdrop Blur) */}
                     <div
                       className={`relative px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[16px_20px_15px_18px] sm:rounded-[22px_26px_20px_24px] border sm:border-[1.5px] text-left backdrop-blur-md shadow-[2px_3px_12px_rgba(0,0,0,0.38)] transition-all duration-200 ${
                         !isDragging && npcPhase === 'composing'
                           ? 'w-fit min-w-[104px] sm:min-w-[132px] max-w-[134px] sm:max-w-[192px]'
                           : 'w-[136px] sm:w-[196px]'
-                      } ${
-                        !isDragging && mood === 'angry'
-                          ? 'bg-[#1a0f14]/55 border-red-400/75 text-[#fbeee0]'
-                          : !isDragging && mood === 'dizzy'
-                          ? 'bg-[#141f18]/55 border-lime-400/75 text-[#fbeee0]'
-                          : isDragging || mood === 'greeting'
-                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
-                          : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
-                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
-                          : isPlaying
-                          ? 'bg-[#101824]/50 border-emerald-400/75 text-[#fbeee0]'
-                          : 'bg-[#101824]/45 border-[#fbeee0]/60 text-[#fbeee0] group-hover/cloud:border-[#e59b63]/80 group-hover/cloud:bg-[#101824]/60'
-                      }`}
+                      } ${cloudAccentStyle} text-[#fbeee0]`}
                     >
-                      {/* Decorative Top Cloud Puffs (Smaller & Translucent) */}
                       <span
                         aria-hidden="true"
-                        className={`pointer-events-none absolute -top-1.5 left-3 sm:left-4 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
-                          !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
-                            : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
-                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
-                            : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
-                        }`}
+                        className={`pointer-events-none absolute -top-1.5 left-3 sm:left-4 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${cloudAccentStyle}`}
                       />
                       <span
                         aria-hidden="true"
-                        className={`pointer-events-none absolute -top-2 left-6 sm:left-8 w-5 sm:w-7 h-2 sm:h-3 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
-                          !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
-                            : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
-                            : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
-                            : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
-                        }`}
+                        className={`pointer-events-none absolute -top-2 left-6 sm:left-8 w-5 sm:w-7 h-2 sm:h-3 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${cloudAccentStyle}`}
                       />
                       {!(!isDragging && npcPhase === 'composing') && (
                         <span
                           aria-hidden="true"
-                          className={`pointer-events-none absolute -top-1.5 right-3.5 sm:right-5 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
-                            !isDragging && mood === 'angry'
-                              ? 'bg-[#1a0f14]/55 border-red-400/75'
-                              : !isDragging && mood === 'dizzy'
-                              ? 'bg-[#141f18]/55 border-lime-400/75'
-                              : isDragging || mood === 'greeting' || npcPhase === 'typing'
-                              ? 'bg-[#101824]/50 border-[#e59b63]/75'
-                              : isPlaying
-                              ? 'bg-[#101824]/50 border-emerald-400/75'
-                              : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
-                          }`}
+                          className={`pointer-events-none absolute -top-1.5 right-3.5 sm:right-5 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${cloudAccentStyle}`}
                         />
                       )}
 
-                      {/* Top NPC Header Tag inside Cloud */}
                       <div className="relative z-10 flex items-center justify-between gap-1 sm:gap-1.5 mb-1 sm:mb-1.5 border-b border-dashed border-[#fbeee0]/15 pb-0.5 sm:pb-1">
                         <div className="flex items-center gap-1 min-w-0">
                           <span
@@ -2430,7 +2023,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                         </span>
                       </div>
 
-                      {/* NPC Cloud Dialogue Body: Compact "Sedang mengetik..." Bubble vs Typewriter Text */}
                       <div className="relative z-10 pt-0.5">
                         {!isDragging && npcPhase === 'composing' ? (
                           <div className="flex items-center gap-1.5 sm:gap-2 py-0.5">
@@ -2470,7 +2062,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
             </div>
           </motion.div>
         ) : (
-          /* 3. Round Frosted Glass Restore Button when widget is hidden (also draggable) */
           <motion.button
             key="hidden-restore-badge"
             type="button"

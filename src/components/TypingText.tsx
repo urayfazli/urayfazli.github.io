@@ -31,7 +31,7 @@ export const TypingText: React.FC<TypingTextProps> = ({
   }, []);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     let charIndex = displayedText.length;
 
     if (isPaused) {
