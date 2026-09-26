@@ -21,7 +21,6 @@ import { RetroAudioPlayer } from './components/RetroAudioPlayer';
 import { RunningTextMarquee } from './components/RunningTextMarquee';
 import { NodeSentryCharacter } from './components/CardCharacters';
 import { LoadingScreen } from './components/LoadingScreen';
-import { ScrollMotionBlur } from './components/ScrollMotionBlur';
 import { useLanguage } from './context/LanguageContext';
 
 export default function App() {
@@ -129,12 +128,6 @@ export default function App() {
 
       {/* Permanent Responsive Background Layer */}
       <BackgroundLayer />
-
-      {/* Directional Vertical Scroll Motion Blur Engine (Up/Down Scroll) */}
-      <ScrollMotionBlur
-        targetRef={mainContentRef}
-        disabled={isLoading || Boolean(selectedNetworkId) || contactModalOpen}
-      />
 
       {/* Sticky Top Bar Navigation with Scroll Progress Indicator & Animated Rocket */}
       <div
