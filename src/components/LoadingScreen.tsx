@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DoodleStar } from './Doodles';
 import { robotSound } from '../utils/robotSoundEngine';
+import { isWebCacheWarm, markWebCacheWarm } from '../utils/cacheManager';
 
 interface LoadingScreenProps {
   onStartExit?: () => void;
@@ -33,6 +34,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const triggerSmoothExit = () => {
     if (exitTriggeredRef.current) return;
     exitTriggeredRef.current = true;
+    markWebCacheWarm();
     setIsExiting(true);
 
     // Start revealing & gliding in the main website underneath in parallel for a seamless cross-dissolve
@@ -44,7 +46,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   };
 
   useEffect(() => {
-    // Realistic staged data-loading simulation (~5.2 seconds total)
+    // Realistic staged data-loading simulation (accelerates automatically on warm-cached repeat visits)
+    const warmCache = isWebCacheWarm();
+    const speedFactor = warmCache ? 0.48 : 1;
     let current = 0;
     let timeoutId: ReturnType<typeof setTimeout>;
 
@@ -74,15 +78,15 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         nextDelay = 50;
       }
 
-      current = Math.min(100, current + increment);
+      current = Math.min(100, current + (warmCache ? increment * 1.4 : increment));
       setProgress(current);
 
       if (current < 100) {
-        timeoutId = setTimeout(tick, nextDelay);
+        timeoutId = setTimeout(tick, Math.max(18, Math.round(nextDelay * speedFactor)));
       }
     };
 
-    timeoutId = setTimeout(tick, 120);
+    timeoutId = setTimeout(tick, warmCache ? 45 : 120);
     return () => clearTimeout(timeoutId);
   }, []);
 

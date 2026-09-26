@@ -47,7 +47,7 @@ export const RunningTextMarquee: React.FC = () => {
     <div
       role="region"
       aria-label="NODE ONLINE ✓ • WALLET CONNECTED ✓ • MEME COIN LOADED ✓ • NFT MINTED ✓ • SER, WE ARE STILL EARLY 🚀"
-      className="relative w-full overflow-hidden bg-[#0d131d]/90 border-b border-[#9d613c]/25 py-2.5 backdrop-blur-md z-20 select-none"
+      className="relative w-full overflow-hidden bg-[#0d131d] border-b border-[#9d613c]/25 py-2.5 z-20 select-none"
     >
       {/* Left & Right Smooth Gradient Fade Masks */}
       <div

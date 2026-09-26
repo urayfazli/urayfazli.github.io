@@ -1,0 +1,71 @@
+# ============================================================================
+# Cloudflare Edge Caching & CDN Header Configuration (_headers)
+# Automatically applied by Cloudflare Pages & Cloudflare Edge Proxy
+# ============================================================================
+
+# 1. HTML Entry Points — Instant Browser Revalidation + Cloudflare Edge SWR & Always-Online
+/
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=60, stale-while-revalidate=600, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=60, stale-while-revalidate=600, stale-if-error=86400
+  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=60, stale-while-revalidate=600, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=60, stale-while-revalidate=600, stale-if-error=86400
+  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# 2. Vite Content-Hashed Bundles (JS, CSS, Bundled Illustrations) — 1 Year Immutable Edge Cache
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  CDN-Cache-Control: public, max-age=31536000, immutable
+  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+  Access-Control-Allow-Origin: *
+
+# 3. Audio Backsound Tracks — 30-Day Cloudflare Edge Cache + 7-Day Browser Cache with SWR
+/audio/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800, stale-if-error=2592000
+  Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800, stale-if-error=2592000
+  Accept-Ranges: bytes
+  X-Content-Type-Options: nosniff
+
+# 4. Static Vector & Raster Icons
+/*.svg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  X-Content-Type-Options: nosniff
+
+/*.png
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  X-Content-Type-Options: nosniff
+
+/*.webp
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+  X-Content-Type-Options: nosniff
+
+# 5. Service Worker & Web App Manifest — Fast Edge Revalidation so updates propagate immediately
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=60, stale-while-revalidate=300
+  Cloudflare-CDN-Cache-Control: public, max-age=60, stale-while-revalidate=300
+  Service-Worker-Allowed: /
+  X-Content-Type-Options: nosniff
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cloudflare-CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Content-Type: application/manifest+json
+  X-Content-Type-Options: nosniff

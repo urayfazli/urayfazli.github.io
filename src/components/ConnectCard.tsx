@@ -196,7 +196,7 @@ export const ConnectCard: React.FC<ConnectCardProps> = ({ onOpenContact }) => {
           <span className="font-hand text-2xl sm:text-3xl text-[#fbeee0] tracking-wide leading-none group-hover:text-[#e59b63] transition-colors">
             {lang === 'id' ? 'Mari membangun bersama!' : "Let's build together!"}
           </span>
-          <span className="inline-block w-2.5 h-5 bg-[#22c55e] rounded-xs animate-pulse" aria-hidden="true" />
+          <span className="inline-block w-2.5 h-5 bg-[#22c55e] rounded-xs" aria-hidden="true" />
         </div>
       </div>
     </div>

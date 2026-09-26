@@ -228,7 +228,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               transition={{ duration: 0.5, delay: 0.55 }}
               className="mt-6 ml-2 hidden sm:block"
             >
-              <DoodleStar className="w-5 h-5 text-[#9d613c] animate-twinkle" />
+              <DoodleStar className="w-5 h-5 text-[#9d613c]" />
             </motion.div>
           </div>
 
@@ -243,7 +243,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               transition={{ type: 'spring', delay: 0.55 }}
               className="absolute -top-4 left-6 sm:left-12 pointer-events-none"
             >
-              <DoodleStar className="w-7 h-7 text-[#fbeee0] animate-twinkle" />
+              <DoodleStar className="w-7 h-7 text-[#fbeee0]" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -253,7 +253,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               transition={{ type: 'spring', delay: 0.65 }}
               className="absolute top-1/2 -left-4 sm:left-2 pointer-events-none"
             >
-              <DoodleStar className="w-6 h-6 text-[#d8c3ad] animate-twinkle [animation-delay:1s]" />
+              <DoodleStar className="w-6 h-6 text-[#d8c3ad]" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -263,7 +263,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               transition={{ type: 'spring', delay: 0.75 }}
               className="absolute top-1/4 right-2 sm:right-6 pointer-events-none"
             >
-              <DoodleStar className="w-5 h-5 text-[#fbeee0] animate-twinkle [animation-delay:1.8s]" />
+              <DoodleStar className="w-5 h-5 text-[#fbeee0]" />
             </motion.div>
 
             {/* Speech Bubble: "Node Operator" smooth fade-in directly above character's head */}
@@ -279,7 +279,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.34,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-30 animate-float-slow will-change-[transform,opacity]"
+              className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-30"
             >
               <SpeechBubble text={lang === 'id' ? 'Operator Node' : 'Node Operator'} />
             </motion.div>
@@ -297,10 +297,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.16,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center will-change-[transform,opacity]"
+              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center"
             >
-              {/* Soft warm aura backdrop behind character */}
-              <div className="absolute inset-4 rounded-full bg-gradient-to-tr from-[#9d613c]/25 via-[#402d23]/40 to-transparent blur-2xl" />
+              {/* Soft warm aura backdrop behind character (zero filter:blur GPU cost) */}
+              <div
+                className="absolute inset-2 rounded-full pointer-events-none"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(157, 97, 60, 0.28) 0%, rgba(64, 45, 35, 0.22) 45%, transparent 72%)',
+                }}
+              />
 
               {/* Photo Profile Card Wrapper + Perimeter Looping Paper Plane & Rocket System */}
               <div className="relative w-[276px] xs:w-[312px] sm:w-[380px] lg:w-[440px] h-[276px] xs:h-[312px] sm:h-[380px] lg:h-[440px] flex items-center justify-center">
@@ -337,7 +343,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                   {/* In-corner subtle aesthetic doodle badge */}
                   <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                     <span className="truncate">
                       {lang === 'id'
                         ? 'Node Aktif Aptos · Sei · SubQuery'
@@ -370,20 +376,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <circle cx="550" cy="550" r="4" stroke="#FBEEE0" strokeDasharray="2 2" />
                   </g>
 
-                  {/* Helios Solar Beacon (Top-Left Perihelion Anchor with Rotating Corona) */}
+                  {/* Helios Solar Beacon (Top-Left Perihelion Anchor) */}
                   <g transform="translate(46, 46)">
                     {/* Soft Solar Corona Halo */}
                     <circle r="14" fill="#E59B63" fillOpacity="0.18" />
-                    {/* Rotating 8-Point Solar Rays */}
+                    {/* 8-Point Solar Rays */}
                     <g>
-                      <animateTransform
-                        attributeName="transform"
-                        type="rotate"
-                        from="0"
-                        to="360"
-                        dur="24s"
-                        repeatCount="indefinite"
-                      />
                       <line x1="0" y1="-13.5" x2="0" y2="-10.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
                       <line x1="0" y1="10.5" x2="0" y2="13.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
                       <line x1="-13.5" y1="0" x2="-10.5" y2="0" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
@@ -457,22 +455,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       opacity="0.45"
                     />
 
-                    {/* Planet 3: Terra (Earth) + Active Orbiting Luna Moon */}
+                    {/* Planet 3: Terra (Earth) + Luna Moon */}
                     <g>
                       {/* Luna Sub-Orbit Track */}
                       <circle r="13.5" stroke="#FBEEE0" strokeWidth="0.9" strokeDasharray="2 3" opacity="0.5" />
-                      {/* Orbiting Luna Moon */}
-                      <g>
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          from="0"
-                          to="360"
-                          dur="4s"
-                          repeatCount="indefinite"
-                        />
-                        <circle cx="13.5" cy="0" r="2.5" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.2" />
-                      </g>
+                      {/* Luna Moon */}
+                      <circle cx="13.5" cy="0" r="2.5" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.2" />
                       {/* Terra Globe */}
                       <circle r="8.2" fill="#1E3A5F" stroke="#0B1018" strokeWidth="1.8" />
                       <circle r="7.2" fill="#38BDF8" fillOpacity="0.88" />
@@ -542,18 +530,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                     {/* Planet 5: Saturn (Ringed Gas Giant with Cassini Division & Titan Moon) */}
                     <g>
-                      {/* Orbiting Titan Moon */}
-                      <g>
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          from="360"
-                          to="0"
-                          dur="5.5s"
-                          repeatCount="indefinite"
-                        />
-                        <circle cx="19" cy="0" r="2.1" fill="#E59B63" stroke="#0B1018" strokeWidth="1.1" />
-                      </g>
+                      {/* Titan Moon */}
+                      <circle cx="19" cy="-4" r="2.1" fill="#E59B63" stroke="#0B1018" strokeWidth="1.1" />
 
                       <g transform="rotate(-22)">
                         {/* Back Half of Planetary Rings (Behind Sphere) */}
@@ -606,18 +584,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                     {/* Planet 6: Jupiter (Banded Storm Giant with Great Red Spot & Io Moon) */}
                     <g>
-                      {/* Orbiting Galilean Moon Io */}
-                      <g>
-                        <animateTransform
-                          attributeName="transform"
-                          type="rotate"
-                          from="0"
-                          to="360"
-                          dur="4.5s"
-                          repeatCount="indefinite"
-                        />
-                        <circle cx="14.5" cy="0" r="2.1" fill="#22C55E" stroke="#0B1018" strokeWidth="1.1" />
-                      </g>
+                      {/* Galilean Moon Io */}
+                      <circle cx="14.5" cy="3" r="2.1" fill="#22C55E" stroke="#0B1018" strokeWidth="1.1" />
                       {/* Jupiter Sphere */}
                       <circle r="9.4" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.8" />
                       {/* Equatorial Storm Belts */}
@@ -662,7 +630,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               onClick={onScrollDown}
             >
               <div className="w-5 h-8 rounded-full border-[1.5px] border-[#fbeee0]/70 flex items-start justify-center p-1 group-hover:border-[#e59b63] transition-colors">
-                <div className="w-1.5 h-2 rounded-full bg-[#fbeee0] animate-bounce" />
+                <div className="w-1.5 h-2 rounded-full bg-[#fbeee0] group-hover:translate-y-1 transition-transform" />
               </div>
               <span className="text-[11px] font-hand tracking-wider text-[#d6c4b2] group-hover:text-[#fbeee0] transition-colors uppercase">
                 {lang === 'id' ? 'Gulir' : 'Scroll'}

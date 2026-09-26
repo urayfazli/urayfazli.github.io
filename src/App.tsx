@@ -82,32 +82,50 @@ export default function App() {
     }
   };
 
-  // Scroll spy to detect active section dynamically
+  // Scroll spy to detect active section dynamically without calling getBoundingClientRect on every scroll tick
   useEffect(() => {
+    let aboutTop = 500;
+    let expTop = 1200;
+    let currentActive = 'home';
+
+    const measureSections = () => {
+      const aboutEl = document.getElementById('about');
+      const expEl = document.getElementById('experience');
+      if (aboutEl) {
+        aboutTop = aboutEl.offsetTop - 180;
+      }
+      if (expEl) {
+        expTop = expEl.offsetTop - 180;
+      }
+    };
+
     const handleScroll = () => {
       if (isNavigatingRef.current) return;
 
       const scrollPos = window.scrollY;
+      const nextActive =
+        scrollPos >= expTop
+          ? 'experience'
+          : scrollPos >= aboutTop
+          ? 'about'
+          : 'home';
 
-      const aboutEl = document.getElementById('about');
-      const expEl = document.getElementById('experience');
-
-      if (!aboutEl || !expEl) return;
-
-      const expTop = expEl.getBoundingClientRect().top + scrollPos - 180;
-      const aboutTop = aboutEl.getBoundingClientRect().top + scrollPos - 180;
-
-      if (scrollPos >= expTop) {
-        setActiveSection('experience');
-      } else if (scrollPos >= aboutTop) {
-        setActiveSection('about');
-      } else {
-        setActiveSection('home');
+      if (nextActive !== currentActive) {
+        currentActive = nextActive;
+        setActiveSection(nextActive);
       }
     };
 
+    measureSections();
+    const settleTimer = window.setTimeout(measureSections, 900);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', measureSections, { passive: true });
+    return () => {
+      window.clearTimeout(settleTimer);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', measureSections);
+    };
   }, []);
 
   const handleSelectNetwork = (networkId: string) => {
@@ -227,7 +245,7 @@ export default function App() {
                             <h3 className="font-fredoka text-2xl font-medium text-[#fbeee0]">
                               {lang === 'id' ? 'Operasi Node' : 'Node Operations'}
                             </h3>
-                            <DoodleStar className="w-5 h-5 text-[#e59b63] animate-twinkle" />
+                            <DoodleStar className="w-5 h-5 text-[#e59b63]" />
                           </div>
                           <span className="font-hand text-sm text-[#e59b63] ml-6 -mt-1">
                             {lang === 'id'
@@ -291,7 +309,7 @@ export default function App() {
                     {/* Footer badge */}
                     <div className="relative z-10 pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex items-center justify-between text-xs text-[#d6c4b2]">
                       <span className="flex items-center gap-1.5 font-mono">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
                         {lang === 'id' ? 'Kelas Produksi' : 'Production Grade'}
                       </span>
                       <button

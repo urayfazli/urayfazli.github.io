@@ -306,13 +306,12 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
 
   return (
     <div
-      className={`inline-flex flex-wrap items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#101723]/95 border border-[#9d613c]/30 shadow-md backdrop-blur-sm transition-all duration-300 hover:border-[#9d613c]/60 group ${className}`}
+      className={`inline-flex flex-wrap items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-[#101723] border border-[#9d613c]/30 shadow-md transition-all duration-300 hover:border-[#9d613c]/60 group ${className}`}
       title={`Real-time Visitors (${visitorData.source.toUpperCase()}) • Last synced: ${visitorData.lastUpdated}`}
     >
-      {/* Node status beacon: Green pulsing diode */}
+      {/* Node status beacon: Green diode */}
       <div className="flex items-center gap-1.5 font-mono text-[10px] sm:text-[11px] text-[#22c55e] shrink-0">
         <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75" />
           <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]" />
         </span>
         <span className="tracking-wider uppercase font-semibold text-[#86efac]">

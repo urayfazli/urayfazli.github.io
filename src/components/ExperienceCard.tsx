@@ -87,7 +87,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ onSelectNetwork 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <NetworkDroidCharacter type={net.logoType} />
                       <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-emerald-300 bg-[#0b1018]/90 px-2 py-0.5 rounded-md border border-dashed border-emerald-400/45">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                         {net.status}
                       </span>
                     </div>

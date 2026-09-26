@@ -17,120 +17,56 @@ const BGMCharacterAvatar = React.memo<{
   isExpanded: boolean;
   isDragging: boolean;
   mood: DjBotMood;
-  step: number;
-}>(({ isPlaying, isExpanded, isDragging, mood, step }) => {
+}>(({ isPlaying, isExpanded, isDragging, mood }) => {
   const isAngry = mood === 'angry' && !isDragging;
   const isDizzy = mood === 'dizzy' && !isDragging;
   const isGreeting = mood === 'greeting' && !isDragging;
-  const isActiveBody = isPlaying || isAngry || isDizzy || isGreeting || isDragging;
+  const isExpressive = isAngry || isDizzy || isGreeting || isDragging;
 
   return (
     <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
-      {/* Floating Emotes: Angry 💢, Greeting 👋, or Musical Notes ♫ (immediately removed when expression/music stops) */}
+      {/* Floating Emotes: Angry 💢, Greeting 👋, or Musical Notes ♫ */}
       {isAngry && (
-        <>
-          <motion.span
-            key="angry-vein-emote"
-            initial={{ opacity: 0, scale: 0.3, rotate: -15 }}
-            animate={{
-              opacity: 1,
-              scale: [1, 1.28, 1],
-              rotate: [-10, 10, -10],
-            }}
-            transition={{ duration: 0.38, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute -top-1 right-0 sm:top-0 sm:right-1 text-sm sm:text-lg drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] z-20"
-          >
-            💢
-          </motion.span>
-          <motion.span
-            key="angry-steam"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{
-              opacity: [0, 0.95, 0],
-              y: [-2, -20],
-              x: [-8, -16],
-              scale: [0.7, 1.15],
-            }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: 'easeOut' }}
-            className="absolute top-0 left-1 text-xs sm:text-sm z-20"
-          >
-            💨
-          </motion.span>
-        </>
+        <span
+          key="angry-vein-emote"
+          className="absolute -top-1 right-0 sm:top-0 sm:right-1 text-sm sm:text-lg z-20"
+        >
+          💢
+        </span>
       )}
 
       {isGreeting && (
-        <motion.span
+        <span
           key="greeting-wave-emote"
-          initial={{ opacity: 0, scale: 0.3, rotate: -20 }}
-          animate={{
-            opacity: 1,
-            scale: [1, 1.2, 1],
-            rotate: [-16, 24, -16],
-            y: [0, -3, 0],
-          }}
-          transition={{ duration: 0.48, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ transformOrigin: '75% 80%' }}
-          className="absolute -top-1 right-0 sm:top-0 sm:right-0.5 text-sm sm:text-lg drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] z-20"
+          className="absolute -top-1 right-0 sm:top-0 sm:right-0.5 text-sm sm:text-lg z-20"
         >
           👋
-        </motion.span>
+        </span>
       )}
 
       {isDizzy && (
-        <motion.span
+        <span
           key="dizzy-spiral-emote"
-          initial={{ opacity: 0, scale: 0.3 }}
-          animate={{
-            opacity: 1,
-            scale: [1, 1.2, 1],
-            rotate: [-15, 15, -15],
-            y: [0, -3, 0],
-          }}
-          transition={{ duration: 0.55, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-1 right-0 sm:top-0 sm:right-0.5 text-sm sm:text-lg drop-shadow-[0_2px_6px_rgba(0,0,0,0.85)] z-20"
+          className="absolute -top-1 right-0 sm:top-0 sm:right-0.5 text-sm sm:text-lg z-20"
         >
           😵‍💫
-        </motion.span>
+        </span>
       )}
 
       {isPlaying && !isAngry && !isDizzy && !isGreeting && (
         <>
-          <motion.span
+          <span
             key="note-1"
-            initial={{ opacity: 0, y: 6, x: -12, scale: 0.6 }}
-            animate={{
-              opacity: [0, 1, 0],
-              y: [-2, -26],
-              x: [-14, -24],
-              rotate: [-12, -25],
-              scale: [0.7, 1.1, 0.8],
-            }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
-            className="absolute top-1 left-2 font-hand text-base sm:text-lg text-[#e59b63] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20"
+            className="absolute -top-0.5 left-1.5 font-hand text-sm sm:text-base text-[#e59b63] z-20"
           >
             ♪
-          </motion.span>
-          <motion.span
+          </span>
+          <span
             key="note-2"
-            initial={{ opacity: 0, y: 6, x: 12, scale: 0.6 }}
-            animate={{
-              opacity: [0, 1, 0],
-              y: [-4, -30],
-              x: [14, 26],
-              rotate: [10, 24],
-              scale: [0.7, 1.15, 0.85],
-            }}
-            transition={{
-              duration: 1.8,
-              delay: 0.6,
-              repeat: Infinity,
-              ease: 'easeOut',
-            }}
-            className="absolute top-0 right-1 font-hand text-base sm:text-lg text-emerald-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-20"
+            className="absolute -top-1 right-1.5 font-hand text-sm sm:text-base text-emerald-400 z-20"
           >
             ♫
-          </motion.span>
+          </span>
         </>
       )}
 
@@ -139,31 +75,26 @@ const BGMCharacterAvatar = React.memo<{
         className="w-full h-full overflow-visible"
         fill="none"
       >
-        {/* Ground Shadow (shrinks slightly when lifted/dragged) */}
-        <motion.ellipse
+        {/* Ground Shadow */}
+        <ellipse
           cx="55"
           cy="108"
-          rx="34"
+          rx={isDragging ? '24' : '34'}
           ry="5"
           fill="#05080D"
-          animate={
-            isDragging
-              ? { scaleX: 0.7, opacity: 0.4 }
-              : { scaleX: 1, opacity: 0.75 }
-          }
+          opacity={isDragging ? '0.4' : '0.75'}
         />
 
-        {/* Ambient Pulse Ring on Ground when Playing, Angry, or Dizzy */}
+        {/* Ambient Ring on Ground when Playing, Angry, or Dizzy */}
         {(isPlaying || isAngry || isDizzy) && (
-          <motion.ellipse
+          <ellipse
             cx="55"
             cy="108"
             rx="34"
             ry="5"
             stroke={isAngry ? '#EF4444' : isDizzy ? '#A3E635' : '#22C55E'}
             strokeWidth="1.5"
-            animate={{ scaleX: [0.9, 1.25, 0.9], opacity: [0.75, 0, 0.75] }}
-            transition={{ duration: isAngry ? 0.55 : isDizzy ? 0.65 : 0.9, repeat: Infinity }}
+            opacity="0.55"
           />
         )}
 
@@ -178,27 +109,17 @@ const BGMCharacterAvatar = React.memo<{
               ? { x: [-1.5, 1.5, -1.5], y: [0, -3, 0], rotate: 0 }
               : isGreeting
               ? { x: 0, y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }
-              : isPlaying
-              ? { x: 0, y: [0, -2.5, 0], rotate: 0 }
               : { x: 0, y: 0, rotate: 0 }
           }
           transition={{
-            duration: isDizzy
-              ? 0.65
-              : isAngry
-              ? 0.25
-              : isGreeting
-              ? 0.6
-              : isPlaying
-              ? 0.45
-              : 0.3,
-            repeat: isActiveBody && !isDragging ? Infinity : 0,
+            duration: isDizzy ? 0.65 : isAngry ? 0.25 : 0.6,
+            repeat: isExpressive && !isDragging ? Infinity : 0,
             ease: 'easeInOut',
           }}
           style={{ transformBox: 'fill-box', transformOrigin: '50% 70%' }}
         >
-          {/* Cute Chibi Feet (with proper SVG fill-box transformOrigin so rotation never swings around 0,0) */}
-          <motion.rect
+          {/* Cute Chibi Feet */}
+          <rect
             x="36"
             y="96"
             width="12"
@@ -207,23 +128,8 @@ const BGMCharacterAvatar = React.memo<{
             fill={isAngry ? '#B91C1C' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="1.8"
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-            animate={
-              isDragging
-                ? { x: 0, y: [-2, 3, -2], rotate: [-8, 8, -8] }
-                : isDizzy
-                ? { x: 0, y: [-2, 2, -2], rotate: [-8, 8, -8] }
-                : isAngry
-                ? { x: 0, y: [0, -4, 0], rotate: 0 }
-                : { x: 0, y: 0, rotate: 0 }
-            }
-            transition={{
-              duration: isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
-              repeat: isDragging || isAngry || isDizzy ? Infinity : 0,
-              ease: 'easeInOut',
-            }}
           />
-          <motion.rect
+          <rect
             x="62"
             y="96"
             width="12"
@@ -232,21 +138,6 @@ const BGMCharacterAvatar = React.memo<{
             fill={isAngry ? '#B91C1C' : '#9D613C'}
             stroke="#FBEEE0"
             strokeWidth="1.8"
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-            animate={
-              isDragging
-                ? { x: 0, y: [3, -2, 3], rotate: [8, -8, 8] }
-                : isDizzy
-                ? { x: 0, y: [2, -2, 2], rotate: [8, -8, 8] }
-                : isAngry
-                ? { x: 0, y: [-4, 0, -4], rotate: 0 }
-                : { x: 0, y: 0, rotate: 0 }
-            }
-            transition={{
-              duration: isDizzy ? 0.5 : isAngry ? 0.28 : 0.35,
-              repeat: isDragging || isAngry || isDizzy ? Infinity : 0,
-              ease: 'easeInOut',
-            }}
           />
 
           {/* Hoodie Body */}
@@ -270,16 +161,13 @@ const BGMCharacterAvatar = React.memo<{
           />
 
           {/* Left Speaker Woofer */}
-          <motion.circle
+          <circle
             cx="41"
             cy="83"
             r="6"
             fill="#141C28"
             stroke="#FBEEE0"
             strokeWidth="1.5"
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-            animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: isPlaying || isAngry ? Infinity : 0 }}
           />
           <circle cx="41" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
 
@@ -298,7 +186,7 @@ const BGMCharacterAvatar = React.memo<{
             x1="52.5"
             y1="86"
             x2="52.5"
-            y2={isPlaying || isAngry ? (step % 2 === 0 ? '80' : '84') : '84'}
+            y2={isPlaying || isAngry ? '80' : '84'}
             stroke={isAngry ? '#EF4444' : '#22C55E'}
             strokeWidth="1.6"
             strokeLinecap="round"
@@ -307,7 +195,7 @@ const BGMCharacterAvatar = React.memo<{
             x1="55"
             y1="86"
             x2="55"
-            y2={isPlaying || isAngry ? (step % 3 === 0 ? '79' : '83') : '84'}
+            y2={isPlaying || isAngry ? '79' : '84'}
             stroke="#E59B63"
             strokeWidth="1.6"
             strokeLinecap="round"
@@ -316,34 +204,27 @@ const BGMCharacterAvatar = React.memo<{
             x1="57.5"
             y1="86"
             x2="57.5"
-            y2={isPlaying || isAngry ? (step % 2 === 1 ? '80' : '84') : '84'}
+            y2={isPlaying || isAngry ? '81' : '84'}
             stroke={isAngry ? '#EF4444' : '#22C55E'}
             strokeWidth="1.6"
             strokeLinecap="round"
           />
 
           {/* Right Speaker Woofer */}
-          <motion.circle
+          <circle
             cx="69"
             cy="83"
             r="6"
             fill="#141C28"
             stroke="#FBEEE0"
             strokeWidth="1.5"
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-            animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: isPlaying || isAngry ? Infinity : 0 }}
           />
           <circle cx="69" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
         </motion.g>
 
-        {/* Orbiting Halo of Stars When Dizzy/Mabuk (Kept outside Head fill-box group so Head pivot never shifts) */}
+        {/* Orbiting Halo of Stars When Dizzy/Mabuk */}
         {isDizzy && (
-          <motion.g
-            animate={{ x: [-3, 3, -3], rotate: [-5, 5, -5] }}
-            transition={{ duration: 0.65, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-          >
+          <g>
             <ellipse
               cx="55"
               cy="2"
@@ -354,34 +235,30 @@ const BGMCharacterAvatar = React.memo<{
               strokeDasharray="3 3"
               fill="none"
             />
-            <motion.circle
+            <circle
               cx="29"
               cy="2"
               r="2.8"
               fill="#E59B63"
               stroke="#090E16"
               strokeWidth="1"
-              animate={{ x: [0, 52, 0] }}
-              transition={{ duration: 0.95, repeat: Infinity, ease: 'easeInOut' }}
             />
-            <motion.circle
+            <circle
               cx="81"
               cy="2"
               r="2.8"
               fill="#A3E635"
               stroke="#090E16"
               strokeWidth="1"
-              animate={{ x: [0, -52, 0] }}
-              transition={{ duration: 0.95, repeat: Infinity, ease: 'easeInOut' }}
             />
-          </motion.g>
+          </g>
         )}
 
         {/* Animated Head + Giant DJ Headphones */}
         <motion.g
           animate={
             isDragging
-              ? { x: 0, y: -7, rotate: [-5, 5, -5] }
+              ? { x: 0, y: -7, rotate: 0 }
               : isDizzy
               ? {
                   x: [-3, 3, -3],
@@ -400,31 +277,15 @@ const BGMCharacterAvatar = React.memo<{
                   y: [0, -4, 0],
                   rotate: [-5, 5, -5],
                 }
-              : isPlaying
-              ? {
-                  x: 0,
-                  y: [0, -5, 0],
-                  rotate: [-4, 4, -4],
-                }
               : {
                   x: 0,
-                  y: [0, -2.5, 0],
-                  rotate: [-1, 1, -1],
+                  y: 0,
+                  rotate: 0,
                 }
           }
           transition={{
-            duration: isDragging
-              ? 0.35
-              : isDizzy
-              ? 0.65
-              : isAngry
-              ? 0.28
-              : isGreeting
-              ? 0.65
-              : isPlaying
-              ? 0.55
-              : 2.2,
-            repeat: Infinity,
+            duration: isDizzy ? 0.65 : isAngry ? 0.28 : 0.65,
+            repeat: isExpressive && !isDragging ? Infinity : 0,
             ease: 'easeInOut',
           }}
           style={{ transformBox: 'fill-box', transformOrigin: '50% 65%' }}
@@ -447,23 +308,11 @@ const BGMCharacterAvatar = React.memo<{
             strokeWidth="2.2"
             strokeLinecap="round"
           />
-          <motion.circle
+          <circle
             cx="55"
             cy="-2"
             r="3.8"
             fill={isAngry ? '#EF4444' : isDizzy ? '#A3E635' : isPlaying ? '#22C55E' : '#E59B63'}
-            style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
-            animate={
-              isAngry || isDizzy
-                ? { scale: [1, 1.55, 1], opacity: [1, 0.6, 1] }
-                : isPlaying
-                ? { scale: [1, 1.4, 1], opacity: [1, 0.7, 1] }
-                : { scale: 1, opacity: 1 }
-            }
-            transition={{
-              duration: isAngry || isDizzy ? 0.35 : 0.7,
-              repeat: isAngry || isDizzy || isPlaying ? Infinity : 0,
-            }}
           />
 
           {/* Left & Right Cushioned DJ Earcups */}
@@ -686,34 +535,22 @@ const BGMCharacterAvatar = React.memo<{
             </g>
           ) : (
             <g>
-              {/* Blinking Idle LED Eyes */}
-              <motion.rect
+              {/* Idle LED Eyes */}
+              <rect
                 x="39"
                 y="30"
                 width="6.5"
                 height="9.5"
                 rx="3.2"
                 fill="#E59B63"
-                animate={{ scaleY: [1, 1, 0.12, 1] }}
-                transition={{
-                  duration: 2.8,
-                  repeat: Infinity,
-                  times: [0, 0.46, 0.5, 1],
-                }}
               />
-              <motion.rect
+              <rect
                 x="64.5"
                 y="30"
                 width="6.5"
                 height="9.5"
                 rx="3.2"
                 fill="#E59B63"
-                animate={{ scaleY: [1, 1, 0.12, 1] }}
-                transition={{
-                  duration: 2.8,
-                  repeat: Infinity,
-                  times: [0, 0.46, 0.5, 1],
-                }}
               />
               {/* Cute Little Smile */}
               <path
@@ -726,38 +563,19 @@ const BGMCharacterAvatar = React.memo<{
           )}
         </motion.g>
 
-        {/* Animated Chibi Hands (Hold Head on Dizzy, Wave on Greeting, Shake Fists on Angry!) */}
-        <motion.circle
+        {/* Chibi Hands */}
+        <circle
           cx={isDizzy ? 16 : isAngry ? 19 : isPlaying ? 18 : 26}
           cy={isDizzy ? 34 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
           stroke={isDizzy ? '#A3E635' : isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
-          animate={
-            isDragging
-              ? { x: 0, y: [-8, -2, -8] }
-              : isDizzy
-              ? { x: [-3, 3, -3], y: [-4, 4, -4] }
-              : isAngry
-              ? { y: [-6, 4, -6], x: [-2, 2, -2] }
-              : isPlaying
-              ? { y: [0, -5, 0], x: [0, 2, 0] }
-              : { x: 0, y: 0 }
-          }
-          transition={{
-            duration: isDizzy ? 0.55 : isAngry ? 0.24 : isPlaying ? 0.45 : 0.3,
-            repeat: isDragging || isDizzy || isAngry || isPlaying ? Infinity : 0,
-          }}
         />
 
         {/* Waving Motion Lines when Greeting */}
         {isGreeting && (
-          <motion.g
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.3, 0.95, 0.3] }}
-            transition={{ duration: 0.45, repeat: Infinity }}
-          >
+          <g>
             <path
               d="M99 20C103 23 104 28 102 33"
               stroke="#E59B63"
@@ -770,33 +588,16 @@ const BGMCharacterAvatar = React.memo<{
               strokeWidth="1.4"
               strokeLinecap="round"
             />
-          </motion.g>
+          </g>
         )}
 
-        <motion.circle
+        <circle
           cx={isDizzy ? 94 : isGreeting ? 95 : isAngry ? 91 : isPlaying ? 92 : 84}
           cy={isDizzy ? 34 : isGreeting ? 30 : isAngry ? 54 : isPlaying ? 44 : 78}
           r="5.5"
           fill="#FBEEE0"
           stroke={isDizzy ? '#A3E635' : isGreeting ? '#E59B63' : isAngry ? '#EF4444' : '#9D613C'}
           strokeWidth="1.8"
-          animate={
-            isDragging
-              ? { x: 0, y: [-2, -8, -2] }
-              : isDizzy
-              ? { x: [3, -3, 3], y: [4, -4, 4] }
-              : isGreeting
-              ? { x: [-4, 5, -4], y: [-4, 2, -4] }
-              : isAngry
-              ? { y: [4, -6, 4], x: [2, -2, 2] }
-              : isPlaying
-              ? { y: [-4, 1, -4], x: [0, -2, 0] }
-              : { x: 0, y: 0 }
-          }
-          transition={{
-            duration: isDizzy ? 0.55 : isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 0.3,
-            repeat: isActiveBody ? Infinity : 0,
-          }}
         />
 
         {/* Small Indicator Badge on Corner */}
@@ -973,6 +774,9 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
     movedBeyondThreshold: false,
   });
 
+  const isExpandedRef = useRef(isExpanded);
+  isExpandedRef.current = isExpanded;
+
   useEffect(() => {
     offsetRef.current = offset;
   }, [offset]);
@@ -984,7 +788,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
       setCurrentTrack(retroAudio.getCurrentTrack());
       setVolume(retroAudio.getVolume());
       setIsWidgetVisible(retroAudio.getIsWidgetVisible());
-      setStep(retroAudio.getCurrentStep());
+      if (isExpandedRef.current) {
+        const nextStep = retroAudio.getCurrentStep();
+        if (nextStep % 2 === 0) {
+          setStep(nextStep);
+        }
+      }
     });
     return unsubscribe;
   }, []);
@@ -1526,7 +1335,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         setNpcPhase('composing');
         setNpcTalkBounce(true);
         setTimeout(() => setNpcTalkBounce(false), 260);
-      }, 3400);
+      }, 16000);
       return () => clearTimeout(pauseTimer);
     }
 
@@ -1536,64 +1345,15 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         () => {
           setNpcPhase('typing');
         },
-        mood === 'greeting' ? 850 : mood === 'angry' ? 850 : 1400
+        mood === 'greeting' ? 700 : mood === 'angry' ? 700 : 1000
       );
       return () => clearTimeout(composeTimer);
     }
 
     if (npcPhase === 'typing') {
-      let charIndex = 0;
-      let isCancelled = false;
-      let timeoutId: number | null = null;
-      setTypedText('');
-
-      const typeNextChar = () => {
-        if (isCancelled) return;
-        const remaining = fullDialogueText.length - charIndex;
-        const c1 = fullDialogueText[charIndex] || '';
-        const isPunct =
-          c1 === '.' || c1 === '!' || c1 === '?' || c1 === ',' || c1 === ':' || c1 === ';' || c1 === '—';
-        const stepChars = isPunct || remaining <= 1 ? 1 : 2;
-        charIndex += stepChars;
-        setTypedText(fullDialogueText.slice(0, charIndex));
-
-        if (charIndex >= fullDialogueText.length) {
-          setNpcPhase('reading');
-          return;
-        }
-
-        const justTypedChar = fullDialogueText[charIndex - 1];
-        const nextChar = fullDialogueText[charIndex] || '';
-
-        // Natural speech/reading pause ("jeda") on punctuation marks inside interactive text
-        let delay = mood === 'angry' || mood === 'dizzy' ? 32 : 46;
-        if (
-          (justTypedChar === '.' || justTypedChar === '!' || justTypedChar === '?') &&
-          nextChar === ' '
-        ) {
-          delay = mood === 'angry' || mood === 'dizzy' ? 210 : 340;
-        } else if (
-          (justTypedChar === ',' ||
-            justTypedChar === ':' ||
-            justTypedChar === ';' ||
-            justTypedChar === '—') &&
-          (nextChar === ' ' || justTypedChar === '—')
-        ) {
-          delay = mood === 'angry' || mood === 'dizzy' ? 120 : 190;
-        }
-
-        timeoutId = window.setTimeout(typeNextChar, delay);
-      };
-
-      // Brief initial pause before first character appears after "Mengetik..."
-      timeoutId = window.setTimeout(typeNextChar, 90);
-
-      return () => {
-        isCancelled = true;
-        if (timeoutId !== null) {
-          window.clearTimeout(timeoutId);
-        }
-      };
+      setTypedText(fullDialogueText);
+      setNpcPhase('reading');
+      return;
     }
 
     if (npcPhase === 'reading') {
@@ -2071,7 +1831,6 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                   isExpanded={isExpanded}
                   isDragging={isDragging}
                   mood={mood}
-                  step={step}
                 />
               </button>
 
@@ -2129,95 +1888,95 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                       } pointer-events-none z-20`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
+                        className={`w-1.5 h-1.5 rounded-full border sm:border-[1.5px] shadow-sm transition-colors duration-200 ${
                           !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            ? 'bg-[#1a0f14] border-red-400/75'
                             : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
+                            ? 'bg-[#141f18] border-lime-400/75'
                             : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            ? 'bg-[#101824] border-[#e59b63]/75'
                             : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                            ? 'bg-[#101824] border-emerald-400/75'
+                            : 'bg-[#101824] border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                         }`}
                       />
                       <span
-                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border sm:border-[1.5px] backdrop-blur-sm shadow-sm transition-colors duration-200 ${
+                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border sm:border-[1.5px] shadow-sm transition-colors duration-200 ${
                           !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            ? 'bg-[#1a0f14] border-red-400/75'
                             : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
+                            ? 'bg-[#141f18] border-lime-400/75'
                             : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            ? 'bg-[#101824] border-[#e59b63]/75'
                             : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                            ? 'bg-[#101824] border-emerald-400/75'
+                            : 'bg-[#101824] border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                         }`}
                       />
                     </div>
 
-                    {/* Main Fluffy Cloud Container (Smaller & Translucent with Backdrop Blur) */}
+                    {/* Main Fluffy Cloud Container */}
                     <div
-                      className={`relative px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[16px_20px_15px_18px] sm:rounded-[22px_26px_20px_24px] border sm:border-[1.5px] text-left backdrop-blur-md shadow-[2px_3px_12px_rgba(0,0,0,0.38)] transition-all duration-200 ${
+                      className={`relative px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-[16px_20px_15px_18px] sm:rounded-[22px_26px_20px_24px] border sm:border-[1.5px] text-left shadow-[2px_3px_12px_rgba(0,0,0,0.38)] transition-all duration-200 ${
                         !isDragging && npcPhase === 'composing'
                           ? 'w-fit min-w-[104px] sm:min-w-[132px] max-w-[134px] sm:max-w-[192px]'
                           : 'w-[136px] sm:w-[196px]'
                       } ${
                         !isDragging && mood === 'angry'
-                          ? 'bg-[#1a0f14]/55 border-red-400/75 text-[#fbeee0]'
+                          ? 'bg-[#1a0f14]/95 border-red-400/75 text-[#fbeee0]'
                           : !isDragging && mood === 'dizzy'
-                          ? 'bg-[#141f18]/55 border-lime-400/75 text-[#fbeee0]'
+                          ? 'bg-[#141f18]/95 border-lime-400/75 text-[#fbeee0]'
                           : isDragging || mood === 'greeting'
-                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
+                          ? 'bg-[#101824]/95 border-[#e59b63]/75 text-[#fbeee0]'
                           : !isDragging && (npcPhase === 'composing' || npcPhase === 'typing')
-                          ? 'bg-[#101824]/50 border-[#e59b63]/75 text-[#fbeee0]'
+                          ? 'bg-[#101824]/95 border-[#e59b63]/75 text-[#fbeee0]'
                           : isPlaying
-                          ? 'bg-[#101824]/50 border-emerald-400/75 text-[#fbeee0]'
-                          : 'bg-[#101824]/45 border-[#fbeee0]/60 text-[#fbeee0] group-hover/cloud:border-[#e59b63]/80 group-hover/cloud:bg-[#101824]/60'
+                          ? 'bg-[#101824]/95 border-emerald-400/75 text-[#fbeee0]'
+                          : 'bg-[#101824]/95 border-[#fbeee0]/60 text-[#fbeee0] group-hover/cloud:border-[#e59b63]/80'
                       }`}
                     >
-                      {/* Decorative Top Cloud Puffs (Smaller & Translucent) */}
+                      {/* Decorative Top Cloud Puffs */}
                       <span
                         aria-hidden="true"
-                        className={`pointer-events-none absolute -top-1.5 left-3 sm:left-4 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                        className={`pointer-events-none absolute -top-1.5 left-3 sm:left-4 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] transition-colors duration-200 ${
                           !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            ? 'bg-[#1a0f14] border-red-400/75'
                             : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
+                            ? 'bg-[#141f18] border-lime-400/75'
                             : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            ? 'bg-[#101824] border-[#e59b63]/75'
                             : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                            ? 'bg-[#101824] border-emerald-400/75'
+                            : 'bg-[#101824] border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                         }`}
                       />
                       <span
                         aria-hidden="true"
-                        className={`pointer-events-none absolute -top-2 left-6 sm:left-8 w-5 sm:w-7 h-2 sm:h-3 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                        className={`pointer-events-none absolute -top-2 left-6 sm:left-8 w-5 sm:w-7 h-2 sm:h-3 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] transition-colors duration-200 ${
                           !isDragging && mood === 'angry'
-                            ? 'bg-[#1a0f14]/55 border-red-400/75'
+                            ? 'bg-[#1a0f14] border-red-400/75'
                             : !isDragging && mood === 'dizzy'
-                            ? 'bg-[#141f18]/55 border-lime-400/75'
+                            ? 'bg-[#141f18] border-lime-400/75'
                             : isDragging || mood === 'greeting' || npcPhase === 'composing' || npcPhase === 'typing'
-                            ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                            ? 'bg-[#101824] border-[#e59b63]/75'
                             : isPlaying
-                            ? 'bg-[#101824]/50 border-emerald-400/75'
-                            : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                            ? 'bg-[#101824] border-emerald-400/75'
+                            : 'bg-[#101824] border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                         }`}
                       />
                       {!(!isDragging && npcPhase === 'composing') && (
                         <span
                           aria-hidden="true"
-                          className={`pointer-events-none absolute -top-1.5 right-3.5 sm:right-5 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] backdrop-blur-md transition-colors duration-200 ${
+                          className={`pointer-events-none absolute -top-1.5 right-3.5 sm:right-5 w-3.5 sm:w-5 h-1.5 sm:h-2.5 rounded-t-full border-t border-x sm:border-t-[1.5px] sm:border-x-[1.5px] transition-colors duration-200 ${
                             !isDragging && mood === 'angry'
-                              ? 'bg-[#1a0f14]/55 border-red-400/75'
+                              ? 'bg-[#1a0f14] border-red-400/75'
                               : !isDragging && mood === 'dizzy'
-                              ? 'bg-[#141f18]/55 border-lime-400/75'
+                              ? 'bg-[#141f18] border-lime-400/75'
                               : isDragging || mood === 'greeting' || npcPhase === 'typing'
-                              ? 'bg-[#101824]/50 border-[#e59b63]/75'
+                              ? 'bg-[#101824] border-[#e59b63]/75'
                               : isPlaying
-                              ? 'bg-[#101824]/50 border-emerald-400/75'
-                              : 'bg-[#101824]/45 border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
+                              ? 'bg-[#101824] border-emerald-400/75'
+                              : 'bg-[#101824] border-[#fbeee0]/60 group-hover/cloud:border-[#e59b63]/80'
                           }`}
                         />
                       )}
@@ -2228,13 +1987,13 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
                           <span
                             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                               !isDragging && mood === 'angry'
-                                ? 'bg-red-400 animate-ping'
+                                ? 'bg-red-400'
                                 : !isDragging && mood === 'dizzy'
-                                ? 'bg-lime-400 animate-ping'
+                                ? 'bg-lime-400'
                                 : isDragging || npcPhase === 'composing' || npcPhase === 'typing'
-                                ? 'bg-[#e59b63] animate-ping'
+                                ? 'bg-[#e59b63]'
                                 : isPlaying
-                                ? 'bg-emerald-400 animate-ping'
+                                ? 'bg-emerald-400'
                                 : 'bg-[#e59b63]'
                             }`}
                           />

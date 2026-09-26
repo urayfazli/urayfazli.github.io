@@ -71,7 +71,7 @@ export const SpeechBubble: React.FC<{
     </div>
 
     {/* Speech Bubble Pill */}
-    <div className="relative px-5 py-2.5 rounded-[22px] border-[2.5px] border-[#fbeee0] bg-[#141b26]/90 backdrop-blur-sm text-center shadow-lg transform rotate-[-4deg] hover:rotate-0 transition-transform duration-300">
+    <div className="relative px-5 py-2.5 rounded-[22px] border-[2.5px] border-[#fbeee0] bg-[#141b26] text-center shadow-lg transform rotate-[-4deg] hover:rotate-0 transition-transform duration-300">
       <span className="font-fredoka text-lg md:text-xl font-medium tracking-wide text-[#fbeee0] whitespace-nowrap block">
         {text}
       </span>
@@ -381,7 +381,7 @@ export const SketchbookPaperPlaneDoodle: React.FC<{ className?: string }> = ({
   className = '',
 }) => (
   <g className={className} aria-hidden="true">
-    {/* Looping Hand-Drawn Slipstream Wind Contrails Behind Wingtips & Tail */}
+    {/* Hand-Drawn Slipstream Wind Contrails Behind Wingtips & Tail */}
     <path
       d="M4 16C10 15 16 17 22 17"
       stroke="#FBEEE0"
@@ -389,14 +389,7 @@ export const SketchbookPaperPlaneDoodle: React.FC<{ className?: string }> = ({
       strokeLinecap="round"
       strokeDasharray="2.5 4"
       opacity="0.65"
-    >
-      <animate
-        attributeName="stroke-dashoffset"
-        values="0;13"
-        dur="0.85s"
-        repeatCount="indefinite"
-      />
-    </path>
+    />
     <path
       d="M2 26C9 26 16 26 23 26"
       stroke="#E59B63"
@@ -404,14 +397,7 @@ export const SketchbookPaperPlaneDoodle: React.FC<{ className?: string }> = ({
       strokeLinecap="round"
       strokeDasharray="3.5 4.5"
       opacity="0.9"
-    >
-      <animate
-        attributeName="stroke-dashoffset"
-        values="0;16"
-        dur="0.7s"
-        repeatCount="indefinite"
-      />
-    </path>
+    />
     <path
       d="M4 36C10 37 16 35 22 35"
       stroke="#FBEEE0"
@@ -419,25 +405,10 @@ export const SketchbookPaperPlaneDoodle: React.FC<{ className?: string }> = ({
       strokeLinecap="round"
       strokeDasharray="2.5 4"
       opacity="0.65"
-    >
-      <animate
-        attributeName="stroke-dashoffset"
-        values="0;13"
-        dur="0.95s"
-        repeatCount="indefinite"
-      />
-    </path>
+    />
 
-    {/* Gently Banking Origami Airframe Group */}
+    {/* Origami Airframe Group */}
     <g>
-      <animateTransform
-        attributeName="transform"
-        type="rotate"
-        values="-3.5 46 26; 3.5 46 26; -3.5 46 26"
-        dur="2.4s"
-        repeatCount="indefinite"
-      />
-
       {/* Upper Swept Origami Wing (Warm Parchment Cream) */}
       <path
         d="M72 26L22 7L31 22.5L72 26Z"
@@ -514,43 +485,21 @@ export const SketchbookOrbitRocketDoodle: React.FC<{ className?: string }> = ({
   className = '',
 }) => (
   <g className={className} aria-hidden="true">
-    {/* Looping Exhaust Smoke Rings & Plasma Sparks */}
-    <circle cx="6" cy="19" r="2" fill="#E59B63" opacity="0.85">
-      <animate attributeName="cx" values="15;2" dur="0.5s" repeatCount="indefinite" />
-      <animate attributeName="opacity" values="0.95;0" dur="0.5s" repeatCount="indefinite" />
-      <animate attributeName="r" values="1.4;3.1" dur="0.5s" repeatCount="indefinite" />
-    </circle>
-    <circle cx="9" cy="25" r="1.5" fill="#FBEEE0" opacity="0.8">
-      <animate attributeName="cx" values="16;4" dur="0.42s" repeatCount="indefinite" />
-      <animate attributeName="opacity" values="0.9;0" dur="0.42s" repeatCount="indefinite" />
-      <animate attributeName="r" values="1.2;2.5" dur="0.42s" repeatCount="indefinite" />
-    </circle>
+    {/* Exhaust Smoke Rings & Plasma Sparks */}
+    <circle cx="8" cy="19" r="2.2" fill="#E59B63" opacity="0.75" />
+    <circle cx="11" cy="25" r="1.6" fill="#FBEEE0" opacity="0.7" />
 
-    {/* Outer Thruster Plasma Plume (Looping Pulse) */}
+    {/* Outer Thruster Plasma Plume */}
     <path
       d="M22 15.5L4 22L22 28.5V15.5Z"
       fill="#E59B63"
       stroke="#0B1018"
       strokeWidth="1.7"
       strokeLinejoin="round"
-    >
-      <animate
-        attributeName="d"
-        values="M22 15.5L5 22L22 28.5V15.5Z;M22 14.2L1 22L22 29.8V14.2Z;M22 15.5L5 22L22 28.5V15.5Z"
-        dur="0.26s"
-        repeatCount="indefinite"
-      />
-    </path>
+    />
 
     {/* Inner White-Hot Core Plume */}
-    <path d="M22 18L11 22L22 26V18Z" fill="#FBEEE0">
-      <animate
-        attributeName="d"
-        values="M22 18L12 22L22 26V18Z;M22 17.2L8 22L22 26.8V17.2Z;M22 18L12 22L22 26V18Z"
-        dur="0.2s"
-        repeatCount="indefinite"
-      />
-    </path>
+    <path d="M22 18L11 22L22 26V18Z" fill="#FBEEE0" />
 
     {/* Swept Delta Stabilizer Fins (Terracotta Copper) */}
     <path

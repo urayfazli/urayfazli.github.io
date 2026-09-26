@@ -183,92 +183,33 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
 
   useEffect(() => {
     let railWidth = railRef.current ? railRef.current.clientWidth : window.innerWidth;
+    let cachedMaxScroll = 1;
     let targetProgress = 0;
-    let currentProgress = 0;
-    let velocity = 0;
-    let targetDirection = 1; // +1 = scrolling down (right), -1 = scrolling up (left)
-    let smoothDirection = 1;
-    let smoothSpeed = 0;
-    let lastScrollY = 0;
-    let lastFrameTime = performance.now();
+    let lastScrollY = window.scrollY || 0;
+    let currentDirection = 1;
+    let lastRenderedDirection = 0;
+    let lastRenderedPct = -1;
     let rafId = 0;
 
-    const readRawScrollMetrics = (isScrollEvent = false) => {
-      const currentScroll = Math.max(
-        0,
-        window.scrollY ||
-          window.pageYOffset ||
-          document.documentElement.scrollTop ||
-          document.body.scrollTop ||
-          0
-      );
-
+    const measureLayout = () => {
+      if (railRef.current) {
+        railWidth = railRef.current.clientWidth;
+      }
       const docHeight = Math.max(
         document.documentElement.scrollHeight,
-        document.body.scrollHeight,
-        document.documentElement.offsetHeight,
-        document.body.offsetHeight
+        document.body.scrollHeight
       );
       const winHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-      const maxScroll = Math.max(0, docHeight - winHeight);
-
-      targetProgress = maxScroll > 2 ? Math.min(1, Math.max(0, currentScroll / maxScroll)) : 0;
-
-      const isNowScrolled = currentScroll > 20;
-      if (isNowScrolled !== scrolledRef.current) {
-        scrolledRef.current = isNowScrolled;
-        setScrolled(isNowScrolled);
-      }
-
-      if (isScrollEvent) {
-        const delta = currentScroll - lastScrollY;
-        if (Math.abs(delta) > 0.8) {
-          targetDirection = delta > 0 ? 1 : -1;
-          lastScrollY = currentScroll;
-        }
-      } else {
-        lastScrollY = currentScroll;
-      }
+      cachedMaxScroll = Math.max(1, docHeight - winHeight);
     };
 
-    const stepPhysics = (now: number) => {
-      // Frame-rate independent delta time (clamped to avoid huge jumps on tab switch)
-      const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTime) / 1000));
-      lastFrameTime = now;
-
-      // Critically damped spring physics for silky-smooth position tracking
-      const stiffness = 190;
-      const damping = 26;
-      const force = (targetProgress - currentProgress) * stiffness;
-      velocity = (velocity + force * dt) * Math.exp(-damping * dt);
-      currentProgress += velocity * dt;
-
-      // Snap micro-epsilon when settled at boundaries
-      if (Math.abs(targetProgress - currentProgress) < 0.00015 && Math.abs(velocity) < 0.0005) {
-        currentProgress = targetProgress;
-        velocity = 0;
-      }
-
-      const clampedProgress = Math.min(1, Math.max(0, currentProgress));
-
-      // Normalized instantaneous speed (0..1) with smooth exponential decay
-      const rawSpeed = Math.min(1, Math.abs(velocity) * 2.4 + Math.abs(targetProgress - currentProgress) * 6);
-      const speedLerp = 1 - Math.exp(-14 * dt);
-      smoothSpeed += (rawSpeed - smoothSpeed) * speedLerp;
-
-      // Smoothly interpolate rocket facing direction (-1..+1) so turnaround banks fluidly
-      const dirLerp = 1 - Math.exp(-16 * dt);
-      smoothDirection += (targetDirection - smoothDirection) * dirLerp;
-      const effectiveScaleX =
-        Math.abs(smoothDirection) < 0.18
-          ? smoothDirection < 0
-            ? -0.18
-            : 0.18
-          : smoothDirection;
+    const renderScrollProgress = () => {
+      rafId = 0;
+      const clampedProgress = Math.min(1, Math.max(0, targetProgress));
 
       // 1. Update Progress Fill Bar on GPU via scaleX
       if (fillBarRef.current) {
-        fillBarRef.current.style.transform = `scaleX(${clampedProgress.toFixed(5)})`;
+        fillBarRef.current.style.transform = `scaleX(${clampedProgress.toFixed(4)})`;
       }
 
       // 2. Update Rocket Carriage X Position on GPU via translate3d
@@ -276,143 +217,82 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         const w = railWidth || window.innerWidth;
         const minX = 18;
         const maxX = Math.max(minX, w - 24);
-        const rawX = clampedProgress * w;
-        const clampedX = Math.min(Math.max(rawX, minX), maxX);
-        rocketCarriageRef.current.style.transform = `translate3d(${clampedX.toFixed(2)}px, -50%, 0)`;
+        const clampedX = Math.min(Math.max(clampedProgress * w, minX), maxX);
+        rocketCarriageRef.current.style.transform = `translate3d(${clampedX.toFixed(1)}px, -50%, 0)`;
       }
 
-      // 3. Update Rocket Body Hover Bob, Banking Pitch & Smooth Turnaround
-      if (rocketBodyRef.current) {
-        const idleBobY = Math.sin(now * 0.0042) * (0.9 + smoothSpeed * 0.7);
-        const pitchDeg = -smoothSpeed * 4.5 * Math.sign(smoothDirection);
-        const boostScale = 1 + smoothSpeed * 0.07;
-        rocketBodyRef.current.style.transform = `translate3d(0px, ${idleBobY.toFixed(2)}px, 0) scale(${(
-          effectiveScaleX * boostScale
-        ).toFixed(3)}, ${boostScale.toFixed(3)}) rotate(${pitchDeg.toFixed(2)}deg)`;
+      // 3. Only update Rocket Facing Direction when direction actually changes
+      if (rocketBodyRef.current && currentDirection !== lastRenderedDirection) {
+        lastRenderedDirection = currentDirection;
+        rocketBodyRef.current.style.transform = `scaleX(${currentDirection})`;
       }
 
-      // 4. Update Multi-Stage Thruster Plume & Afterburner Glow
-      const flameOsc = Math.sin(now * 0.032) * 0.14 + Math.cos(now * 0.051) * 0.08;
-      const outerScaleX = Math.max(0.45, 0.62 + smoothSpeed * 1.05 + flameOsc * (0.35 + smoothSpeed));
-      const innerScaleX = Math.max(0.4, 0.54 + smoothSpeed * 0.92 + flameOsc * 0.4);
-      const outerOpacity = Math.min(1, 0.72 + smoothSpeed * 0.28);
-
-      if (outerFlameRef.current) {
-        outerFlameRef.current.style.transform = `scaleX(${outerScaleX.toFixed(3)})`;
-        outerFlameRef.current.style.opacity = outerOpacity.toFixed(2);
-      }
-      if (innerFlameRef.current) {
-        innerFlameRef.current.style.transform = `scaleX(${innerScaleX.toFixed(3)})`;
-      }
-      if (afterburnerGlowRef.current) {
-        const glowOpacity = 0.18 + smoothSpeed * 0.48 + Math.max(0, flameOsc * 0.2);
-        afterburnerGlowRef.current.setAttribute('opacity', glowOpacity.toFixed(2));
-        afterburnerGlowRef.current.setAttribute('r', (4.8 + smoothSpeed * 2.8).toFixed(2));
-      }
-
-      // 5. Smooth Continuous Exhaust Sparks
-      const isAtEnd = clampedProgress >= 0.985;
-      const sparkIntensity = isAtEnd ? 0.95 : Math.min(1, smoothSpeed * 1.5);
-      if (spark1Ref.current) {
-        const phase1 = ((now * 0.0038) % 1);
-        const sx1 = 10 - phase1 * (12 + smoothSpeed * 8);
-        const sy1 = 10.2 + Math.sin(phase1 * Math.PI * 2) * 1.4;
-        const op1 = (1 - phase1) * sparkIntensity;
-        spark1Ref.current.setAttribute('cx', sx1.toFixed(2));
-        spark1Ref.current.setAttribute('cy', sy1.toFixed(2));
-        spark1Ref.current.setAttribute('opacity', op1.toFixed(2));
-      }
-      if (spark2Ref.current) {
-        const phase2 = (((now * 0.0038) + 0.5) % 1);
-        const sx2 = 10 - phase2 * (11 + smoothSpeed * 7);
-        const sy2 = 13.8 - Math.sin(phase2 * Math.PI * 2) * 1.4;
-        const op2 = (1 - phase2) * sparkIntensity;
-        spark2Ref.current.setAttribute('cx', sx2.toFixed(2));
-        spark2Ref.current.setAttribute('cy', sy2.toFixed(2));
-        spark2Ref.current.setAttribute('opacity', op2.toFixed(2));
-      }
-
-      if (portholeLedRef.current) {
-        portholeLedRef.current.setAttribute('fill', isAtEnd ? '#34D399' : '#22C55E');
-      }
-
-      // 6. Update Telemetry Percentage Readout & ARIA without React re-renders
+      // 4. Only mutate textContent and ARIA when integer percentage changes
       const pct = Math.round(clampedProgress * 100);
-      if (percentTextRef.current) {
-        percentTextRef.current.textContent = `${pct}%`;
-        const showPct = smoothSpeed > 0.03 || (clampedProgress > 0.015 && clampedProgress < 0.995);
-        percentTextRef.current.style.opacity = showPct ? '0.92' : '0';
-      }
-      if (railRef.current) {
-        railRef.current.setAttribute('aria-valuenow', String(pct));
-      }
-
-      const isSettled =
-        Math.abs(targetProgress - currentProgress) === 0 &&
-        Math.abs(velocity) === 0 &&
-        smoothSpeed < 0.004 &&
-        Math.abs(targetDirection - smoothDirection) < 0.01;
-
-      if (isSettled) {
-        rafId = 0;
-      } else {
-        rafId = window.requestAnimationFrame(stepPhysics);
+      if (pct !== lastRenderedPct) {
+        lastRenderedPct = pct;
+        if (percentTextRef.current) {
+          percentTextRef.current.textContent = `${pct}%`;
+          percentTextRef.current.style.opacity = pct > 1 && pct < 100 ? '0.92' : '0';
+        }
+        if (railRef.current) {
+          railRef.current.setAttribute('aria-valuenow', String(pct));
+        }
       }
     };
 
-    const wakePhysics = () => {
+    const scheduleRender = () => {
       if (!rafId) {
-        lastFrameTime = performance.now();
-        rafId = window.requestAnimationFrame(stepPhysics);
+        rafId = window.requestAnimationFrame(renderScrollProgress);
       }
     };
 
     const onScroll = () => {
-      readRawScrollMetrics(true);
-      wakePhysics();
-    };
-    const onResize = () => {
-      if (railRef.current) {
-        railWidth = railRef.current.clientWidth;
+      const currentScroll = Math.max(0, window.scrollY || window.pageYOffset || 0);
+      if (currentScroll > cachedMaxScroll) {
+        measureLayout();
       }
-      readRawScrollMetrics(false);
-      wakePhysics();
+      targetProgress = cachedMaxScroll > 2 ? Math.min(1, Math.max(0, currentScroll / cachedMaxScroll)) : 0;
+
+      const isNowScrolled = currentScroll > 20;
+      if (isNowScrolled !== scrolledRef.current) {
+        scrolledRef.current = isNowScrolled;
+        setScrolled(isNowScrolled);
+      }
+
+      const delta = currentScroll - lastScrollY;
+      if (Math.abs(delta) > 1.5) {
+        currentDirection = delta > 0 ? 1 : -1;
+        lastScrollY = currentScroll;
+      }
+
+      scheduleRender();
     };
 
-    readRawScrollMetrics(false);
-    currentProgress = targetProgress;
-    if (railRef.current) {
-      railWidth = railRef.current.clientWidth;
-    }
+    const onResize = () => {
+      measureLayout();
+      onScroll();
+    };
+
+    measureLayout();
+    onScroll();
+
+    // Re-measure once after initial content & images settle
+    const settleTimer = window.setTimeout(() => {
+      measureLayout();
+      onScroll();
+    }, 1000);
 
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize, { passive: true });
 
-    let resizeObserver: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        if (railRef.current) {
-          railWidth = railRef.current.clientWidth;
-        }
-        readRawScrollMetrics(false);
-        wakePhysics();
-      });
-      if (railRef.current) {
-        resizeObserver.observe(railRef.current);
-      }
-    }
-
-    wakePhysics();
-
     return () => {
+      window.clearTimeout(settleTimer);
       if (rafId) {
         window.cancelAnimationFrame(rafId);
       }
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
     };
   }, []);
 

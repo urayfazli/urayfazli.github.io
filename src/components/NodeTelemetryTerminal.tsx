@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface NodeTelemetryTerminalProps {
@@ -150,13 +150,30 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
   const [copiedCli, setCopiedCli] = useState<boolean>(false);
   const [lastPingTimestamp, setLastPingTimestamp] = useState<string>('00:00:02');
 
+  const terminalRef = useRef<HTMLDivElement | null>(null);
   const activeNode =
     TELEMETRY_NODES.find((node) => node.id === activeId) || TELEMETRY_NODES[0];
 
-  // Authentic block progression with tabular precision (pauses when tab is hidden)
+  // Authentic block progression with tabular precision (pauses when tab is hidden or scrolled out of viewport)
   useEffect(() => {
+    let isVisible = false;
+    const el = terminalRef.current;
+
+    let observer: IntersectionObserver | null = null;
+    if (el && 'IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          isVisible = entry.isIntersecting;
+        },
+        { threshold: 0.05 }
+      );
+      observer.observe(el);
+    } else {
+      isVisible = true;
+    }
+
     const timer = window.setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || !isVisible) return;
       setBlockOffsets((prev) => ({
         aptos: prev.aptos + 1,
         sei: prev.sei + 1,
@@ -169,9 +186,12 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       setLastPingTimestamp(`${hh}:${mm}:${ss}`);
-    }, 3500);
+    }, 10000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      if (observer) observer.disconnect();
+      window.clearInterval(timer);
+    };
   }, []);
 
   const handlePingRpc = () => {
@@ -208,7 +228,10 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
   const currentLatency = Math.max(8, activeNode.baseLatencyMs + latencyJitter);
 
   return (
-    <div className="mb-5 rounded-xl bg-[#0a0f17] border border-[#fbeee0]/25 overflow-hidden">
+    <div
+      ref={terminalRef}
+      className="mb-5 rounded-xl bg-[#0a0f17] border border-[#fbeee0]/25 overflow-hidden"
+    >
       {/* Terminal Top Bar: Natural Title + Functional Segmented Node Switcher */}
       <div className="px-3.5 py-2.5 bg-[#0e1520] border-b border-[#fbeee0]/15 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">

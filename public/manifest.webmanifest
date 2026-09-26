@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Uray Fazli Alman - Blockchain Node Operator Portfolio",
+  "short_name": "Uray Node",
+  "description": "Portfolio of Uray Fazli Alman, experienced blockchain node operator for Aptos Network, Sei Network, and SubQuery Network.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0c1017",
+  "theme_color": "#0f141d",
+  "icons": [
+    {
+      "src": "./favicon.svg?v=5",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

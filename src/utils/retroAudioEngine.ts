@@ -7,9 +7,12 @@
  */
 
 import { BACKSOUND_TRACKS, RetroTrack } from '../data/backsoundData';
+import { fetchArrayBufferWithCache } from './cacheManager';
 
 export type { RetroTrack };
 export const RETRO_TRACKS = BACKSOUND_TRACKS;
+
+const AUDIO_PREFS_CACHE_KEY = 'uray_portfolio_audio_prefs_v1';
 
 export type CharacterSfxType =
   | 'coder'
@@ -77,6 +80,63 @@ class RetroAudioEngine {
   private synthTickCount = 0;
   private isWidgetVisible = true;
   private listeners: Array<() => void> = [];
+
+  constructor() {
+    this.restoreCachedPreferences();
+  }
+
+  private restoreCachedPreferences() {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(AUDIO_PREFS_CACHE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        volume?: number;
+        previousNonZeroVolume?: number;
+        isShuffle?: boolean;
+        currentTrackIndex?: number;
+      };
+      if (typeof parsed.volume === 'number' && parsed.volume >= 0 && parsed.volume <= 1) {
+        this.volume = parsed.volume;
+      }
+      if (
+        typeof parsed.previousNonZeroVolume === 'number' &&
+        parsed.previousNonZeroVolume > 0 &&
+        parsed.previousNonZeroVolume <= 1
+      ) {
+        this.previousNonZeroVolume = parsed.previousNonZeroVolume;
+      }
+      if (typeof parsed.isShuffle === 'boolean') {
+        this.isShuffle = parsed.isShuffle;
+      }
+      if (
+        typeof parsed.currentTrackIndex === 'number' &&
+        parsed.currentTrackIndex >= 0 &&
+        parsed.currentTrackIndex < this.tracks.length
+      ) {
+        this.currentTrackIndex = parsed.currentTrackIndex;
+      }
+    } catch {
+      // Ignore storage parse errors
+    }
+  }
+
+  private saveCachedPreferences() {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(
+        AUDIO_PREFS_CACHE_KEY,
+        JSON.stringify({
+          volume: this.volume,
+          previousNonZeroVolume: this.previousNonZeroVolume,
+          isShuffle: this.isShuffle,
+          currentTrackIndex: this.currentTrackIndex,
+        })
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }
 
   private initContext() {
     try {
@@ -197,7 +257,7 @@ class RetroAudioEngine {
   }
 
   /**
-   * Fetch candidate URLs for a track, sniff real MIME type from magic header, and cache as a playable Blob URL
+   * Fetch candidate URLs for a track via multi-tier CacheStorage + memory, sniff real MIME type from magic header, and cache as a playable Blob URL
    */
   private async resolveBlobUrlForTrack(track: RetroTrack): Promise<string | null> {
     const candidates = [track.audioSrc, track.fallbackAudioSrc].filter(
@@ -209,10 +269,8 @@ class RetroAudioEngine {
       if (cached) return cached;
 
       try {
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const buf = await res.arrayBuffer();
-        if (buf.byteLength < 64) continue;
+        const buf = await fetchArrayBufferWithCache(url);
+        if (!buf || buf.byteLength < 64) continue;
         const mime = this.detectMimeTypeFromBuffer(buf);
         const blobUrl = URL.createObjectURL(new Blob([buf], { type: mime }));
         this.blobUrlCache.set(url, blobUrl);
@@ -640,6 +698,7 @@ class RetroAudioEngine {
     } else {
       this.currentTrackIndex = (this.currentTrackIndex + 1) % this.tracks.length;
     }
+    this.saveCachedPreferences();
 
     if (wasPlaying) {
       this.start();
@@ -658,6 +717,7 @@ class RetroAudioEngine {
       this.currentTrackIndex =
         (this.currentTrackIndex - 1 + this.tracks.length) % this.tracks.length;
     }
+    this.saveCachedPreferences();
 
     if (wasPlaying) {
       this.start();
@@ -669,6 +729,7 @@ class RetroAudioEngine {
   public playRandomTrack() {
     this.stopForTrackSwitch();
     this.currentTrackIndex = this.getNextRandomTrackIndex();
+    this.saveCachedPreferences();
     this.start();
   }
 
@@ -677,6 +738,7 @@ class RetroAudioEngine {
     const wasPlaying = this.isPlaying;
     this.stopForTrackSwitch();
     this.currentTrackIndex = index;
+    this.saveCachedPreferences();
     if (wasPlaying) {
       this.start();
     } else {
@@ -689,6 +751,7 @@ class RetroAudioEngine {
     if (this.isShuffle) {
       this.shuffleBag = [];
     }
+    this.saveCachedPreferences();
     this.notify();
   }
 
@@ -716,6 +779,7 @@ class RetroAudioEngine {
       this.htmlAudio.volume = this.volume;
       this.htmlAudio.muted = this.volume === 0;
     }
+    this.saveCachedPreferences();
     this.notify();
   }
 

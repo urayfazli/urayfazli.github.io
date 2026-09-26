@@ -12,7 +12,7 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToTop }) => {
   const { lang } = useLanguage();
 
   return (
-    <footer className="w-full border-t border-[#fbeee0]/10 bg-[#0b0e14]/90 backdrop-blur-md pt-10 pb-24 sm:pb-12 text-[#9a8978] relative z-10">
+    <footer className="w-full border-t border-[#fbeee0]/10 bg-[#0b0e14]/95 pt-10 pb-24 sm:pb-12 text-[#9a8978] relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
           {/* Brand & Title */}

@@ -48,7 +48,7 @@ export const AboutCoderCharacter: React.FC = () => {
           handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer group/char focus:outline-none will-change-[transform,opacity]"
+      className="relative inline-flex items-center select-none cursor-pointer group/char focus:outline-none"
     >
       {/* Interactive Speech Bubble Above Character Head */}
       <AnimatePresence>
@@ -195,26 +195,22 @@ export const AboutCoderCharacter: React.FC = () => {
             </g>
           ) : (
             <g>
-              {/* Focused Blinking LED Eyes */}
-              <motion.rect
+              {/* Focused LED Eyes */}
+              <rect
                 x="34"
                 y="27"
                 width="5"
                 height="7"
                 rx="2.5"
                 fill="#FBEEE0"
-                animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                transition={{ duration: 3.8, repeat: Infinity, times: [0, 0.46, 0.49, 0.52, 1] }}
               />
-              <motion.rect
+              <rect
                 x="53"
                 y="27"
                 width="5"
                 height="7"
                 rx="2.5"
                 fill="#FBEEE0"
-                animate={{ scaleY: [1, 1, 0.1, 1, 1] }}
-                transition={{ duration: 3.8, repeat: Infinity, times: [0, 0.46, 0.49, 0.52, 1] }}
               />
               {/* Subtle Cheek Glow */}
               <circle cx="32" cy="35" r="1.5" fill="#9D613C" fillOpacity="0.6" />

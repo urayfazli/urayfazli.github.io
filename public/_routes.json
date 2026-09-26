@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/audio/*",
+    "/favicon.svg",
+    "/manifest.webmanifest",
+    "/sw.js"
+  ]
+}
