@@ -12,16 +12,17 @@ export type DjBotMood = 'greeting' | 'normal' | 'angry' | 'dizzy';
  * Grooves, bobs head, waves hello on initial visit, gets hilariously angry when user stays too long,
  * gets dizzy/motion-sick when the user scrolls too fast, and reacts playfully when dragged across the screen.
  */
-const BGMCharacterAvatar: React.FC<{
+const BGMCharacterAvatar = React.memo<{
   isPlaying: boolean;
   isExpanded: boolean;
   isDragging: boolean;
   mood: DjBotMood;
   step: number;
-}> = ({ isPlaying, isExpanded, isDragging, mood, step }) => {
+}>(({ isPlaying, isExpanded, isDragging, mood, step }) => {
   const isAngry = mood === 'angry' && !isDragging;
   const isDizzy = mood === 'dizzy' && !isDragging;
   const isGreeting = mood === 'greeting' && !isDragging;
+  const isActiveBody = isPlaying || isAngry || isDizzy || isGreeting || isDragging;
 
   return (
     <div className="relative w-16 h-18 sm:w-24 sm:h-25 flex items-center justify-center pointer-events-none select-none">
@@ -135,7 +136,7 @@ const BGMCharacterAvatar: React.FC<{
 
       <svg
         viewBox="0 0 110 115"
-        className="w-full h-full overflow-visible drop-shadow-[0_8px_14px_rgba(0,0,0,0.7)]"
+        className="w-full h-full overflow-visible"
         fill="none"
       >
         {/* Ground Shadow (shrinks slightly when lifted/dragged) */}
@@ -179,7 +180,7 @@ const BGMCharacterAvatar: React.FC<{
               ? { x: 0, y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }
               : isPlaying
               ? { x: 0, y: [0, -2.5, 0], rotate: 0 }
-              : { x: 0, y: [0, -1, 0], rotate: 0 }
+              : { x: 0, y: 0, rotate: 0 }
           }
           transition={{
             duration: isDizzy
@@ -190,8 +191,8 @@ const BGMCharacterAvatar: React.FC<{
               ? 0.6
               : isPlaying
               ? 0.45
-              : 2,
-            repeat: isDragging ? 0 : Infinity,
+              : 0.3,
+            repeat: isActiveBody && !isDragging ? Infinity : 0,
             ease: 'easeInOut',
           }}
           style={{ transformBox: 'fill-box', transformOrigin: '50% 70%' }}
@@ -278,7 +279,7 @@ const BGMCharacterAvatar: React.FC<{
             strokeWidth="1.5"
             style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
             animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: Infinity }}
+            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: isPlaying || isAngry ? Infinity : 0 }}
           />
           <circle cx="41" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
 
@@ -331,7 +332,7 @@ const BGMCharacterAvatar: React.FC<{
             strokeWidth="1.5"
             style={{ transformBox: 'fill-box', transformOrigin: '50% 50%' }}
             animate={isPlaying || isAngry ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: Infinity }}
+            transition={{ duration: isAngry ? 0.25 : 0.35, repeat: isPlaying || isAngry ? Infinity : 0 }}
           />
           <circle cx="69" cy="83" r="2" fill={isAngry ? '#EF4444' : '#E59B63'} />
         </motion.g>
@@ -457,9 +458,12 @@ const BGMCharacterAvatar: React.FC<{
                 ? { scale: [1, 1.55, 1], opacity: [1, 0.6, 1] }
                 : isPlaying
                 ? { scale: [1, 1.4, 1], opacity: [1, 0.7, 1] }
-                : { scale: [1, 1.1, 1], opacity: 1 }
+                : { scale: 1, opacity: 1 }
             }
-            transition={{ duration: isAngry || isDizzy ? 0.35 : 0.7, repeat: Infinity }}
+            transition={{
+              duration: isAngry || isDizzy ? 0.35 : 0.7,
+              repeat: isAngry || isDizzy || isPlaying ? Infinity : 0,
+            }}
           />
 
           {/* Left & Right Cushioned DJ Earcups */}
@@ -739,11 +743,11 @@ const BGMCharacterAvatar: React.FC<{
               ? { y: [-6, 4, -6], x: [-2, 2, -2] }
               : isPlaying
               ? { y: [0, -5, 0], x: [0, 2, 0] }
-              : { x: 0, y: [0, -2, 0] }
+              : { x: 0, y: 0 }
           }
           transition={{
-            duration: isDizzy ? 0.55 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
-            repeat: Infinity,
+            duration: isDizzy ? 0.55 : isAngry ? 0.24 : isPlaying ? 0.45 : 0.3,
+            repeat: isDragging || isDizzy || isAngry || isPlaying ? Infinity : 0,
           }}
         />
 
@@ -787,11 +791,11 @@ const BGMCharacterAvatar: React.FC<{
               ? { y: [4, -6, 4], x: [2, -2, 2] }
               : isPlaying
               ? { y: [-4, 1, -4], x: [0, -2, 0] }
-              : { x: 0, y: [0, -2, 0] }
+              : { x: 0, y: 0 }
           }
           transition={{
-            duration: isDizzy ? 0.55 : isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 1.8,
-            repeat: Infinity,
+            duration: isDizzy ? 0.55 : isGreeting ? 0.36 : isAngry ? 0.24 : isPlaying ? 0.45 : 0.3,
+            repeat: isActiveBody ? Infinity : 0,
           }}
         />
 
@@ -809,7 +813,7 @@ const BGMCharacterAvatar: React.FC<{
       </svg>
     </div>
   );
-};
+});
 
 const NPC_GREETING_DIALOGUE_ID =
   'Halo ser! Selamat datang di web Uray! Yuk nyalain BGM sambil berburu airdrop & testnet! 🎧✨';
@@ -1545,7 +1549,12 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
 
       const typeNextChar = () => {
         if (isCancelled) return;
-        charIndex += 1;
+        const remaining = fullDialogueText.length - charIndex;
+        const c1 = fullDialogueText[charIndex] || '';
+        const isPunct =
+          c1 === '.' || c1 === '!' || c1 === '?' || c1 === ',' || c1 === ':' || c1 === ';' || c1 === '—';
+        const stepChars = isPunct || remaining <= 1 ? 1 : 2;
+        charIndex += stepChars;
         setTypedText(fullDialogueText.slice(0, charIndex));
 
         if (charIndex >= fullDialogueText.length) {
@@ -1557,7 +1566,7 @@ export const RetroAudioPlayer: React.FC<RetroAudioPlayerProps> = ({ isReady = tr
         const nextChar = fullDialogueText[charIndex] || '';
 
         // Natural speech/reading pause ("jeda") on punctuation marks inside interactive text
-        let delay = mood === 'angry' || mood === 'dizzy' ? 20 : 28;
+        let delay = mood === 'angry' || mood === 'dizzy' ? 32 : 46;
         if (
           (justTypedChar === '.' || justTypedChar === '!' || justTypedChar === '?') &&
           nextChar === ' '

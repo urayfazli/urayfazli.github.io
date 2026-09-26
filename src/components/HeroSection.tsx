@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   DoodleRays,
@@ -28,6 +28,43 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const { lang } = useLanguage();
   const [heroBounce, setHeroBounce] = useState(false);
+  const orrerySvgRef = useRef<SVGSVGElement | null>(null);
+
+  // Pause Solar System Orrery SVG animations when scrolled out of viewport or tab is hidden to prevent GPU/CPU drain
+  useEffect(() => {
+    const svgEl = orrerySvgRef.current;
+    if (!svgEl) return;
+
+    let isIntersecting = true;
+
+    const syncAnimationState = () => {
+      if (!svgEl || typeof svgEl.pauseAnimations !== 'function') return;
+      if (document.hidden || !isIntersecting) {
+        svgEl.pauseAnimations();
+      } else {
+        svgEl.unpauseAnimations();
+      }
+    };
+
+    let observer: IntersectionObserver | null = null;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          isIntersecting = entry.isIntersecting;
+          syncAnimationState();
+        },
+        { threshold: 0.05 }
+      );
+      observer.observe(svgEl);
+    }
+
+    document.addEventListener('visibilitychange', syncAnimationState);
+
+    return () => {
+      if (observer) observer.disconnect();
+      document.removeEventListener('visibilitychange', syncAnimationState);
+    };
+  }, []);
 
   const handleHeroCharacterPress = () => {
     robotSound.play('hero');
@@ -316,6 +353,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     Titan moon, Jupiter, plus the Validator Rocket & Origami Paper Plane
                    ===================================================================== */}
                 <svg
+                  ref={orrerySvgRef}
                   viewBox="0 0 600 600"
                   fill="none"
                   aria-hidden="true"
@@ -334,11 +372,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                   {/* Helios Solar Beacon (Top-Left Perihelion Anchor with Rotating Corona) */}
                   <g transform="translate(46, 46)">
-                    {/* Pulsing Solar Corona Halo */}
-                    <circle r="14" fill="#E59B63" fillOpacity="0.16">
-                      <animate attributeName="r" values="12;16.5;12" dur="3.2s" repeatCount="indefinite" />
-                      <animate attributeName="fill-opacity" values="0.12;0.26;0.12" dur="3.2s" repeatCount="indefinite" />
-                    </circle>
+                    {/* Soft Solar Corona Halo */}
+                    <circle r="14" fill="#E59B63" fillOpacity="0.18" />
                     {/* Rotating 8-Point Solar Rays */}
                     <g>
                       <animateTransform
@@ -346,7 +381,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         type="rotate"
                         from="0"
                         to="360"
-                        dur="18s"
+                        dur="24s"
                         repeatCount="indefinite"
                       />
                       <line x1="0" y1="-13.5" x2="0" y2="-10.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
@@ -364,7 +399,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </g>
 
                   {/* -------------------------------------------------------------------
-                      ORBIT 1 (INNER TERRESTRIAL BELT — CLOCKWISE, 11.5s PERIOD)
+                      ORBIT 1 (INNER TERRESTRIAL BELT — CLOCKWISE, 14s PERIOD)
                       Planets: Mercury (Cratered World) & Venus (Golden Cloud Sphere)
                      ------------------------------------------------------------------- */}
                   <g transform="rotate(2 300 300)">
@@ -375,31 +410,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       strokeDasharray="2 7"
                       strokeLinecap="round"
                       opacity="0.32"
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        values="0;-36"
-                        dur="2.4s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
+                    />
 
                     {/* Planet 1: Mercury (Compact Cratered Terrestrial Sphere) */}
-                    <g style={{ filter: 'drop-shadow(0px 2px 3px rgba(11, 16, 24, 0.85))' }}>
+                    <g>
                       <circle r="5.5" fill="#DEC6B0" stroke="#0B1018" strokeWidth="1.6" />
                       <path d="M 1.5,-5.2 A 5.5,5.5 0 0,1 1.5,5.2 A 4,5.3 0 0,0 1.5,-5.2 Z" fill="#9D613C" opacity="0.65" />
                       <circle cx="-1.8" cy="-1.2" r="1.1" fill="#9D613C" />
                       <circle cx="0.8" cy="2" r="0.8" fill="#9D613C" />
                       <animateMotion
                         path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
-                        dur="11.5s"
+                        dur="14s"
                         repeatCount="indefinite"
                         rotate="0"
                       />
                     </g>
 
                     {/* Planet 2: Venus (Golden Amber Cloud-Banded World — Opposite Phase) */}
-                    <g style={{ filter: 'drop-shadow(0px 2px 4px rgba(11, 16, 24, 0.85))' }}>
+                    <g>
                       <circle r="9" fill="#E59B63" fillOpacity="0.18" />
                       <circle r="6.8" fill="#E59B63" stroke="#0B1018" strokeWidth="1.7" />
                       <path d="M -5.2,-2 Q 0,-3.8 5.2,-1.5" stroke="#FBEEE0" strokeWidth="1.3" strokeLinecap="round" fill="none" />
@@ -407,8 +435,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <circle cx="-2.2" cy="-2.4" r="1.1" fill="#FBEEE0" />
                       <animateMotion
                         path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
-                        dur="11.5s"
-                        begin="-5.75s"
+                        dur="14s"
+                        begin="-7s"
                         repeatCount="indefinite"
                         rotate="0"
                       />
@@ -416,7 +444,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </g>
 
                   {/* -------------------------------------------------------------------
-                      ORBIT 2 (MIDDLE ECLIPTIC BELT — COUNTER-CLOCKWISE, 15.5s PERIOD)
+                      ORBIT 2 (MIDDLE ECLIPTIC BELT — COUNTER-CLOCKWISE, 18s PERIOD)
                       Planets: Terra + Orbiting Luna Moon, Mars, & Origami Paper Plane
                      ------------------------------------------------------------------- */}
                   <g transform="rotate(-5 300 300)">
@@ -427,17 +455,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       strokeDasharray="5 8"
                       strokeLinecap="round"
                       opacity="0.45"
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        values="0;-52"
-                        dur="2.8s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
+                    />
 
                     {/* Planet 3: Terra (Earth) + Active Orbiting Luna Moon */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 5px rgba(11, 16, 24, 0.88))' }}>
+                    <g>
                       {/* Luna Sub-Orbit Track */}
                       <circle r="13.5" stroke="#FBEEE0" strokeWidth="0.9" strokeDasharray="2 3" opacity="0.5" />
                       {/* Orbiting Luna Moon */}
@@ -447,7 +468,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           type="rotate"
                           from="0"
                           to="360"
-                          dur="2.8s"
+                          dur="4s"
                           repeatCount="indefinite"
                         />
                         <circle cx="13.5" cy="0" r="2.5" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.2" />
@@ -468,14 +489,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <path d="M -3.5,-6 A 6.5,6.5 0 0,1 3.5,-6" stroke="#FBEEE0" strokeWidth="1.4" strokeLinecap="round" />
                       <animateMotion
                         path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="15.5s"
+                        dur="18s"
                         repeatCount="indefinite"
                         rotate="0"
                       />
                     </g>
 
                     {/* Planet 4: Mars (Red-Terracotta Oxide Planet — Opposite Phase) */}
-                    <g style={{ filter: 'drop-shadow(0px 2px 4px rgba(11, 16, 24, 0.85))' }}>
+                    <g>
                       <circle r="6.4" fill="#C85A32" stroke="#0B1018" strokeWidth="1.7" />
                       {/* Martian Canyon Belt & North Polar Ice Cap */}
                       <path d="M -4.2,0.8 Q 0,2.4 4.2,0.2" stroke="#7C2D12" strokeWidth="1.4" strokeLinecap="round" fill="none" />
@@ -483,22 +504,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <circle cx="-1.8" cy="-1.6" r="1" fill="#E59B63" />
                       <animateMotion
                         path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="15.5s"
-                        begin="-7.75s"
+                        dur="18s"
+                        begin="-9s"
                         repeatCount="indefinite"
                         rotate="0"
                       />
                     </g>
 
                     {/* Origami Paper Plane Gliding on Orbit 2 */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
+                    <g>
                       <g transform="scale(0.45) translate(-46, -26)">
                         <SketchbookPaperPlaneDoodle />
                       </g>
                       <animateMotion
                         path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="15.5s"
-                        begin="-3.8s"
+                        dur="18s"
+                        begin="-4.5s"
                         repeatCount="indefinite"
                         rotate="auto"
                       />
@@ -506,7 +527,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </g>
 
                   {/* -------------------------------------------------------------------
-                      ORBIT 3 (OUTER JOVIAN GAS GIANT BELT — CLOCKWISE, 21s PERIOD)
+                      ORBIT 3 (OUTER JOVIAN GAS GIANT BELT — CLOCKWISE, 24s PERIOD)
                       Planets: Saturn (Double-Ringed Gas Giant + Titan), Jupiter, & Rocket
                      ------------------------------------------------------------------- */}
                   <g transform="rotate(5 300 300)">
@@ -517,17 +538,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       strokeDasharray="8 10"
                       strokeLinecap="round"
                       opacity="0.38"
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        values="0;-72"
-                        dur="3.6s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
+                    />
 
                     {/* Planet 5: Saturn (Ringed Gas Giant with Cassini Division & Titan Moon) */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 6px rgba(11, 16, 24, 0.9))' }}>
+                    <g>
                       {/* Orbiting Titan Moon */}
                       <g>
                         <animateTransform
@@ -535,7 +549,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           type="rotate"
                           from="360"
                           to="0"
-                          dur="4.2s"
+                          dur="5.5s"
                           repeatCount="indefinite"
                         />
                         <circle cx="19" cy="0" r="2.1" fill="#E59B63" stroke="#0B1018" strokeWidth="1.1" />
@@ -583,7 +597,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                       <animateMotion
                         path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="21s"
+                        dur="24s"
                         begin="-2s"
                         repeatCount="indefinite"
                         rotate="0"
@@ -591,7 +605,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </g>
 
                     {/* Planet 6: Jupiter (Banded Storm Giant with Great Red Spot & Io Moon) */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 6px rgba(11, 16, 24, 0.9))' }}>
+                    <g>
                       {/* Orbiting Galilean Moon Io */}
                       <g>
                         <animateTransform
@@ -599,7 +613,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                           type="rotate"
                           from="0"
                           to="360"
-                          dur="3.1s"
+                          dur="4.5s"
                           repeatCount="indefinite"
                         />
                         <circle cx="14.5" cy="0" r="2.1" fill="#22C55E" stroke="#0B1018" strokeWidth="1.1" />
@@ -614,22 +628,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       <ellipse cx="2.6" cy="2.1" rx="2.6" ry="1.6" fill="#C85A32" stroke="#0B1018" strokeWidth="0.9" />
                       <animateMotion
                         path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="21s"
-                        begin="-12.5s"
+                        dur="24s"
+                        begin="-14s"
                         repeatCount="indefinite"
                         rotate="0"
                       />
                     </g>
 
                     {/* Validator Rocket Cruising Along Outer Orbit 3 */}
-                    <g style={{ filter: 'drop-shadow(0px 3px 4px rgba(11, 16, 24, 0.82))' }}>
+                    <g>
                       <g transform="scale(0.48) translate(-39, -22)">
                         <SketchbookOrbitRocketDoodle />
                       </g>
                       <animateMotion
                         path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="21s"
-                        begin="-7.2s"
+                        dur="24s"
+                        begin="-8s"
                         repeatCount="indefinite"
                         rotate="auto"
                       />

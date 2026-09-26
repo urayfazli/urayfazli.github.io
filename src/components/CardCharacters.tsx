@@ -71,7 +71,7 @@ export const AboutCoderCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 96 84"
-        className={`w-20 h-18 sm:w-24 sm:h-20 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+        className={`w-20 h-18 sm:w-24 sm:h-20 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -109,12 +109,12 @@ export const AboutCoderCharacter: React.FC = () => {
         {/* Floating / Breathing Head & Headphones Group */}
         <motion.g
           animate={{
-            y: excited ? [0, -3.5, 0] : [0, -2, 0],
-            rotate: excited ? [-2, 2, -2] : [0, 1, 0],
+            y: excited ? [0, -3.5, 0] : 0,
+            rotate: excited ? [-2, 2, -2] : 0,
           }}
           transition={{
-            duration: excited ? 0.6 : 2.6,
-            repeat: Infinity,
+            duration: 0.6,
+            repeat: excited ? Infinity : 0,
             ease: 'easeInOut',
           }}
         >
@@ -127,13 +127,11 @@ export const AboutCoderCharacter: React.FC = () => {
           />
           {/* Antenna on Right Earcup */}
           <line x1="74" y1="26" x2="79" y2="14" stroke="#E59B63" strokeWidth="2" strokeLinecap="round" />
-          <motion.circle
+          <circle
             cx="79"
             cy="13"
             r="2.8"
             fill="#22C55E"
-            animate={{ opacity: [1, 0.35, 1], scale: [1, 1.25, 1] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
           />
 
           {/* Left & Right Headphone Earcups */}
@@ -235,8 +233,8 @@ export const AboutCoderCharacter: React.FC = () => {
           fill="#FBEEE0"
           stroke="#9D613C"
           strokeWidth="1.4"
-          animate={{ y: [0, -3, 0, -2, 0] }}
-          transition={{ duration: 0.7, repeat: Infinity }}
+          animate={excited ? { y: [0, -3, 0, -2, 0] } : { y: 0 }}
+          transition={{ duration: 0.7, repeat: excited ? Infinity : 0 }}
         />
         <motion.circle
           cx="57"
@@ -245,8 +243,8 @@ export const AboutCoderCharacter: React.FC = () => {
           fill="#FBEEE0"
           stroke="#9D613C"
           strokeWidth="1.4"
-          animate={{ y: [-2.5, 0, -3, 0, -2.5] }}
-          transition={{ duration: 0.7, repeat: Infinity }}
+          animate={excited ? { y: [-2.5, 0, -3, 0, -2.5] } : { y: 0 }}
+          transition={{ duration: 0.7, repeat: excited ? Infinity : 0 }}
         />
 
         {/* Mini Mechanical Keyboard Deck */}
@@ -258,21 +256,19 @@ export const AboutCoderCharacter: React.FC = () => {
           <rect x="0" y="6" width="12" height="13" rx="2.5" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1.3" />
           <path d="M12 9H14.5C15.8 9 16.5 10 16.5 11.5C16.5 13 15.8 14 14.5 14H12" stroke="#FBEEE0" strokeWidth="1.3" />
           {/* Rising Steam Wisps */}
-          <motion.path
+          <path
             d="M4 3C4 1 6 1 6 -1"
             stroke="#FBEEE0"
             strokeWidth="1.3"
             strokeLinecap="round"
-            animate={{ y: [0, -4], opacity: [0.7, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
+            opacity="0.6"
           />
-          <motion.path
+          <path
             d="M8.5 4C8.5 2 10.5 2 10.5 0"
             stroke="#E59B63"
             strokeWidth="1.3"
             strokeLinecap="round"
-            animate={{ y: [0, -4], opacity: [0.7, 0] }}
-            transition={{ duration: 1.8, delay: 0.7, repeat: Infinity, ease: 'easeOut' }}
+            opacity="0.6"
           />
         </g>
       </svg>
@@ -314,7 +310,7 @@ export const NodeSentryCharacter: React.FC = () => {
           handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
     >
       <AnimatePresence>
         {scanning && (
@@ -336,7 +332,7 @@ export const NodeSentryCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -352,33 +348,27 @@ export const NodeSentryCharacter: React.FC = () => {
           </linearGradient>
         </defs>
 
-        {/* Pulsing Ground Thruster Ring */}
-        <motion.ellipse
+        {/* Ground Thruster Ring */}
+        <ellipse
           cx="44"
           cy="73"
           rx="18"
           ry="3.5"
           fill="#22C55E"
-          fillOpacity="0.25"
-          animate={{ rx: [15, 21, 15], opacity: [0.2, 0.45, 0.2] }}
-          transition={{ duration: 1.8, repeat: Infinity }}
+          fillOpacity="0.28"
         />
 
         {/* Levitating Mech Body */}
         <motion.g
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          animate={scanning ? { y: [0, -5, 0] } : { y: 0 }}
+          transition={{ duration: 1.2, repeat: scanning ? Infinity : 0, ease: 'easeInOut' }}
         >
-          {/* Top Rotating Radar Dish */}
-          <motion.g
-            animate={{ rotate: [-14, 14, -14] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-            style={{ transformOrigin: '44px 16px' }}
-          >
+          {/* Top Radar Dish */}
+          <g>
             <line x1="44" y1="16" x2="44" y2="8" stroke="#E59B63" strokeWidth="2.2" />
             <path d="M36 9C39 5.5 49 5.5 52 9" stroke="#FBEEE0" strokeWidth="2" strokeLinecap="round" />
             <circle cx="44" cy="6" r="2.2" fill="#22C55E" />
-          </motion.g>
+          </g>
 
           {/* Left & Right Hover Wing Stabilizers */}
           <path d="M12 32L22 26V44L14 46L12 32Z" fill="url(#sentryTrim)" stroke="#FBEEE0" strokeWidth="1.2" />
@@ -397,8 +387,8 @@ export const NodeSentryCharacter: React.FC = () => {
 
           {/* Scanning Laser Optic Eye */}
           <motion.g
-            animate={{ x: scanning ? [-7, 7, -7] : [-3, 3, -3] }}
-            transition={{ duration: scanning ? 0.9 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            animate={scanning ? { x: [-7, 7, -7] } : { x: 0 }}
+            transition={{ duration: 0.9, repeat: scanning ? Infinity : 0, ease: 'easeInOut' }}
           >
             <circle cx="44" cy="33.5" r="5.5" fill="#10B981" fillOpacity="0.25" />
             <circle cx="44" cy="33.5" r="3.8" fill="#22C55E" />
@@ -411,10 +401,7 @@ export const NodeSentryCharacter: React.FC = () => {
           <rect x="51" y="46" width="6" height="4" rx="1.5" fill="#FBEEE0" fillOpacity="0.5" />
 
           {/* Floating Mini Security Shield on Right Side */}
-          <motion.g
-            animate={{ y: [-2, 2, -2], rotate: [-4, 4, -4] }}
-            transition={{ duration: 1.8, repeat: Infinity }}
-          >
+          <g>
             <path
               d="M74 44L82 47V54C82 58.5 78.5 61.5 74 63C69.5 61.5 66 58.5 66 54V47L74 44Z"
               fill="#141C28"
@@ -422,15 +409,13 @@ export const NodeSentryCharacter: React.FC = () => {
               strokeWidth="1.6"
             />
             <path d="M71.5 53.5L73.5 55.5L77 51.5" stroke="#22C55E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </motion.g>
+          </g>
 
           {/* Bottom Jet Thruster Flame */}
-          <motion.path
+          <path
             d="M38 56H50L47 65L44 62L41 65L38 56Z"
             fill="#22C55E"
-            animate={{ scaleY: [0.85, 1.25, 0.85], opacity: [0.65, 1, 0.65] }}
-            transition={{ duration: 0.45, repeat: Infinity }}
-            style={{ transformOrigin: '44px 56px' }}
+            opacity="0.85"
           />
         </motion.g>
       </svg>
@@ -461,7 +446,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
-        className="inline-flex shrink-0 will-change-[transform,opacity]"
+        className="inline-flex shrink-0"
       >
         <motion.svg
           onClick={handleDroidClick}
@@ -471,24 +456,23 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
           animate={
             chirpBounce
               ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
-              : { y: [0, -3, 0] }
+              : { y: 0, scale: 1 }
           }
           transition={{
-            duration: chirpBounce ? 0.24 : 2,
-            repeat: chirpBounce ? 0 : Infinity,
+            duration: 0.24,
+            repeat: 0,
             ease: 'easeInOut',
           }}
         >
           {/* Speed Halo Ring */}
-          <motion.ellipse
+          <ellipse
             cx="24"
             cy="10"
             rx="10"
             ry="2.5"
             stroke="#22C55E"
             strokeWidth="1.5"
-            animate={{ scaleX: [0.9, 1.1, 0.9], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            opacity="0.85"
           />
           {/* Sleek Aero Helmet */}
           <path
@@ -520,7 +504,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
-        className="inline-flex shrink-0 will-change-[transform,opacity]"
+        className="inline-flex shrink-0"
       >
         <motion.svg
           onClick={handleDroidClick}
@@ -530,11 +514,11 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
           animate={
             chirpBounce
               ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
-              : { y: [0, -3, 0], rotate: [-1.5, 1.5, -1.5] }
+              : { y: 0, scale: 1 }
           }
           transition={{
-            duration: chirpBounce ? 0.24 : 1.8,
-            repeat: chirpBounce ? 0 : Infinity,
+            duration: 0.24,
+            repeat: 0,
             ease: 'easeInOut',
           }}
         >
@@ -546,22 +530,8 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
           {/* Visor */}
           <rect x="14.5" y="18" width="19" height="12" rx="4" fill="#080C12" />
           {/* Glowing Twin Eyes */}
-          <motion.circle
-            cx="20"
-            cy="24"
-            r="2.3"
-            fill="#F97316"
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 1.1, repeat: Infinity }}
-          />
-          <motion.circle
-            cx="28"
-            cy="24"
-            r="2.3"
-            fill="#F97316"
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 1.1, repeat: Infinity }}
-          />
+          <circle cx="20" cy="24" r="2.3" fill="#F97316" />
+          <circle cx="28" cy="24" r="2.3" fill="#F97316" />
           {/* Happy Grin */}
           <path d="M21.5 27.5H26.5" stroke="#FBEEE0" strokeWidth="1.6" strokeLinecap="round" />
           {/* Parallel Core Indicator Dots */}
@@ -579,7 +549,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, delay: staggerDelay, ease: [0.16, 1, 0.3, 1] }}
-      className="inline-flex shrink-0 will-change-[transform,opacity]"
+      className="inline-flex shrink-0"
     >
       <motion.svg
         onClick={handleDroidClick}
@@ -589,24 +559,17 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         animate={
           chirpBounce
             ? { y: [0, -5, 0], scale: [1, 1.08, 1] }
-            : { y: [0, -2.5, 0] }
+            : { y: 0, scale: 1 }
         }
         transition={{
-          duration: chirpBounce ? 0.24 : 2.3,
-          repeat: chirpBounce ? 0 : Infinity,
+          duration: 0.24,
+          repeat: 0,
           ease: 'easeInOut',
         }}
       >
         {/* Top Data Dish */}
         <line x1="24" y1="12" x2="24" y2="6" stroke="#FBEEE0" strokeWidth="1.6" />
-        <motion.circle
-          cx="24"
-          cy="5.5"
-          r="2.2"
-          fill="#38BDF8"
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.3, repeat: Infinity }}
-        />
+        <circle cx="24" cy="5.5" r="2.2" fill="#38BDF8" />
         {/* Round Owl-Bot Chassis */}
         <rect x="11" y="12" width="26" height="26" rx="9" fill="#182334" stroke="#9D613C" strokeWidth="1.6" />
         {/* Visor */}
@@ -615,14 +578,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         <circle cx="19.5" cy="23.5" r="2" fill="#FBEEE0" />
         {/* Right Enlarged Indexer Monocle Scope */}
         <circle cx="28.5" cy="23.5" r="4.2" fill="#0F172A" stroke="#E59B63" strokeWidth="1.6" />
-        <motion.circle
-          cx="28.5"
-          cy="23.5"
-          r="1.8"
-          fill="#38BDF8"
-          animate={{ scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.6, repeat: Infinity }}
-        />
+        <circle cx="28.5" cy="23.5" r="1.8" fill="#38BDF8" />
         {/* Little Owl Beak / Data Port */}
         <polygon points="23,26 25,26 24,28.5" fill="#E59B63" />
         {/* Bottom Indexed Bars */}
@@ -666,7 +622,7 @@ export const ExperienceForgeCharacter: React.FC = () => {
           handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
     >
       <AnimatePresence>
         {active && (
@@ -688,7 +644,7 @@ export const ExperienceForgeCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 76"
-        className={`w-18 h-15 sm:w-20 sm:h-17 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+        className={`w-18 h-15 sm:w-20 sm:h-17 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -697,8 +653,8 @@ export const ExperienceForgeCharacter: React.FC = () => {
 
         {/* Levitating Isometric Genesis Block above hands */}
         <motion.g
-          animate={{ y: active ? [0, -6, 0] : [0, -3.5, 0] }}
-          transition={{ duration: active ? 0.8 : 2, repeat: Infinity, ease: 'easeInOut' }}
+          animate={active ? { y: [0, -6, 0] } : { y: 0 }}
+          transition={{ duration: 0.8, repeat: active ? Infinity : 0, ease: 'easeInOut' }}
         >
           {/* Top Face */}
           <polygon points="71,16 81,21 71,26 61,21" fill="#FBEEE0" stroke="#9D613C" strokeWidth="1.2" />
@@ -710,8 +666,8 @@ export const ExperienceForgeCharacter: React.FC = () => {
 
         {/* Main Bot Chassis */}
         <motion.g
-          animate={{ y: [0, -2.5, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          animate={active ? { y: [0, -2.5, 0] } : { y: 0 }}
+          transition={{ duration: 0.8, repeat: active ? Infinity : 0, ease: 'easeInOut' }}
         >
           {/* Twin Rack Ears */}
           <rect x="13" y="24" width="5" height="14" rx="2" fill="#9D613C" stroke="#FBEEE0" strokeWidth="1.2" />
@@ -785,7 +741,7 @@ export const ConnectMessengerCharacter: React.FC = () => {
           handleTrigger(e);
         }
       }}
-      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none will-change-[transform,opacity]"
+      className="relative inline-flex items-center select-none cursor-pointer focus:outline-none"
     >
       <AnimatePresence>
         {waving && (
@@ -807,7 +763,7 @@ export const ConnectMessengerCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible drop-shadow-[0_6px_12px_rgba(0,0,0,0.5)] transition-transform duration-150 ease-out ${
+        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -817,25 +773,24 @@ export const ConnectMessengerCharacter: React.FC = () => {
 
         {/* Bouncing Messenger Bot */}
         <motion.g
-          animate={{ y: waving ? [0, -5, 0] : [0, -2.5, 0] }}
-          transition={{ duration: waving ? 0.55 : 2.1, repeat: Infinity, ease: 'easeInOut' }}
+          animate={waving ? { y: [0, -5, 0] } : { y: 0 }}
+          transition={{ duration: 0.55, repeat: waving ? Infinity : 0, ease: 'easeInOut' }}
         >
           {/* Signal Broadcast Waves from Antenna */}
-          <motion.path
+          <path
             d="M35 8C39 4 49 4 53 8"
             stroke="#22C55E"
             strokeWidth="1.6"
             strokeLinecap="round"
-            animate={{ opacity: [0.2, 0.9, 0.2], y: [0, -2, 0] }}
-            transition={{ duration: 1.4, repeat: Infinity }}
+            opacity="0.75"
           />
           <line x1="44" y1="16" x2="44" y2="9" stroke="#E59B63" strokeWidth="2.2" strokeLinecap="round" />
           <circle cx="44" cy="8.5" r="2.5" fill="#22C55E" />
 
           {/* Waving Left Arm */}
           <motion.g
-            animate={{ rotate: waving ? [-28, 22, -28] : [-10, 12, -10] }}
-            transition={{ duration: waving ? 0.4 : 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={waving ? { rotate: [-28, 22, -28] } : { rotate: 0 }}
+            transition={{ duration: 0.4, repeat: waving ? Infinity : 0, ease: 'easeInOut' }}
             style={{ transformOrigin: '23px 46px' }}
           >
             <path d="M23 46L11 35" stroke="#FBEEE0" strokeWidth="3.2" strokeLinecap="round" />
@@ -846,14 +801,10 @@ export const ConnectMessengerCharacter: React.FC = () => {
           <g>
             <path d="M65 46L73 42" stroke="#FBEEE0" strokeWidth="3" strokeLinecap="round" />
             {/* Mini Sealed Message Envelope */}
-            <motion.g
-              animate={{ rotate: [-5, 6, -5], y: [0, -2, 0] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-              style={{ transformOrigin: '76px 40px' }}
-            >
+            <g>
               <rect x="67" y="33" width="17" height="12" rx="2" fill="#FBEEE0" stroke="#9D613C" strokeWidth="1.4" />
               <path d="M68 34.5L75.5 40L83 34.5" stroke="#9D613C" strokeWidth="1.4" strokeLinecap="round" />
-            </motion.g>
+            </g>
           </g>
 
           {/* Courier Satchel Body */}

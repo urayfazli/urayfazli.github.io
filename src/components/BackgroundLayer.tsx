@@ -7,21 +7,16 @@ export const BackgroundLayer: React.FC = () => {
       {/* 1. Base Dark Solid Foundation */}
       <div className="absolute inset-0 bg-[#0c1017]" />
 
-      {/* 2. Desktop & Tablet Background Artwork Image (Visible on >= 768px screens) */}
-      <img
-        src={ASSET_IMAGES.bgDesktop}
-        alt=""
-        className="hidden md:block absolute inset-0 w-full h-full object-cover object-center opacity-70"
-        loading="eager"
-      />
-
-      {/* 3. Mobile Vertical Background Artwork Image (Visible on < 768px screens) */}
-      <img
-        src={ASSET_IMAGES.bgMobile}
-        alt=""
-        className="block md:hidden absolute inset-0 w-full h-full object-cover object-top opacity-65"
-        loading="eager"
-      />
+      {/* 2. Responsive Background Artwork (loads & decodes only 1 image per device viewport to save GPU VRAM) */}
+      <picture className="absolute inset-0 w-full h-full">
+        <source media="(min-width: 768px)" srcSet={ASSET_IMAGES.bgDesktop} />
+        <img
+          src={ASSET_IMAGES.bgMobile}
+          alt=""
+          decoding="async"
+          className="w-full h-full object-cover object-top md:object-center opacity-65 md:opacity-70"
+        />
+      </picture>
 
       {/* 4. Fine Matrix Grid Texture */}
       <div

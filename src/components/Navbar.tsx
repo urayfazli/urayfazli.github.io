@@ -40,7 +40,7 @@ const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
     >
       <svg
         viewBox="0 0 48 24"
-        className="w-8 h-[17px] sm:w-9 sm:h-[19px] overflow-visible drop-shadow-[0_2px_6px_rgba(11,15,23,0.95)]"
+        className="w-8 h-[17px] sm:w-9 sm:h-[19px] overflow-visible"
         fill="none"
       >
         {/* Soft Afterburner Radial Glow Behind Nozzle */}
@@ -347,15 +347,36 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         railRef.current.setAttribute('aria-valuenow', String(pct));
       }
 
-      rafId = window.requestAnimationFrame(stepPhysics);
+      const isSettled =
+        Math.abs(targetProgress - currentProgress) === 0 &&
+        Math.abs(velocity) === 0 &&
+        smoothSpeed < 0.004 &&
+        Math.abs(targetDirection - smoothDirection) < 0.01;
+
+      if (isSettled) {
+        rafId = 0;
+      } else {
+        rafId = window.requestAnimationFrame(stepPhysics);
+      }
     };
 
-    const onScroll = () => readRawScrollMetrics(true);
+    const wakePhysics = () => {
+      if (!rafId) {
+        lastFrameTime = performance.now();
+        rafId = window.requestAnimationFrame(stepPhysics);
+      }
+    };
+
+    const onScroll = () => {
+      readRawScrollMetrics(true);
+      wakePhysics();
+    };
     const onResize = () => {
       if (railRef.current) {
         railWidth = railRef.current.clientWidth;
       }
       readRawScrollMetrics(false);
+      wakePhysics();
     };
 
     readRawScrollMetrics(false);
@@ -374,20 +395,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
           railWidth = railRef.current.clientWidth;
         }
         readRawScrollMetrics(false);
+        wakePhysics();
       });
-      resizeObserver.observe(document.documentElement);
-      if (document.body) {
-        resizeObserver.observe(document.body);
-      }
       if (railRef.current) {
         resizeObserver.observe(railRef.current);
       }
     }
 
-    rafId = window.requestAnimationFrame(stepPhysics);
+    wakePhysics();
 
     return () => {
-      window.cancelAnimationFrame(rafId);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
       if (resizeObserver) {

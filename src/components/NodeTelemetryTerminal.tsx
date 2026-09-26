@@ -153,9 +153,10 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
   const activeNode =
     TELEMETRY_NODES.find((node) => node.id === activeId) || TELEMETRY_NODES[0];
 
-  // Authentic block progression with tabular precision
+  // Authentic block progression with tabular precision (pauses when tab is hidden)
   useEffect(() => {
     const timer = window.setInterval(() => {
+      if (document.hidden) return;
       setBlockOffsets((prev) => ({
         aptos: prev.aptos + 1,
         sei: prev.sei + 1,
@@ -168,7 +169,7 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       setLastPingTimestamp(`${hh}:${mm}:${ss}`);
-    }, 2200);
+    }, 3500);
 
     return () => window.clearInterval(timer);
   }, []);
