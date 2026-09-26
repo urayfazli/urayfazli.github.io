@@ -1,5 +1,4 @@
 import { ASSET_IMAGES } from '../assets/images';
-import { BACKSOUND_TRACKS } from '../data/backsoundData';
 
 const CACHE_VERSION = 'cf-v2';
 export const MEDIA_CACHE_NAME = `uray-cf-media-${CACHE_VERSION}`;
@@ -20,9 +19,6 @@ export interface CloudflareEdgeStatus {
   updatedAt: number;
 }
 
-// In-memory ArrayBuffer cache for ultra-fast instant repeat access within the same session
-const memoryBufferCache = new Map<string, ArrayBuffer>();
-
 let latestEdgeStatus: CloudflareEdgeStatus = {
   cfCacheStatus: 'INIT',
   edgeColo: null,
@@ -41,7 +37,6 @@ export function recordCloudflareHeadersFromResponse(res: Response): void {
     const cfRay = res.headers.get('cf-ray');
     if (!cfCacheStatus && !cfRay) return;
 
-    // `cf-ray` format is e.g. `8c91a2b3c4d5e6f7-CGK` or `8c91a2b3c4d5e6f7-SIN`
     let edgeColo = latestEdgeStatus.edgeColo;
     if (cfRay && cfRay.includes('-')) {
       const parts = cfRay.split('-');
@@ -81,52 +76,6 @@ export function getCloudflareEdgeStatus(): CloudflareEdgeStatus {
 }
 
 /**
- * Probes Cloudflare's built-in `/cdn-cgi/trace` endpoint when the site is proxied through Cloudflare
- * to identify the visitor's nearest Cloudflare Edge Data Center (`colo=CGK` / `colo=SIN`) and HTTP/3 status.
- */
-async function detectCloudflareEdgeTrace(): Promise<void> {
-  try {
-    const res = await fetch('/cdn-cgi/trace', {
-      method: 'GET',
-      cache: 'no-store',
-    });
-    recordCloudflareHeadersFromResponse(res);
-    if (!res.ok) return;
-
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) {
-      // SPA fallback returned index.html because domain is not currently proxied by Cloudflare
-      return;
-    }
-
-    const text = await res.text();
-    if (!text.includes('colo=') || !text.includes('fl=')) return;
-
-    const lines = text.split('\n');
-    const traceMap: Record<string, string> = {};
-    for (const line of lines) {
-      const [k, v] = line.split('=');
-      if (k && v) {
-        traceMap[k.trim()] = v.trim();
-      }
-    }
-
-    latestEdgeStatus = {
-      ...latestEdgeStatus,
-      edgeColo: traceMap.colo ? traceMap.colo.toUpperCase() : latestEdgeStatus.edgeColo,
-      httpProtocol: traceMap.http || latestEdgeStatus.httpProtocol,
-      cfCacheStatus:
-        latestEdgeStatus.cfCacheStatus === 'INIT' ? 'EDGE_ACTIVE' : latestEdgeStatus.cfCacheStatus,
-      updatedAt: Date.now(),
-    };
-
-    localStorage.setItem(CF_EDGE_META_STORAGE_KEY, JSON.stringify(latestEdgeStatus));
-  } catch {
-    // Silent fallback when running outside a Cloudflare-proxied domain
-  }
-}
-
-/**
  * Checks whether the browser + Cloudflare Edge cache has already been warmed on a previous visit.
  */
 export function isWebCacheWarm(): boolean {
@@ -152,81 +101,16 @@ export function markWebCacheWarm(): void {
 }
 
 /**
- * Fetches a binary resource (such as an MP3/WAV track) using a 4-tier Cloudflare Hybrid cache hierarchy:
- * 1. In-memory session Map (0ms)
- * 2. Persistent Browser CacheStorage API (`uray-cf-media-cf-v2`)
- * 3. Cloudflare Edge PoP Cache (`CDN-Cache-Control` / `CF-Cache-Status: HIT`)
- * 4. Origin Network fetch (automatically stored into Cloudflare Edge, CacheStorage, and memory)
- */
-export async function fetchArrayBufferWithCache(
-  url: string,
-  cacheName = MEDIA_CACHE_NAME
-): Promise<ArrayBuffer | null> {
-  // Tier 1: In-memory cache
-  const memCached = memoryBufferCache.get(url);
-  if (memCached && memCached.byteLength > 64) {
-    return memCached;
-  }
-
-  // Tier 2: Browser CacheStorage API
-  if (typeof window !== 'undefined' && 'caches' in window) {
-    try {
-      const cache = await window.caches.open(cacheName);
-      const cachedResponse = await cache.match(url, { ignoreVary: true });
-      if (cachedResponse && cachedResponse.ok) {
-        recordCloudflareHeadersFromResponse(cachedResponse);
-        const buffer = await cachedResponse.arrayBuffer();
-        if (buffer.byteLength > 64) {
-          memoryBufferCache.set(url, buffer);
-          return buffer;
-        }
-      }
-    } catch {
-      // Fall through to Cloudflare Edge / network fetch
-    }
-  }
-
-  // Tier 3 & 4: Cloudflare Edge CDN (`cache: 'default'` honors `Cloudflare-CDN-Cache-Control` & ETag)
-  try {
-    const response = await fetch(url, { cache: 'default' });
-    if (!response.ok) return null;
-
-    recordCloudflareHeadersFromResponse(response);
-
-    const clonedForCache = response.clone();
-    const buffer = await response.arrayBuffer();
-    if (buffer.byteLength < 64) return null;
-
-    memoryBufferCache.set(url, buffer);
-
-    if (typeof window !== 'undefined' && 'caches' in window && response.status === 200) {
-      window.caches
-        .open(cacheName)
-        .then((cache) => cache.put(url, clonedForCache))
-        .catch(() => {});
-    }
-
-    return buffer;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Preloads & warms critical images and primary audio track across Cloudflare Edge PoP and Browser CacheStorage.
+ * Preloads & warms critical images across Cloudflare Edge PoP and Browser CacheStorage.
  */
 export function warmUpCriticalAssets(): void {
   if (typeof window === 'undefined') return;
 
   const runWarmup = async () => {
-    // Probe Cloudflare Edge trace endpoint asynchronously
-    detectCloudflareEdgeTrace().catch(() => {});
-
     const isDesktop = window.matchMedia('(min-width: 768px)').matches;
     const activeWallpaper = isDesktop ? ASSET_IMAGES.bgDesktop : ASSET_IMAGES.bgMobile;
     const criticalImages = [ASSET_IMAGES.avatar, activeWallpaper];
 
-    // 1. Warm up Cloudflare Edge PoP + Browser CacheStorage for critical illustrations
     if ('caches' in window) {
       try {
         const mediaCache = await window.caches.open(MEDIA_CACHE_NAME);
@@ -244,20 +128,6 @@ export function warmUpCriticalAssets(): void {
         );
       } catch {
         // Ignore CacheStorage errors in restricted contexts
-      }
-    }
-
-    // 2. Pre-cache the first audio track when connection is not in Data-Saver mode
-    const navConn = (
-      navigator as Navigator & {
-        connection?: { saveData?: boolean; effectiveType?: string };
-      }
-    ).connection;
-    const isSaveData = Boolean(navConn?.saveData);
-    if (!isSaveData && BACKSOUND_TRACKS.length > 0) {
-      const firstTrackUrl = BACKSOUND_TRACKS[0].audioSrc;
-      if (firstTrackUrl) {
-        await fetchArrayBufferWithCache(firstTrackUrl, MEDIA_CACHE_NAME);
       }
     }
 
@@ -291,8 +161,7 @@ export function initWebCachingSystem(): void {
       navigator.serviceWorker
         .register('./sw.js', { scope: './' })
         .catch(() => {
-          // Service Worker may be restricted in some sandboxed iframe origins;
-          // Cloudflare Edge CDN + Client CacheStorage + Memory caching still work seamlessly.
+          // Ignore if Service Worker is unavailable
         });
     }
 
