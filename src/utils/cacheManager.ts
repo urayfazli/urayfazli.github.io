@@ -1,9 +1,9 @@
 import { ASSET_IMAGES } from '../assets/images';
 
-const CACHE_VERSION = 'cf-v2';
+const CACHE_VERSION = 'cf-v4';
 export const MEDIA_CACHE_NAME = `uray-cf-media-${CACHE_VERSION}`;
 export const STATIC_CACHE_NAME = `uray-cf-static-${CACHE_VERSION}`;
-const WARM_CACHE_STORAGE_KEY = 'uray_portfolio_cf_cache_warm_v2';
+const WARM_CACHE_STORAGE_KEY = 'uray_portfolio_cf_cache_warm_v4';
 const CF_EDGE_META_STORAGE_KEY = 'uray_portfolio_cf_edge_meta_v1';
 
 export interface CloudflareEdgeStatus {
@@ -157,9 +157,28 @@ export function initWebCachingSystem(): void {
   if (typeof window === 'undefined') return;
 
   const onReady = () => {
+    if ('caches' in window) {
+      window.caches
+        .keys()
+        .then((keys) => {
+          keys.forEach((key) => {
+            if (
+              (key.startsWith('uray-cf-') || key.startsWith('uray-node-')) &&
+              !key.endsWith(CACHE_VERSION)
+            ) {
+              window.caches.delete(key).catch(() => {});
+            }
+          });
+        })
+        .catch(() => {});
+    }
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('./sw.js', { scope: './' })
+        .then((reg) => {
+          reg.update().catch(() => {});
+        })
         .catch(() => {
           // Ignore if Service Worker is unavailable
         });

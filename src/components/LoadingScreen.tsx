@@ -53,34 +53,28 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   }, []);
 
   useEffect(() => {
-    // Realistic staged data-loading simulation (~5.2 seconds total)
+    // Fast, responsive staged boot sequence (~1.2 seconds total)
     let current = 0;
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const tick = () => {
       if (current >= 100 || exitTriggeredRef.current) return;
 
-      let increment = 1;
-      let nextDelay = 65;
+      let increment = 4.5;
+      let nextDelay = 28;
 
-      if (current < 15) {
-        increment = 1.6;
-        nextDelay = 55;
-      } else if (current >= 15 && current < 28) {
-        increment = 0.65;
-        nextDelay = 85;
-      } else if (current >= 28 && current < 48) {
-        increment = current > 36 && current < 42 ? 0.35 : 1.15;
-        nextDelay = current > 36 && current < 42 ? 110 : 65;
-      } else if (current >= 48 && current < 72) {
-        increment = current > 58 && current < 64 ? 0.4 : 1.05;
-        nextDelay = current > 58 && current < 64 ? 105 : 70;
-      } else if (current >= 72 && current < 92) {
-        increment = current > 80 && current < 85 ? 0.35 : 1.2;
-        nextDelay = current > 80 && current < 85 ? 115 : 65;
+      if (current < 25) {
+        increment = 5.5;
+        nextDelay = 24;
+      } else if (current >= 25 && current < 65) {
+        increment = 4.2;
+        nextDelay = 28;
+      } else if (current >= 65 && current < 90) {
+        increment = 4.8;
+        nextDelay = 26;
       } else {
-        increment = 1.5;
-        nextDelay = 50;
+        increment = 6.0;
+        nextDelay = 22;
       }
 
       current = Math.min(100, current + increment);
@@ -91,7 +85,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
       }
     };
 
-    timeoutId = setTimeout(tick, 120);
+    timeoutId = setTimeout(tick, 40);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -99,7 +93,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
     if (progress >= 100 && !exitTriggeredRef.current) {
       const doneTimer = setTimeout(() => {
         triggerSmoothExit();
-      }, 600);
+      }, 180);
       return () => clearTimeout(doneTimer);
     }
   }, [progress]);
