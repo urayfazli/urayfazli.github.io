@@ -162,7 +162,7 @@ export default function App() {
 
       {/* Sticky Top Bar Navigation with Scroll Progress Indicator & Animated Rocket */}
       <div
-        className={`sticky top-0 z-50 transition-opacity duration-500 ${
+        className={`sticky top-0 z-50 transition-opacity duration-200 ${
           isRevealed ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -173,21 +173,19 @@ export default function App() {
         />
       </div>
 
-      {/* Smooth Whole-Page Camera Dolly-In & Unblur Wrapper */}
+      {/* Main Content Wrapper Visible Directly Behind the Shattering Screen Shards */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }}
+        initial={{ opacity: 0, scale: 0.985 }}
         animate={
           isRevealed
             ? {
                 opacity: 1,
                 scale: 1,
-                y: 0,
-                filter: isLoading ? 'blur(0px)' : 'none',
               }
-            : { opacity: 0, scale: 0.88, y: 18, filter: 'blur(10px)' }
+            : { opacity: 0, scale: 0.985 }
         }
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-        style={{ transformOrigin: '50% 35vh' }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        style={{ transformOrigin: '50% 45vh' }}
         className={`flex flex-col flex-grow relative z-10 ${
           isLoading ? 'will-change-transform' : ''
         }`}
