@@ -1,9 +1,16 @@
 /**
- * Retro Chiptune & Synthesizer Web Audio Engine
- * Pure procedural Web Audio API - zero external network dependencies, 100% offline & GitHub Pages compatible.
+ * Hybrid 8-Bit & MP3 Audio Engine
+ *
+ * - Memutar file audio asli (.wav 8-bit & .mp3) dari folder `public/audio/` yang terdaftar di `src/data/backsoundData.ts`
+ * - Otomatis fallback ke Web Audio API 8-Bit Chiptune Synthesizer apabila file audio dihapus/tidak ditemukan
  */
 
-// Musical note frequencies (Hz)
+import { BACKSOUND_TRACKS, RetroTrack } from '../data/backsoundData';
+
+export type { RetroTrack };
+export const RETRO_TRACKS = BACKSOUND_TRACKS;
+
+// Musical note frequencies (Hz) for built-in 8-bit synth
 const NOTE_FREQS: Record<string, number> = {
   C2: 65.41,
   E2: 82.41,
@@ -28,100 +35,21 @@ const NOTE_FREQS: Record<string, number> = {
   C5: 523.25,
   D5: 587.33,
   E5: 659.25,
+  F5: 698.46,
   G5: 783.99,
   A5: 880.0,
   REST: 0,
 };
 
-export interface RetroTrack {
-  id: string;
-  title: string;
-  genre: string;
-  bpm: number;
-  melody: string[];
-  bass: string[];
-  chords: string[][];
-}
-
-export const RETRO_TRACKS: RetroTrack[] = [
-  {
-    id: 'cozy-cafe',
-    title: 'Cozy Node Cafe',
-    genre: '8-bit Lofi Chiptune',
-    bpm: 112,
-    melody: [
-      'E4', 'G4', 'A4', 'B4', 'C5', 'B4', 'A4', 'G4',
-      'E4', 'G4', 'A4', 'G4', 'E4', 'D4', 'C4', 'D4',
-      'E4', 'G4', 'A4', 'B4', 'D5', 'C5', 'B4', 'A4',
-      'G4', 'A4', 'G4', 'E4', 'D4', 'C4', 'D4', 'REST',
-    ],
-    bass: [
-      'C3', 'REST', 'C3', 'REST', 'A2', 'REST', 'A2', 'REST',
-      'F2', 'REST', 'F2', 'REST', 'G2', 'REST', 'G2', 'REST',
-      'C3', 'REST', 'C3', 'REST', 'A2', 'REST', 'A2', 'REST',
-      'F2', 'REST', 'F2', 'REST', 'G2', 'G2', 'G2', 'REST',
-    ],
-    chords: [
-      ['C4', 'E4', 'G4'],
-      ['A3', 'C4', 'E4'],
-      ['F3', 'A3', 'C4'],
-      ['G3', 'B3', 'D4'],
-    ],
-  },
-  {
-    id: 'midnight-validator',
-    title: 'Midnight Validator',
-    genre: '16-bit Synthwave',
-    bpm: 126,
-    melody: [
-      'A4', 'C5', 'E5', 'D5', 'C5', 'A4', 'G4', 'E4',
-      'A4', 'C5', 'D5', 'E5', 'G5', 'E5', 'D5', 'C5',
-      'F4', 'A4', 'C5', 'D5', 'C5', 'A4', 'G4', 'F4',
-      'G4', 'B4', 'D5', 'B4', 'G4', 'E4', 'D4', 'REST',
-    ],
-    bass: [
-      'A2', 'A2', 'C3', 'A2', 'A2', 'A2', 'G2', 'E2',
-      'A2', 'A2', 'C3', 'A2', 'A2', 'A2', 'G2', 'E2',
-      'F2', 'F2', 'A2', 'F2', 'F2', 'F2', 'A2', 'F2',
-      'G2', 'G2', 'B2', 'G2', 'E2', 'E2', 'G2', 'REST',
-    ],
-    chords: [
-      ['A3', 'C4', 'E4'],
-      ['A3', 'C4', 'E4'],
-      ['F3', 'A3', 'C4'],
-      ['G3', 'B3', 'D4'],
-    ],
-  },
-  {
-    id: 'starlight-blocks',
-    title: 'Starlight Blocks',
-    genre: 'Chrono Nostalgia',
-    bpm: 96,
-    melody: [
-      'C5', 'B4', 'G4', 'E4', 'G4', 'A4', 'C5', 'REST',
-      'D5', 'C5', 'A4', 'F4', 'A4', 'B4', 'D5', 'REST',
-      'E5', 'D5', 'B4', 'G4', 'B4', 'C5', 'E5', 'REST',
-      'D5', 'B4', 'G4', 'D4', 'E4', 'G4', 'C4', 'REST',
-    ],
-    bass: [
-      'C3', 'REST', 'E3', 'REST', 'A2', 'REST', 'C3', 'REST',
-      'F2', 'REST', 'A2', 'REST', 'G2', 'REST', 'B2', 'REST',
-      'A2', 'REST', 'C3', 'REST', 'E2', 'REST', 'G2', 'REST',
-      'F2', 'REST', 'A2', 'REST', 'G2', 'REST', 'C3', 'REST',
-    ],
-    chords: [
-      ['C4', 'E4', 'G4'],
-      ['F3', 'A3', 'C4'],
-      ['A3', 'C4', 'E4'],
-      ['G3', 'B3', 'D4'],
-    ],
-  },
-];
-
 class RetroAudioEngine {
+  private tracks: RetroTrack[] = [...BACKSOUND_TRACKS];
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private filterNode: BiquadFilterNode | null = null;
+  private htmlAudio: HTMLAudioElement | null = null;
+  private usingHtmlAudio = false;
+  private failedUrls = new Set<string>();
+
   private isPlaying = false;
   private currentTrackIndex = 0;
   private volume = 0.28; // Default comfortable volume
@@ -132,13 +60,15 @@ class RetroAudioEngine {
 
   private initContext() {
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioCtx();
 
       // Master lowpass filter for warm, cozy retro sound (softens harsh square waves)
       this.filterNode = this.ctx.createBiquadFilter();
       this.filterNode.type = 'lowpass';
-      this.filterNode.frequency.value = 2400; // Warm analog retro warmth
+      this.filterNode.frequency.value = 2400;
 
       // Master gain
       this.masterGain = this.ctx.createGain();
@@ -150,6 +80,59 @@ class RetroAudioEngine {
 
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
+    }
+  }
+
+  private stopHtmlAudio() {
+    if (this.htmlAudio) {
+      try {
+        this.htmlAudio.pause();
+        this.htmlAudio.currentTime = 0;
+      } catch {
+        // Ignore cleanup errors
+      }
+      this.htmlAudio = null;
+    }
+    this.usingHtmlAudio = false;
+  }
+
+  private tryStartHtmlAudio(track: RetroTrack): boolean {
+    const src = track.audioSrc;
+    if (!src || this.failedUrls.has(src)) {
+      this.usingHtmlAudio = false;
+      return false;
+    }
+
+    try {
+      this.stopHtmlAudio();
+      const audio = new Audio(src);
+      audio.loop = true;
+      audio.volume = this.volume;
+      audio.preload = 'auto';
+
+      const handleFallback = () => {
+        this.failedUrls.add(src);
+        if (this.htmlAudio === audio) {
+          this.stopHtmlAudio();
+          this.notify();
+        }
+      };
+
+      audio.addEventListener('error', handleFallback, { once: true });
+
+      this.htmlAudio = audio;
+      this.usingHtmlAudio = true;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          handleFallback();
+        });
+      }
+      return true;
+    } catch {
+      this.usingHtmlAudio = false;
+      return false;
     }
   }
 
@@ -174,8 +157,8 @@ class RetroAudioEngine {
     if (type === 'square' && freq > 200) {
       const vibrato = this.ctx.createOscillator();
       const vibratoGain = this.ctx.createGain();
-      vibrato.frequency.value = 5.5; // 5.5 Hz vibrato
-      vibratoGain.gain.value = freq * 0.015; // Small pitch wiggle
+      vibrato.frequency.value = 5.5;
+      vibratoGain.gain.value = freq * 0.015;
       vibrato.connect(osc.frequency);
       vibrato.start(now);
       vibrato.stop(now + duration);
@@ -232,41 +215,44 @@ class RetroAudioEngine {
   private step() {
     if (!this.isPlaying) return;
 
-    const track = RETRO_TRACKS[this.currentTrackIndex];
-    const totalSteps = track.melody.length;
+    const track = this.tracks[this.currentTrackIndex];
+    const totalSteps = Math.max(1, track.melody.length);
     const stepDuration = 60 / track.bpm / 2; // Sixteenth note step duration
 
-    // 1. Play Lead Melody (Square wave)
-    const melodyNote = track.melody[this.currentStep % totalSteps];
-    const melodyFreq = NOTE_FREQS[melodyNote] || 0;
-    if (melodyFreq > 0) {
-      this.playPulseNote(melodyFreq, stepDuration * 0.9, 'square', 0.16);
-    }
-
-    // 2. Play Bassline (Triangle wave for that authentic warm NES bass)
-    const bassNote = track.bass[this.currentStep % totalSteps];
-    const bassFreq = NOTE_FREQS[bassNote] || 0;
-    if (bassFreq > 0) {
-      this.playPulseNote(bassFreq, stepDuration * 1.2, 'triangle', 0.28, 0.9);
-    }
-
-    // 3. Play Chord Arpeggios every 4 steps
-    const chordIndex = Math.floor((this.currentStep % 16) / 4);
-    const chord = track.chords[chordIndex % track.chords.length];
-    if (chord && this.currentStep % 2 === 0) {
-      const arpNote = chord[(this.currentStep / 2) % chord.length];
-      const arpFreq = NOTE_FREQS[arpNote] || 0;
-      if (arpFreq > 0) {
-        this.playPulseNote(arpFreq, stepDuration * 0.6, 'sine', 0.08);
+    // Synthesize 8-bit notes only when not playing an HTML5 audio file (.wav / .mp3)
+    if (!this.usingHtmlAudio) {
+      // 1. Play Lead Melody (Square wave)
+      const melodyNote = track.melody[this.currentStep % totalSteps];
+      const melodyFreq = NOTE_FREQS[melodyNote] || 0;
+      if (melodyFreq > 0) {
+        this.playPulseNote(melodyFreq, stepDuration * 0.9, 'square', 0.16);
       }
-    }
 
-    // 4. Subtle percussion tick (hi-hat on off-beats, snare on step 4 & 12)
-    const beatInBar = this.currentStep % 8;
-    if (beatInBar === 4) {
-      this.playNoiseTick(0.06, true); // Snare
-    } else if (beatInBar % 2 === 0) {
-      this.playNoiseTick(0.02, false); // Hi-hat
+      // 2. Play Bassline (Triangle wave for authentic warm NES bass)
+      const bassNote = track.bass[this.currentStep % totalSteps];
+      const bassFreq = NOTE_FREQS[bassNote] || 0;
+      if (bassFreq > 0) {
+        this.playPulseNote(bassFreq, stepDuration * 1.2, 'triangle', 0.28, 0.9);
+      }
+
+      // 3. Play Chord Arpeggios every 4 steps
+      const chordIndex = Math.floor((this.currentStep % 16) / 4);
+      const chord = track.chords[chordIndex % track.chords.length];
+      if (chord && this.currentStep % 2 === 0) {
+        const arpNote = chord[(this.currentStep / 2) % chord.length];
+        const arpFreq = NOTE_FREQS[arpNote] || 0;
+        if (arpFreq > 0) {
+          this.playPulseNote(arpFreq, stepDuration * 0.6, 'sine', 0.08);
+        }
+      }
+
+      // 4. Subtle percussion tick (hi-hat on off-beats, snare on step 4 & 12)
+      const beatInBar = this.currentStep % 8;
+      if (beatInBar === 4) {
+        this.playNoiseTick(0.06, true); // Snare
+      } else if (beatInBar % 2 === 0) {
+        this.playNoiseTick(0.02, false); // Hi-hat
+      }
     }
 
     this.currentStep = (this.currentStep + 1) % totalSteps;
@@ -278,10 +264,13 @@ class RetroAudioEngine {
     if (this.isPlaying) return;
 
     this.isPlaying = true;
-    const track = RETRO_TRACKS[this.currentTrackIndex];
+    const track = this.tracks[this.currentTrackIndex];
     const stepMs = (60 / track.bpm / 2) * 1000;
 
-    // Immediately trigger first note
+    // Play audio file from `public/audio/` synchronously inside user gesture
+    this.tryStartHtmlAudio(track);
+
+    // Step timer drives equalizer bars, DJ Bot head-bob, and 8-bit synth fallback
     this.step();
     this.stepInterval = window.setInterval(() => {
       this.step();
@@ -292,6 +281,7 @@ class RetroAudioEngine {
 
   public stop() {
     this.isPlaying = false;
+    this.stopHtmlAudio();
     if (this.stepInterval !== null) {
       clearInterval(this.stepInterval);
       this.stepInterval = null;
@@ -311,7 +301,7 @@ class RetroAudioEngine {
     const wasPlaying = this.isPlaying;
     this.stop();
     this.currentStep = 0;
-    this.currentTrackIndex = (this.currentTrackIndex + 1) % RETRO_TRACKS.length;
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.tracks.length;
     if (wasPlaying) {
       this.start();
     } else {
@@ -324,7 +314,7 @@ class RetroAudioEngine {
     this.stop();
     this.currentStep = 0;
     this.currentTrackIndex =
-      (this.currentTrackIndex - 1 + RETRO_TRACKS.length) % RETRO_TRACKS.length;
+      (this.currentTrackIndex - 1 + this.tracks.length) % this.tracks.length;
     if (wasPlaying) {
       this.start();
     } else {
@@ -336,6 +326,9 @@ class RetroAudioEngine {
     this.volume = Math.max(0, Math.min(1, val));
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+    }
+    if (this.htmlAudio) {
+      this.htmlAudio.volume = this.volume;
     }
     this.notify();
   }
@@ -349,7 +342,7 @@ class RetroAudioEngine {
   }
 
   public getCurrentTrack(): RetroTrack {
-    return RETRO_TRACKS[this.currentTrackIndex];
+    return this.tracks[this.currentTrackIndex];
   }
 
   public getCurrentStep(): number {
