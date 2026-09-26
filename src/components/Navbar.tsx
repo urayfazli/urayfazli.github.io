@@ -12,29 +12,16 @@ import { useLanguage } from '../context/LanguageContext';
  */
 interface ValidatorScrollRocketProps {
   rocketBodyRef: React.RefObject<HTMLDivElement | null>;
-  outerFlameRef: React.RefObject<SVGPathElement | null>;
-  innerFlameRef: React.RefObject<SVGPathElement | null>;
-  afterburnerGlowRef: React.RefObject<SVGCircleElement | null>;
-  spark1Ref: React.RefObject<SVGCircleElement | null>;
-  spark2Ref: React.RefObject<SVGCircleElement | null>;
-  portholeLedRef: React.RefObject<SVGCircleElement | null>;
 }
 
 const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
   rocketBodyRef,
-  outerFlameRef,
-  innerFlameRef,
-  afterburnerGlowRef,
-  spark1Ref,
-  spark2Ref,
-  portholeLedRef,
 }) => {
   return (
     <div
       ref={rocketBodyRef}
       style={{
         transform: 'translate3d(0px, 0px, 0) scaleX(1) rotate(0deg)',
-        willChange: 'transform',
       }}
       className="relative flex items-center justify-center select-none pointer-events-none"
     >
@@ -45,7 +32,6 @@ const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
       >
         {/* Soft Afterburner Radial Glow Behind Nozzle */}
         <circle
-          ref={afterburnerGlowRef}
           cx="14"
           cy="12"
           r="5.5"
@@ -53,38 +39,16 @@ const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
           opacity="0.25"
         />
 
-        {/* Trailing Plasma Exhaust Sparks (Driven smoothly at 120fps) */}
-        <circle
-          ref={spark1Ref}
-          cx="6"
-          cy="10"
-          r="1.25"
-          fill="#FBEEE0"
-          opacity="0"
-        />
-        <circle
-          ref={spark2Ref}
-          cx="7"
-          cy="14"
-          r="1.05"
-          fill="#E59B63"
-          opacity="0"
-        />
-
         {/* Outer Thruster Plasma Plume */}
         <path
-          ref={outerFlameRef}
           d="M16 8.2L1.5 12L16 15.8V8.2Z"
           fill="#E59B63"
-          style={{ transformOrigin: '16px 12px', willChange: 'transform, opacity' }}
         />
 
         {/* Inner White-Hot Core Flame */}
         <path
-          ref={innerFlameRef}
           d="M16 9.8L7 12L16 14.2V9.8Z"
           fill="#FBEEE0"
-          style={{ transformOrigin: '16px 12px', willChange: 'transform' }}
         />
 
         {/* Upper & Lower Swept Delta Stabilizer Fins (Terracotta Copper) */}
@@ -142,7 +106,6 @@ const ValidatorScrollRocket: React.FC<ValidatorScrollRocketProps> = ({
         {/* Validator Telemetry Avionics Porthole (Live Emerald LED) */}
         <circle cx="27.5" cy="12" r="3.4" fill="#0B0F17" />
         <circle
-          ref={portholeLedRef}
           cx="27.5"
           cy="12"
           r="2.2"
@@ -166,17 +129,11 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
   const [scrolled, setScrolled] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
 
-  // Refs for 120fps GPU-accelerated Scroll Progress Rail & Rocket Physics Engine
+  // Refs for GPU-accelerated Scroll Progress Rail & Rocket Carriage
   const railRef = useRef<HTMLDivElement>(null);
   const fillBarRef = useRef<HTMLDivElement>(null);
   const rocketCarriageRef = useRef<HTMLDivElement>(null);
   const rocketBodyRef = useRef<HTMLDivElement>(null);
-  const outerFlameRef = useRef<SVGPathElement>(null);
-  const innerFlameRef = useRef<SVGPathElement>(null);
-  const afterburnerGlowRef = useRef<SVGCircleElement>(null);
-  const spark1Ref = useRef<SVGCircleElement>(null);
-  const spark2Ref = useRef<SVGCircleElement>(null);
-  const portholeLedRef = useRef<SVGCircleElement>(null);
   const percentTextRef = useRef<HTMLSpanElement>(null);
 
   const scrolledRef = useRef(false);
@@ -367,7 +324,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className={`w-full transition-all duration-300 relative ${
-        scrolled ? 'py-2.5 glass-navbar-scrolled' : 'py-3.5 glass-navbar'
+        scrolled ? 'py-2 glass-navbar-scrolled' : 'py-2.5 glass-navbar'
       }`}
     >
       {/* Top Specular Glass Reflection Highlight & Ambient Sheen */}
@@ -376,7 +333,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-        <div className="absolute -top-10 left-1/4 w-1/2 h-20 bg-gradient-to-r from-transparent via-white/[0.07] to-transparent blur-xl" />
+        <div
+          className="absolute -top-10 left-1/4 w-1/2 h-20"
+          style={{
+            background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, transparent 70%)',
+          }}
+        />
       </div>
 
       {/* 120fps Spring-Physics Scroll Progress Rail + Interactive Anti-AI-Slop Validator Rocket */}
@@ -417,12 +379,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         >
           <ValidatorScrollRocket
             rocketBodyRef={rocketBodyRef}
-            outerFlameRef={outerFlameRef}
-            innerFlameRef={innerFlameRef}
-            afterburnerGlowRef={afterburnerGlowRef}
-            spark1Ref={spark1Ref}
-            spark2Ref={spark2Ref}
-            portholeLedRef={portholeLedRef}
           />
           <span
             ref={percentTextRef}
@@ -434,7 +390,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between relative z-10">
         {/* Brand Zone: Mini Chibi Avatar + Name with Micro-Animations */}
         <a
           href="#home"
@@ -445,10 +401,10 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             setMobileMenuOpen(false);
             onNavigate('home');
           }}
-          className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] rounded-full pr-2 cursor-pointer select-none transition-transform duration-200 active:scale-95 touch-manipulation"
+          className="flex items-center gap-2 sm:gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] rounded-full pr-2 cursor-pointer select-none transition-transform duration-200 active:scale-95 touch-manipulation"
         >
           <div className="relative">
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-white/30 group-hover:border-[#e59b63] transition-all duration-300 bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_4px_12px_rgba(0,0,0,0.3)] flex-shrink-0 group-hover:shadow-[#e59b63]/30 group-hover:shadow-lg">
+            <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-white/30 group-hover:border-[#e59b63] transition-all duration-300 bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_4px_12px_rgba(0,0,0,0.3)] flex-shrink-0 group-hover:shadow-[#e59b63]/30 group-hover:shadow-lg">
               <motion.img
                 src={ASSET_IMAGES.avatar}
                 alt="Uray Fazli Alman Avatar"
@@ -459,17 +415,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
               />
             </div>
             {/* Live Node Operator Status Indicator */}
-            <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5" title="Node Operator Active">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-[#0f141d]"></span>
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3" title="Node Operator Active">
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-[#0f141d] shadow-[0_0_6px_rgba(34,197,94,0.65)]"></span>
             </span>
           </div>
 
           <div className="flex flex-col">
-            <span className="font-fredoka text-lg sm:text-xl font-medium tracking-wide text-[#fbeee0] group-hover:text-white transition-colors truncate max-w-[170px] xs:max-w-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+            <span className="font-fredoka text-base sm:text-lg font-medium tracking-wide text-[#fbeee0] group-hover:text-white transition-colors truncate max-w-[160px] xs:max-w-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
               Uray Fazli Alman
             </span>
-            <span className="text-[10px] uppercase tracking-wider font-mono text-[#e59b63] group-hover:text-[#fbeee0] transition-colors -mt-1 hidden sm:block">
+            <span className="text-[9.5px] uppercase tracking-wider font-mono text-[#e59b63] group-hover:text-[#fbeee0] transition-colors -mt-1 hidden sm:block">
               {lang === 'id' ? 'Operator Node & Engineer' : 'Node Operator & Engineer'}
             </span>
           </div>
@@ -477,7 +432,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
 
         {/* Center Zone: Navigation Links with Smooth Animated Sliding Glass Pill */}
         <nav
-          className="hidden md:flex items-center gap-1 glass-pill p-1.5 rounded-full relative"
+          className="hidden md:flex items-center gap-0.5 glass-pill p-1 rounded-full relative"
           onMouseLeave={() => setHoveredTab(null)}
         >
           {navItems.map((item) => {
@@ -490,7 +445,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
                 href={`#${item.id}`}
                 onClick={(e) => handleItemClick(e, item)}
                 onMouseEnter={() => setHoveredTab(item.id)}
-                className={`relative px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer select-none focus:outline-none ${
+                className={`relative px-3.5 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer select-none focus:outline-none whitespace-nowrap ${
                   isActive
                     ? 'text-white font-semibold drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]'
                     : 'text-[#e8dacb] hover:text-white'
@@ -650,7 +605,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeSection, onNavigate, onOpe
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="md:hidden absolute top-full left-0 right-0 z-50 glass-drawer"
           >
-            <div className="px-4 pt-3 pb-6 space-y-2 max-w-7xl mx-auto">
+            <div className="px-4 pt-3 pb-5 space-y-1.5 max-w-5xl mx-auto">
               {navItems.map((item) => {
                 const isActive = activeSection === item.id;
                 return (

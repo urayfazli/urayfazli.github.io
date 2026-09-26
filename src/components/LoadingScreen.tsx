@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { DoodleStar } from './Doodles';
 import { robotSound } from '../utils/robotSoundEngine';
-import { isWebCacheWarm, markWebCacheWarm } from '../utils/cacheManager';
 
 interface LoadingScreenProps {
   onStartExit?: () => void;
@@ -30,30 +29,36 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const exitTriggeredRef = useRef(false);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const triggerSmoothExit = () => {
     if (exitTriggeredRef.current) return;
     exitTriggeredRef.current = true;
-    markWebCacheWarm();
     setIsExiting(true);
 
     // Start revealing & gliding in the main website underneath in parallel for a seamless cross-dissolve
     onStartExit?.();
 
-    setTimeout(() => {
+    exitTimerRef.current = setTimeout(() => {
       onFinish();
     }, 960);
   };
 
   useEffect(() => {
-    // Realistic staged data-loading simulation (accelerates automatically on warm-cached repeat visits)
-    const warmCache = isWebCacheWarm();
-    const speedFactor = warmCache ? 0.48 : 1;
+    return () => {
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Realistic staged data-loading simulation (~5.2 seconds total)
     let current = 0;
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const tick = () => {
-      if (current >= 100) return;
+      if (current >= 100 || exitTriggeredRef.current) return;
 
       let increment = 1;
       let nextDelay = 65;
@@ -78,15 +83,15 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         nextDelay = 50;
       }
 
-      current = Math.min(100, current + (warmCache ? increment * 1.4 : increment));
+      current = Math.min(100, current + increment);
       setProgress(current);
 
-      if (current < 100) {
-        timeoutId = setTimeout(tick, Math.max(18, Math.round(nextDelay * speedFactor)));
+      if (current < 100 && !exitTriggeredRef.current) {
+        timeoutId = setTimeout(tick, nextDelay);
       }
     };
 
-    timeoutId = setTimeout(tick, warmCache ? 45 : 120);
+    timeoutId = setTimeout(tick, 120);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -137,15 +142,19 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         }}
       />
 
-      {/* Soft Warm Radial Aura Behind Character */}
+      {/* Soft Warm Radial Aura Behind Character (Zero Gaussian Filter Cost) */}
       <motion.div
         animate={
           isExiting
-            ? { scale: 1.65, opacity: 0 }
+            ? { scale: 1.5, opacity: 0 }
             : { scale: 1, opacity: 1 }
         }
         transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute w-[320px] h-[320px] sm:w-[440px] sm:h-[440px] rounded-full bg-[#9d613c]/25 blur-3xl pointer-events-none will-change-transform"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(157, 97, 60, 0.26) 0%, rgba(157, 97, 60, 0.08) 45%, transparent 70%)',
+        }}
+        className="absolute w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] rounded-full pointer-events-none"
       />
 
       {/* Foreground Floating Doodle Stars (Float gently upward on exit) */}
@@ -156,9 +165,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
             : { y: 0, scale: 1, opacity: 1 }
         }
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute top-1/4 left-1/4 pointer-events-none hidden sm:block will-change-transform"
+        className="absolute top-1/4 left-1/4 pointer-events-none hidden sm:block"
       >
-        <DoodleStar className="w-6 h-6 text-[#e59b63]/60 animate-twinkle" />
+        <DoodleStar className="w-6 h-6 text-[#e59b63]/60" />
       </motion.div>
       <motion.div
         animate={
@@ -167,9 +176,9 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
             : { y: 0, scale: 1, opacity: 1 }
         }
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute bottom-1/4 right-1/4 pointer-events-none hidden sm:block will-change-transform"
+        className="absolute bottom-1/4 right-1/4 pointer-events-none hidden sm:block"
       >
-        <DoodleStar className="w-7 h-7 text-[#fbeee0]/50 animate-twinkle" />
+        <DoodleStar className="w-7 h-7 text-[#fbeee0]/50" />
       </motion.div>
 
       {/* ==============================================================

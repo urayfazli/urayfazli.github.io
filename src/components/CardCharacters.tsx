@@ -71,7 +71,7 @@ export const AboutCoderCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 96 84"
-        className={`w-20 h-18 sm:w-24 sm:h-20 overflow-visible transition-transform duration-150 ease-out ${
+        className={`w-14 h-12 sm:w-16 sm:h-14 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -328,7 +328,7 @@ export const NodeSentryCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible transition-transform duration-150 ease-out ${
+        className={`w-14 h-12 sm:w-16 sm:h-14 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -447,7 +447,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         <motion.svg
           onClick={handleDroidClick}
           viewBox="0 0 48 48"
-          className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+          className="w-8 h-8 sm:w-9 sm:h-9 overflow-visible shrink-0 cursor-pointer"
           fill="none"
           animate={
             chirpBounce
@@ -505,7 +505,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
         <motion.svg
           onClick={handleDroidClick}
           viewBox="0 0 48 48"
-          className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+          className="w-8 h-8 sm:w-9 sm:h-9 overflow-visible shrink-0 cursor-pointer"
           fill="none"
           animate={
             chirpBounce
@@ -550,7 +550,7 @@ export const NetworkDroidCharacter: React.FC<{ type: 'aptos' | 'sei' | 'subquery
       <motion.svg
         onClick={handleDroidClick}
         viewBox="0 0 48 48"
-        className="w-11 h-11 overflow-visible shrink-0 cursor-pointer"
+        className="w-8 h-8 sm:w-9 sm:h-9 overflow-visible shrink-0 cursor-pointer"
         fill="none"
         animate={
           chirpBounce
@@ -640,7 +640,7 @@ export const ExperienceForgeCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 76"
-        className={`w-18 h-15 sm:w-20 sm:h-17 overflow-visible transition-transform duration-150 ease-out ${
+        className={`w-14 h-12 sm:w-16 sm:h-14 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"
@@ -759,7 +759,7 @@ export const ConnectMessengerCharacter: React.FC = () => {
 
       <svg
         viewBox="0 0 88 80"
-        className={`w-18 h-16 sm:w-22 sm:h-19 overflow-visible transition-transform duration-150 ease-out ${
+        className={`w-14 h-12 sm:w-16 sm:h-14 overflow-visible transition-transform duration-150 ease-out ${
           isPressed ? 'scale-92 -translate-y-0.5' : 'scale-100'
         }`}
         fill="none"

@@ -66,19 +66,19 @@ export const SpeechBubble: React.FC<{
 }> = ({ text, className = '' }) => (
   <div className={`relative inline-block ${className}`}>
     {/* Crown on top */}
-    <div className="absolute -top-4 left-3 rotate-[-12deg] z-10">
-      <CrownDoodle className="w-5 h-4 text-[#fbeee0]" />
+    <div className="absolute -top-3.5 left-2.5 rotate-[-12deg] z-10">
+      <CrownDoodle className="w-4 h-3.5 text-[#fbeee0]" />
     </div>
 
     {/* Speech Bubble Pill */}
-    <div className="relative px-5 py-2.5 rounded-[22px] border-[2.5px] border-[#fbeee0] bg-[#141b26] text-center shadow-lg transform rotate-[-4deg] hover:rotate-0 transition-transform duration-300">
-      <span className="font-fredoka text-lg md:text-xl font-medium tracking-wide text-[#fbeee0] whitespace-nowrap block">
+    <div className="relative px-3.5 py-1.5 rounded-[16px] border-2 border-[#fbeee0] bg-[#141b26] text-center shadow-md transform rotate-[-3deg] hover:rotate-0 transition-transform duration-300">
+      <span className="font-fredoka text-sm sm:text-base font-medium tracking-wide text-[#fbeee0] whitespace-nowrap block">
         {text}
       </span>
 
       {/* Bubble Tail Centered */}
       <svg
-        className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-5 h-4 text-[#fbeee0]"
+        className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-4 h-3 text-[#fbeee0]"
         viewBox="0 0 20 16"
         fill="currentColor"
         aria-hidden="true"
@@ -272,35 +272,6 @@ export const BashScriptIcon: React.FC<{ className?: string }> = ({ className = '
   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
     <path d="M4 6.5L8.5 10L4 13.5" stroke="#9d613c" />
     <line x1="10.5" y1="13.5" x2="16" y2="13.5" stroke="#fbeee0" />
-  </svg>
-);
-
-// Retro Cassette Tape Doodle
-export const RetroCassetteDoodle: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <rect x="2" y="4" width="20" height="15" rx="3" stroke="#9d613c" fill="#141c28" />
-    <rect x="5.5" y="8" width="13" height="7" rx="1.5" stroke="#fbeee0" opacity="0.8" />
-    <circle cx="8.5" cy="11.5" r="1.8" fill="#9d613c" stroke="#fbeee0" />
-    <circle cx="15.5" cy="11.5" r="1.8" fill="#9d613c" stroke="#fbeee0" />
-    <line x1="10.3" y1="11.5" x2="13.7" y2="11.5" stroke="#fbeee0" strokeDasharray="1 1" />
-  </svg>
-);
-
-// Retro Speaker / Sound Doodle
-export const RetroSpeakerDoodle: React.FC<{ className?: string; isMuted?: boolean }> = ({
-  className = 'w-4 h-4',
-  isMuted = false,
-}) => (
-  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <polygon points="3,7 7,7 12,3 12,17 7,13 3,13" fill="#9d613c" stroke="#fbeee0" />
-    {!isMuted ? (
-      <>
-        <path d="M15 7C16 8 16 12 15 13" stroke="#fbeee0" />
-        <path d="M17.5 5C19.5 7 19.5 13 17.5 15" stroke="#9d613c" />
-      </>
-    ) : (
-      <line x1="14" y1="8" x2="18" y2="12" stroke="#ef4444" strokeWidth="2" />
-    )}
   </svg>
 );
 

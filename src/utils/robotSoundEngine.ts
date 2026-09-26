@@ -14,7 +14,6 @@ export type RobotCharacterId =
   | 'aptos'
   | 'sei'
   | 'subquery'
-  | 'djbot'
   | 'hero';
 
 class RobotSoundEngine {
@@ -28,7 +27,6 @@ class RobotSoundEngine {
     aptos: 0,
     sei: 0,
     subquery: 0,
-    djbot: 0,
     hero: 0,
   };
 
@@ -417,44 +415,6 @@ class RobotSoundEngine {
           modDepth: 40,
           filterFreq: 2500,
           gain: 0.26,
-        });
-        break;
-      }
-
-      case 'djbot': {
-        // DJ Beat-Bot 8-Bit: Funky turntable robot boop-bap + synth drop
-        this.playSyllable(ctx, out, {
-          startTime: now,
-          duration: 0.07,
-          startFreq: 440 * pitchShift,
-          endFreq: 880 * pitchShift,
-          carrierType: 'square',
-          modFreq: 85,
-          modDepth: 70,
-          filterFreq: 2200,
-          gain: 0.28,
-        });
-        this.playSyllable(ctx, out, {
-          startTime: now + 0.075,
-          duration: 0.065,
-          startFreq: 659.25 * pitchShift,
-          endFreq: 523.25 * pitchShift,
-          carrierType: 'square',
-          modFreq: 65,
-          modDepth: 55,
-          filterFreq: 2000,
-          gain: 0.26,
-        });
-        this.playSyllable(ctx, out, {
-          startTime: now + 0.145,
-          duration: 0.12,
-          startFreq: 587.33 * pitchShift,
-          endFreq: 1174.66 * pitchShift,
-          carrierType: 'sawtooth',
-          modFreq: 50,
-          modDepth: 65,
-          filterFreq: 2900,
-          gain: 0.28,
         });
         break;
       }

@@ -54,20 +54,20 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
             initial={{ opacity: 0, scale: 0.96, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 10 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="doodle-card relative w-full max-w-2xl p-6 sm:p-8 text-[#fbeee0] my-auto max-h-[90vh] overflow-y-auto"
+            className="doodle-card relative w-full max-w-xl p-4 sm:p-6 text-[#fbeee0] my-auto max-h-[90vh] overflow-y-auto"
           >
             {/* Top Sketchbook Tape */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-1.5deg] pointer-events-none z-20">
-              <DoodleTape className="w-24 h-5" />
+            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rotate-[-1.5deg] pointer-events-none z-20">
+              <DoodleTape className="w-20 h-4" />
             </div>
 
             {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 h-9 rounded-full bg-[#0e1520] hover:bg-[#9d613c] border border-[#fbeee0]/40 hover:border-[#fbeee0] text-[#d8c7b6] hover:text-white flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] z-20"
+              className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 w-8 h-8 rounded-full bg-[#0e1520] hover:bg-[#9d613c] border border-[#fbeee0]/40 hover:border-[#fbeee0] text-[#d8c7b6] hover:text-white flex items-center justify-center transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63] z-20 text-xs"
               aria-label="Close modal"
             >
               ✕
@@ -75,44 +75,44 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
 
             <div className="relative z-10">
               {/* Header with Network Icon & Title */}
-              <div className="flex items-start gap-4 mb-5 pr-10">
-                <div className="shrink-0 p-2.5 rounded-2xl bg-[#0e1520] border-[1.8px] border-[#fbeee0]/60">
-                  {network.logoType === 'aptos' && <AptosLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
-                  {network.logoType === 'sei' && <SeiLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
-                  {network.logoType === 'subquery' && <SubQueryLogo className="w-11 h-11 sm:w-12 sm:h-12" />}
+              <div className="flex items-start gap-3.5 mb-4 pr-9">
+                <div className="shrink-0 p-2 rounded-xl bg-[#0e1520] border-[1.5px] border-[#fbeee0]/60">
+                  {network.logoType === 'aptos' && <AptosLogo className="w-9 h-9 sm:w-10 sm:h-10" />}
+                  {network.logoType === 'sei' && <SeiLogo className="w-9 h-9 sm:w-10 sm:h-10" />}
+                  {network.logoType === 'subquery' && <SubQueryLogo className="w-9 h-9 sm:w-10 sm:h-10" />}
                 </div>
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono">
                     <span className="uppercase tracking-wider text-[#e59b63] font-semibold">
                       {network.role}
                     </span>
                     <span className="text-[#fbeee0]/25">·</span>
-                    <span className="text-emerald-400 inline-flex items-center gap-1.5">
+                    <span className="text-emerald-400 inline-flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                       {network.status}
                     </span>
                   </div>
                   <h3
                     id="network-modal-title"
-                    className="font-fredoka text-2xl sm:text-3xl font-medium text-[#fbeee0] mt-0.5"
+                    className="font-fredoka text-xl sm:text-2xl font-medium text-[#fbeee0] mt-0.5"
                   >
                     {network.name}
                   </h3>
-                  <p className="text-xs sm:text-sm font-mono text-[#bba998] mt-0.5">
+                  <p className="text-[11px] sm:text-xs font-mono text-[#bba998]">
                     {network.category}
                   </p>
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-[#f0e4d6] text-sm sm:text-base leading-relaxed mb-6 pl-3.5 border-l-2 border-dashed border-[#9d613c]/75">
+              <p className="text-[#f0e4d6] text-xs sm:text-sm leading-relaxed mb-4 pl-3 border-l-2 border-dashed border-[#9d613c]/75">
                 {network.description}
               </p>
 
               {/* Anti-AI-Slop Hairline Tabular Hardware Specifications Strip */}
-              <div className="mb-6 rounded-xl bg-[#0a0f17] border border-[#fbeee0]/20 overflow-hidden">
-                <div className="px-4 py-2 bg-[#101826] border-b border-[#fbeee0]/15 flex items-center justify-between">
-                  <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] font-semibold">
+              <div className="mb-4 rounded-lg bg-[#0a0f17] border border-[#fbeee0]/20 overflow-hidden">
+                <div className="px-3 py-1.5 bg-[#101826] border-b border-[#fbeee0]/15 flex items-center justify-between">
+                  <h4 className="text-[10px] font-mono uppercase tracking-wider text-[#e59b63] font-semibold">
                     {lang === 'id'
                       ? 'Spesifikasi Perangkat Keras & Infrastruktur'
                       : 'Dedicated Node Hardware & Infrastructure'}
@@ -121,36 +121,36 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
                     SLA 99.9%
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#fbeee0]/15 text-xs font-mono">
-                  <div className="p-3">
-                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#fbeee0]/15 text-[11px] font-mono">
+                  <div className="p-2.5">
+                    <div className="text-[#9a8978] text-[9px] uppercase tracking-wider">
                       {lang === 'id' ? 'Prosesor' : 'Processor'}
                     </div>
-                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-0.5">
                       {network.hardware.cpu}
                     </div>
                   </div>
-                  <div className="p-3">
-                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                  <div className="p-2.5">
+                    <div className="text-[#9a8978] text-[9px] uppercase tracking-wider">
                       {lang === 'id' ? 'Memori' : 'Memory'}
                     </div>
-                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-0.5">
                       {network.hardware.ram}
                     </div>
                   </div>
-                  <div className="p-3">
-                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                  <div className="p-2.5">
+                    <div className="text-[#9a8978] text-[9px] uppercase tracking-wider">
                       {lang === 'id' ? 'Penyimpanan' : 'Storage'}
                     </div>
-                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-0.5">
                       {network.hardware.storage}
                     </div>
                   </div>
-                  <div className="p-3">
-                    <div className="text-[#9a8978] text-[10px] uppercase tracking-wider">
+                  <div className="p-2.5">
+                    <div className="text-[#9a8978] text-[9px] uppercase tracking-wider">
                       Bandwidth
                     </div>
-                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-1">
+                    <div className="font-semibold text-[#fbeee0] tabular-nums mt-0.5">
                       {network.hardware.bandwidth}
                     </div>
                   </div>
@@ -158,15 +158,15 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
               </div>
 
               {/* Key Highlights / Operator Responsibilities */}
-              <div className="mb-6">
-                <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] mb-3 font-semibold">
+              <div className="mb-4">
+                <h4 className="text-[10px] font-mono uppercase tracking-wider text-[#e59b63] mb-2 font-semibold">
                   {lang === 'id' ? 'Tanggung Jawab & Sorotan Operasional' : 'Operational Highlights'}
                 </h4>
-                <ul className="space-y-2">
+                <ul className="space-y-1.5">
                   {network.highlights.map((item, idx) => (
                     <li
                       key={idx}
-                      className="flex items-start gap-2.5 text-xs sm:text-sm text-[#e8dacb]"
+                      className="flex items-start gap-2 text-xs text-[#e8dacb]"
                     >
                       <span className="text-emerald-400 font-mono mt-0.5 font-bold">✓</span>
                       <span>{item}</span>
@@ -175,19 +175,19 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
                 </ul>
               </div>
 
-              {/* DevOps & Node Runner Stack (Hairline Inline Metadata instead of Pill Soup) */}
-              <div className="mb-6 pt-4 border-t border-dashed border-[#fbeee0]/20">
-                <h4 className="text-[11px] font-mono uppercase tracking-wider text-[#e59b63] mb-2 font-semibold">
+              {/* DevOps & Node Runner Stack */}
+              <div className="mb-4 pt-3 border-t border-dashed border-[#fbeee0]/20">
+                <h4 className="text-[10px] font-mono uppercase tracking-wider text-[#e59b63] mb-1.5 font-semibold">
                   DevOps & Observability Stack
                 </h4>
-                <div className="flex flex-wrap items-center gap-y-1.5 text-xs font-mono text-[#fbeee0]">
+                <div className="flex flex-wrap items-center gap-y-1 text-[11px] font-mono text-[#fbeee0]">
                   {network.tools.map((tool, index) => (
                     <React.Fragment key={tool}>
-                      <span className="px-2.5 py-1 rounded-md bg-[#0e1520] border border-[#fbeee0]/20 text-[#fbeee0]">
+                      <span className="px-2 py-0.5 rounded bg-[#0e1520] border border-[#fbeee0]/20 text-[#fbeee0]">
                         {tool}
                       </span>
                       {index < network.tools.length - 1 && (
-                        <span className="mx-1.5 text-[#9d613c]" aria-hidden="true">
+                        <span className="mx-1 text-[#9d613c]" aria-hidden="true">
                           ·
                         </span>
                       )}
@@ -197,13 +197,13 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
               </div>
 
               {/* Action Links */}
-              <div className="pt-4 border-t-2 border-dashed border-[#fbeee0]/20 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2.5">
+              <div className="pt-3 border-t border-dashed border-[#fbeee0]/20 flex flex-wrap items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <a
                     href={network.websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="doodle-subcard px-4 py-2 !bg-[#9d613c] hover:!bg-[#b06f44] text-white text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="doodle-subcard px-3.5 py-1.5 !bg-[#9d613c] hover:!bg-[#b06f44] text-white text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     {lang === 'id' ? 'Situs Resmi ↗' : 'Official Website ↗'}
                   </a>
@@ -212,7 +212,7 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
                       href={network.explorerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="doodle-subcard px-4 py-2 text-[#fbeee0] hover:text-white text-xs sm:text-sm font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                      className="doodle-subcard px-3.5 py-1.5 text-[#fbeee0] hover:text-white text-xs font-mono transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
                     >
                       Block Explorer ↗
                     </a>
@@ -221,7 +221,7 @@ export const NetworkDetailModal: React.FC<NetworkDetailModalProps> = ({ network,
                 <button
                   type="button"
                   onClick={onClose}
-                  className="text-xs font-mono text-[#bba998] hover:text-[#fbeee0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] px-3 py-1.5 rounded-lg border border-transparent hover:border-[#fbeee0]/25"
+                  className="text-[11px] font-mono text-[#bba998] hover:text-[#fbeee0] transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9d613c] px-2.5 py-1 rounded-md border border-transparent hover:border-[#fbeee0]/25"
                 >
                   {lang === 'id' ? 'Tutup [ESC]' : 'Close [ESC]'}
                 </button>

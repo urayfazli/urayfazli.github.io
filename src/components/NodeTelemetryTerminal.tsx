@@ -149,12 +149,14 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
   const [isPinging, setIsPinging] = useState<boolean>(false);
   const [copiedCli, setCopiedCli] = useState<boolean>(false);
   const [lastPingTimestamp, setLastPingTimestamp] = useState<string>('00:00:02');
-
   const terminalRef = useRef<HTMLDivElement | null>(null);
+  const pingTimerRef = useRef<number | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
+
   const activeNode =
     TELEMETRY_NODES.find((node) => node.id === activeId) || TELEMETRY_NODES[0];
 
-  // Authentic block progression with tabular precision (pauses when tab is hidden or scrolled out of viewport)
+  // Authentic block progression with tabular precision (pauses when tab is hidden or terminal is offscreen)
   useEffect(() => {
     let isVisible = false;
     const el = terminalRef.current;
@@ -186,18 +188,23 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
       const mm = String(now.getMinutes()).padStart(2, '0');
       const ss = String(now.getSeconds()).padStart(2, '0');
       setLastPingTimestamp(`${hh}:${mm}:${ss}`);
-    }, 10000);
+    }, 3500);
 
     return () => {
-      if (observer) observer.disconnect();
       window.clearInterval(timer);
+      if (observer) observer.disconnect();
+      if (pingTimerRef.current !== null) window.clearTimeout(pingTimerRef.current);
+      if (copyTimerRef.current !== null) window.clearTimeout(copyTimerRef.current);
     };
   }, []);
 
   const handlePingRpc = () => {
     if (isPinging) return;
     setIsPinging(true);
-    window.setTimeout(() => {
+    if (pingTimerRef.current !== null) {
+      window.clearTimeout(pingTimerRef.current);
+    }
+    pingTimerRef.current = window.setTimeout(() => {
       setBlockOffsets((prev) => ({
         ...prev,
         [activeId]: prev[activeId] + 1,
@@ -210,42 +217,45 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
         ).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
       );
       setIsPinging(false);
+      pingTimerRef.current = null;
     }, 180);
   };
 
   const handleCopyCli = async () => {
     try {
       await navigator.clipboard.writeText(activeNode.cliCommand);
-      setCopiedCli(true);
-      window.setTimeout(() => setCopiedCli(false), 1800);
     } catch {
-      setCopiedCli(true);
-      window.setTimeout(() => setCopiedCli(false), 1800);
+      // Ignore clipboard permission errors
     }
+    setCopiedCli(true);
+    if (copyTimerRef.current !== null) {
+      window.clearTimeout(copyTimerRef.current);
+    }
+    copyTimerRef.current = window.setTimeout(() => {
+      setCopiedCli(false);
+      copyTimerRef.current = null;
+    }, 1800);
   };
 
   const currentHeight = activeNode.baseHeight + (blockOffsets[activeNode.id] || 0);
   const currentLatency = Math.max(8, activeNode.baseLatencyMs + latencyJitter);
 
   return (
-    <div
-      ref={terminalRef}
-      className="mb-5 rounded-xl bg-[#0a0f17] border border-[#fbeee0]/25 overflow-hidden"
-    >
+    <div ref={terminalRef} className="mb-3.5 rounded-lg bg-[#0a0f17] border border-[#fbeee0]/20 overflow-hidden">
       {/* Terminal Top Bar: Natural Title + Functional Segmented Node Switcher */}
-      <div className="px-3.5 py-2.5 bg-[#0e1520] border-b border-[#fbeee0]/15 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="px-2.5 py-2 bg-[#0e1520] border-b border-[#fbeee0]/15 flex flex-wrap items-center justify-between gap-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span
-            className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"
+            className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"
             aria-hidden="true"
           />
-          <span className="text-xs font-medium text-[#fbeee0] truncate">
-            {lang === 'id' ? 'Telemetri Terminal' : 'Terminal Telemetry'}
+          <span className="text-[11px] font-medium text-[#fbeee0] truncate">
+            {lang === 'id' ? 'Telemetri' : 'Telemetry'}
           </span>
-          <span className="text-xs text-[#bba998]" aria-hidden="true">
+          <span className="text-[11px] text-[#bba998]" aria-hidden="true">
             ·
           </span>
-          <span className="font-mono text-[11px] text-[#d6c4b2] tabular-nums truncate">
+          <span className="font-mono text-[10px] text-[#d6c4b2] tabular-nums truncate">
             {activeNode.daemon}
           </span>
         </div>
@@ -254,7 +264,7 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
         <div
           role="tablist"
           aria-label={lang === 'id' ? 'Pilih node jaringan' : 'Select network node'}
-          className="flex items-center gap-0.5 p-0.5 bg-[#080c12] rounded-lg border border-[#fbeee0]/15 shrink-0"
+          className="flex items-center gap-0.5 p-0.5 bg-[#080c12] rounded-md border border-[#fbeee0]/15 shrink-0"
         >
           {TELEMETRY_NODES.map((node) => {
             const isSelected = node.id === activeId;
@@ -265,7 +275,7 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => setActiveId(node.id)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-mono transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
+                className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0 ${
                   isSelected
                     ? 'bg-[#9d613c] text-[#fbeee0] font-semibold'
                     : 'text-[#bba998] hover:text-[#fbeee0]'
@@ -279,7 +289,7 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
       </div>
 
       {/* Subheader Metadata Row: Clean Unboxed Text with Typographic Separators */}
-      <div className="px-3.5 py-2 bg-[#0b111a] border-b border-[#fbeee0]/10 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[#bba998]">
+      <div className="px-2.5 py-1.5 bg-[#0b111a] border-b border-[#fbeee0]/10 flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-mono text-[#bba998]">
         <div className="flex items-center gap-1.5 min-w-0 truncate">
           <span className="text-emerald-400 font-medium">
             {lang === 'id' ? 'Nominal' : 'Nominal'}
@@ -287,88 +297,88 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
           <span aria-hidden="true">·</span>
           <span className="truncate">{activeNode.chainId}</span>
         </div>
-        <div className="flex items-center gap-1.5 tabular-nums shrink-0">
+        <div className="flex items-center gap-1 tabular-nums shrink-0">
           <span>{activeNode.nvmeLoad}</span>
           <span aria-hidden="true">·</span>
-          <span>{lastPingTimestamp} UTC</span>
+          <span>{lastPingTimestamp}</span>
         </div>
       </div>
 
       {/* High-Density Tabular Metrics Grid (Hairline Divided, Zero Nested Cards) */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-[#fbeee0]/10 border-b border-[#fbeee0]/12 text-xs">
-        <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
-          <span className="text-[#bba998] text-[11px]">
-            {lang === 'id' ? 'Tinggi Blok' : 'Block Height'}
+      <div className="grid grid-cols-2 divide-x divide-y divide-[#fbeee0]/10 border-b border-[#fbeee0]/12 text-[11px]">
+        <div className="px-2.5 py-1.5 flex items-center justify-between gap-1.5">
+          <span className="text-[#bba998] text-[10px] truncate">
+            {lang === 'id' ? 'Blok' : 'Height'}
           </span>
-          <span className="font-mono tabular-nums text-[#fbeee0] font-medium">
+          <span className="font-mono tabular-nums text-[#fbeee0] font-medium text-[10.5px]">
             #{currentHeight.toLocaleString('en-US')}
           </span>
         </div>
 
-        <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
-          <span className="text-[#bba998] text-[11px]">
-            {lang === 'id' ? 'Latensi RPC' : 'RPC Latency'}
+        <div className="px-2.5 py-1.5 flex items-center justify-between gap-1.5">
+          <span className="text-[#bba998] text-[10px] truncate">
+            {lang === 'id' ? 'Latensi' : 'Latency'}
           </span>
-          <span className="font-mono tabular-nums text-emerald-400 font-medium">
+          <span className="font-mono tabular-nums text-emerald-400 font-medium text-[10.5px]">
             {isPinging ? '...' : `${currentLatency} ms`}
           </span>
         </div>
 
-        <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
-          <span className="text-[#bba998] text-[11px]">
+        <div className="px-2.5 py-1.5 flex items-center justify-between gap-1.5">
+          <span className="text-[#bba998] text-[10px] truncate">
             {lang === 'id' ? 'Konsensus' : 'Consensus'}
           </span>
-          <span className="font-mono tabular-nums text-[#f0e4d6] text-[11px] truncate">
+          <span className="font-mono tabular-nums text-[#f0e4d6] text-[10.5px] truncate">
             {lang === 'id'
               ? activeNode.consensusLabelId
               : activeNode.consensusLabelEn}
           </span>
         </div>
 
-        <div className="px-3.5 py-2.5 flex items-center justify-between gap-2">
-          <span className="text-[#bba998] text-[11px]">
-            {lang === 'id' ? 'Peer · Memori' : 'Peers · Memory'}
+        <div className="px-2.5 py-1.5 flex items-center justify-between gap-1.5">
+          <span className="text-[#bba998] text-[10px] truncate">
+            {lang === 'id' ? 'Peer · RAM' : 'Peers · RAM'}
           </span>
-          <span className="font-mono tabular-nums text-[#f0e4d6] text-[11px] truncate">
+          <span className="font-mono tabular-nums text-[#f0e4d6] text-[10.5px] truncate">
             {activeNode.peers} · {activeNode.ramUsage.split(' ')[0]}G
           </span>
         </div>
       </div>
 
       {/* CLI Diagnostic Command & Structured Output Stream */}
-      <div className="p-3.5 font-mono text-[11px] leading-relaxed bg-[#080c12]">
+      <div className="p-2.5 font-mono text-[10px] leading-relaxed bg-[#080c12]">
         {/* Command Prompt Line */}
-        <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-[#fbeee0]/10">
-          <div className="flex items-center gap-2 min-w-0 truncate">
+        <div className="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-[#fbeee0]/10">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
             <span className="text-[#e59b63] select-none shrink-0">$</span>
             <code className="text-[#fbeee0] truncate">{activeNode.cliCommand}</code>
           </div>
           <button
             type="button"
             onClick={handleCopyCli}
-            className="px-2 py-0.5 rounded bg-[#141c28] hover:bg-[#1e293b] text-[#d6c4b2] hover:text-[#fbeee0] border border-[#fbeee0]/15 text-[10px] transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0"
+            className="px-1.5 py-0.5 rounded bg-[#141c28] hover:bg-[#1e293b] text-[#d6c4b2] hover:text-[#fbeee0] border border-[#fbeee0]/15 text-[9.5px] transition-colors duration-150 cursor-pointer whitespace-nowrap shrink-0"
           >
             {copiedCli
               ? lang === 'id'
                 ? 'Tersalin'
                 : 'Copied'
               : lang === 'id'
-              ? 'Salin CLI'
-              : 'Copy CLI'}
+              ? 'Salin'
+              : 'Copy'}
           </button>
         </div>
 
         {/* Structured Stream Rows */}
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           {activeNode.logLines.map((line, index) => (
             <div
               key={`${activeNode.id}-${index}`}
-              className="flex items-baseline gap-2 text-[11px]"
+              className="flex items-baseline gap-1.5 text-[10px]"
             >
               <span className="text-[#8c7a6b] tabular-nums shrink-0">
                 -{line.timeOffsetSec}s
               </span>
-              <span className="text-[#e59b63] shrink-0 w-20 truncate">
+              <span className="text-[#e59b63] shrink-0 w-16 truncate">
                 [{line.subsystem}]
               </span>
               <span className="text-[#d8c7b6] truncate">
@@ -380,26 +390,26 @@ export const NodeTelemetryTerminal: React.FC<NodeTelemetryTerminalProps> = ({
       </div>
 
       {/* Bottom Interactive Controls Bar */}
-      <div className="px-3.5 py-2 bg-[#0e1520] border-t border-[#fbeee0]/15 flex items-center justify-between gap-2 text-[11px]">
+      <div className="px-2.5 py-1.5 bg-[#0e1520] border-t border-[#fbeee0]/15 flex items-center justify-between gap-2 text-[10.5px]">
         <button
           type="button"
           onClick={handlePingRpc}
-          className="px-2.5 py-1 rounded-md bg-[#162030] hover:bg-[#1f2d42] text-[#fbeee0] border border-[#fbeee0]/20 font-mono text-[11px] transition-colors duration-150 cursor-pointer whitespace-nowrap"
+          className="px-2 py-0.5 rounded bg-[#162030] hover:bg-[#1f2d42] text-[#fbeee0] border border-[#fbeee0]/20 font-mono text-[10px] transition-colors duration-150 cursor-pointer whitespace-nowrap"
         >
           {isPinging
             ? lang === 'id'
-              ? 'Memeriksa RPC...'
-              : 'Probing RPC...'
+              ? 'Memeriksa...'
+              : 'Probing...'
             : lang === 'id'
             ? 'Uji Latensi RPC'
-            : 'Probe RPC Latency'}
+            : 'Probe RPC'}
         </button>
 
         {onSelectNetwork && (
           <button
             type="button"
             onClick={() => onSelectNetwork(activeNode.id)}
-            className="font-mono text-[11px] text-[#e59b63] hover:text-[#fbeee0] transition-colors duration-150 cursor-pointer whitespace-nowrap"
+            className="font-mono text-[10px] text-[#e59b63] hover:text-[#fbeee0] transition-colors duration-150 cursor-pointer whitespace-nowrap"
           >
             {lang === 'id'
               ? `Detail ${activeNode.label} →`

@@ -59,13 +59,12 @@ export const TypingText: React.FC<TypingTextProps> = ({
       aria-label={text}
     >
       <span>{displayedText}</span>
-      {/* Animated Typing Cursor */}
+      {/* Animated Typing Cursor (Pulses only while typing, settles cleanly once complete) */}
       <span
-        className={`inline-block w-[3px] sm:w-[3.5px] h-[1.15em] ml-1 rounded-sm align-middle animate-pulse ${cursorClassName}`}
+        className={`inline-block w-[3px] sm:w-[3.5px] h-[1.15em] ml-1 rounded-sm align-middle ${
+          isTyping ? 'animate-pulse' : 'opacity-85'
+        } ${cursorClassName}`}
         aria-hidden="true"
-        style={{
-          animationDuration: isTyping ? '0.6s' : '1.1s',
-        }}
       />
     </p>
   );

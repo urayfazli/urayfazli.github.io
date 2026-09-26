@@ -154,21 +154,16 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
         let resolvedCount: number | null = null;
         let resolvedSource: VisitorData['source'] = 'countapi';
 
-        // 1. Primary CountAPI promise (as requested)
-        const countApiPromise = fetch(
+        // 1. Primary CountAPI promise with 2.5s AbortController timeout so dead DNS never hangs in background
+        const countApiPromise = fetchJsonWithTimeout(
           (mode === 'hit' ? COUNTAPI_HIT_URL : COUNTAPI_GET_URL) + cacheBuster,
-          { cache: 'no-store' }
-        )
-          .then((res) => {
-            if (!res.ok) throw new Error('CountAPI status error');
-            return res.json();
-          })
-          .then((res) => {
-            if (res && typeof res.value === 'number') {
-              return { count: res.value, source: 'countapi' as const };
-            }
-            throw new Error('Invalid CountAPI payload');
-          });
+          2500
+        ).then((res) => {
+          if (res && typeof res.value === 'number') {
+            return { count: res.value, source: 'countapi' as const };
+          }
+          throw new Error('Invalid CountAPI payload');
+        });
 
         // 2. Live Global Cloud Mirror promise (fast & reliable)
         const counterApiPromise = fetchJsonWithTimeout(
@@ -232,7 +227,7 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
     [applyNewCount]
   );
 
-  // Initial real-time HIT on page visit + periodic live polling every 12s
+  // Initial real-time HIT on page visit + periodic live polling every 60s
   useEffect(() => {
     if (!hasHitOnMountRef.current) {
       hasHitOnMountRef.current = true;
@@ -243,7 +238,7 @@ export const VisitorCounterBadge: React.FC<{ className?: string }> = ({ classNam
       if (document.visibilityState === 'visible') {
         syncVisitorCount('poll', false);
       }
-    }, 12000);
+    }, 60000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

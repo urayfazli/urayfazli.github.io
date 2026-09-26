@@ -75,10 +75,10 @@ export const RevealOnScroll: React.FC<RevealOnScrollProps> = ({
         transitionDelay: `${delay}ms`,
         transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
       }}
-      className={`transition-all will-change-[opacity,transform] ${
+      className={`transition-[opacity,transform] ${
         isVisible
           ? 'opacity-100 translate-y-0 scale-100 rotate-0'
-          : 'opacity-0 translate-y-12 scale-[0.96] rotate-[-1deg] pointer-events-none'
+          : 'opacity-0 translate-y-12 scale-[0.96] rotate-[-1deg] pointer-events-none will-change-[opacity,transform]'
       } ${className}`}
     >
       {children}

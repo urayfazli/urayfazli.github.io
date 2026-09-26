@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const TICKER_ITEMS = [
   { label: 'NODE ONLINE', check: true },
@@ -9,6 +9,24 @@ const TICKER_ITEMS = [
 ];
 
 export const RunningTextMarquee: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isInView, setIsInView] = useState(true);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInView(entry.isIntersecting);
+      },
+      { threshold: 0.01 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Render multiple repetitions per half-track so wide viewports are always filled seamlessly
   const repetitions = [0, 1, 2];
 
@@ -22,7 +40,7 @@ export const RunningTextMarquee: React.FC = () => {
         <div key={`${halfPrefix}-${repIdx}`} className="flex items-center shrink-0">
           {TICKER_ITEMS.map((item, idx) => (
             <React.Fragment key={`${halfPrefix}-${repIdx}-${idx}`}>
-              <span className="inline-flex items-center gap-1.5 font-mono text-xs sm:text-[13px] font-medium tracking-wider text-[#fbeee0]/90 whitespace-nowrap px-3 sm:px-4">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] sm:text-xs font-medium tracking-wider text-[#fbeee0]/90 whitespace-nowrap px-2.5 sm:px-3.5">
                 <span>{item.label}</span>
                 {item.check && (
                   <span className="text-emerald-400 font-bold" aria-label="checked">
@@ -31,7 +49,7 @@ export const RunningTextMarquee: React.FC = () => {
                 )}
               </span>
               <span
-                className="text-[#9d613c] font-mono text-xs sm:text-sm select-none"
+                className="text-[#9d613c] font-mono text-[11px] sm:text-xs select-none"
                 aria-hidden="true"
               >
                 •
@@ -45,9 +63,10 @@ export const RunningTextMarquee: React.FC = () => {
 
   return (
     <div
+      ref={containerRef}
       role="region"
       aria-label="NODE ONLINE ✓ • WALLET CONNECTED ✓ • MEME COIN LOADED ✓ • NFT MINTED ✓ • SER, WE ARE STILL EARLY 🚀"
-      className="relative w-full overflow-hidden bg-[#0d131d] border-b border-[#9d613c]/25 py-2.5 z-20 select-none"
+      className="relative w-full overflow-hidden bg-[#0d131d] border-b border-[#9d613c]/25 py-1.5 sm:py-2 z-20 select-none"
     >
       {/* Left & Right Smooth Gradient Fade Masks */}
       <div
@@ -59,8 +78,11 @@ export const RunningTextMarquee: React.FC = () => {
         aria-hidden="true"
       />
 
-      {/* Seamless Infinite Marquee Track */}
-      <div className="animate-marquee">
+      {/* Seamless Infinite Marquee Track (Paused when offscreen) */}
+      <div
+        className="animate-marquee"
+        style={{ animationPlayState: isInView ? undefined : 'paused' }}
+      >
         {renderTrackHalf('track-a', false)}
         {renderTrackHalf('track-b', true)}
       </div>

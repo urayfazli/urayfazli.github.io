@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   DoodleRays,
@@ -7,8 +7,6 @@ import {
   GitHubIcon,
   XIcon,
   DoodleTape,
-  SketchbookPaperPlaneDoodle,
-  SketchbookOrbitRocketDoodle,
 } from './Doodles';
 import { SOCIAL_DATA } from '../data/portfolioData';
 import { TypingText } from './TypingText';
@@ -28,43 +26,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 }) => {
   const { lang } = useLanguage();
   const [heroBounce, setHeroBounce] = useState(false);
-  const orrerySvgRef = useRef<SVGSVGElement | null>(null);
-
-  // Pause Solar System Orrery SVG animations when scrolled out of viewport or tab is hidden to prevent GPU/CPU drain
-  useEffect(() => {
-    const svgEl = orrerySvgRef.current;
-    if (!svgEl) return;
-
-    let isIntersecting = true;
-
-    const syncAnimationState = () => {
-      if (!svgEl || typeof svgEl.pauseAnimations !== 'function') return;
-      if (document.hidden || !isIntersecting) {
-        svgEl.pauseAnimations();
-      } else {
-        svgEl.unpauseAnimations();
-      }
-    };
-
-    let observer: IntersectionObserver | null = null;
-    if ('IntersectionObserver' in window) {
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          isIntersecting = entry.isIntersecting;
-          syncAnimationState();
-        },
-        { threshold: 0.05 }
-      );
-      observer.observe(svgEl);
-    }
-
-    document.addEventListener('visibilitychange', syncAnimationState);
-
-    return () => {
-      if (observer) observer.disconnect();
-      document.removeEventListener('visibilitychange', syncAnimationState);
-    };
-  }, []);
 
   const handleHeroCharacterPress = () => {
     robotSound.play('hero');
@@ -73,46 +34,46 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   return (
-    <div className="relative pt-6 pb-12 md:pt-12 md:pb-16 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+    <div className="relative pt-4 pb-8 md:pt-8 md:pb-12 overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-center">
           {/* Left Column: Greeting, Title, Tagline, Socials & Primary CTA */}
-          <div className="lg:col-span-6 z-10 flex flex-col items-start text-left">
+          <div className="lg:col-span-6 z-10 flex flex-col items-center lg:items-start text-center lg:text-left">
             {/* Step 1: "Hi, I'm" with cute hand-drawn rays */}
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={
                 isLoaded
                   ? { opacity: 1, y: 0 }
-                  : { opacity: 0, y: 14 }
+                  : { opacity: 0, y: 12 }
               }
               transition={{
                 duration: 0.55,
                 delay: 0.08,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="flex items-center gap-2 mb-2"
+              className="flex items-center gap-1.5 mb-1.5"
             >
-              <span className="font-fredoka text-2xl sm:text-3xl text-[#fbeee0] font-normal">
+              <span className="font-fredoka text-lg sm:text-xl text-[#fbeee0] font-normal">
                 {lang === 'id' ? 'Halo, saya' : "Hi, I'm"}
               </span>
-              <DoodleRays className="w-6 h-6 text-[#fbeee0] rotate-[-10deg]" />
+              <DoodleRays className="w-5 h-5 text-[#fbeee0] rotate-[-10deg]" />
             </motion.div>
 
-            {/* Step 2: Giant Title: Uray Fazli Alman */}
+            {/* Step 2: Title: Uray Fazli Alman */}
             <motion.h1
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
               animate={
                 isLoaded
                   ? { opacity: 1, y: 0, scale: 1 }
-                  : { opacity: 0, y: 20, scale: 0.97 }
+                  : { opacity: 0, y: 16, scale: 0.97 }
               }
               transition={{
                 duration: 0.65,
                 delay: 0.15,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="font-fredoka text-4xl xs:text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tight text-[#fbeee0] leading-[1.06] mb-4"
+              className="font-fredoka text-3xl xs:text-4xl sm:text-5xl lg:text-[52px] font-semibold tracking-tight text-[#fbeee0] leading-[1.08] mb-3"
             >
               Uray Fazli
               <br />
@@ -121,22 +82,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Step 3: Caramel Doodle Role Badge */}
             <motion.div
-              initial={{ opacity: 0, y: 12, scale: 0.96 }}
+              initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={
                 isLoaded
                   ? { opacity: 1, y: 0, scale: 1 }
-                  : { opacity: 0, y: 12, scale: 0.96 }
+                  : { opacity: 0, y: 10, scale: 0.96 }
               }
               transition={{
                 duration: 0.55,
                 delay: 0.24,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="flex items-center gap-3 mb-5"
+              className="flex items-center gap-2.5 mb-3.5"
             >
               <span
                 id="hero-operator-node-badge"
-                className="inline-flex items-center px-5 py-1.5 rounded-[18px_14px_20px_15px] bg-[#9d613c] border-2 border-[#fbeee0] text-[#fbeee0] font-fredoka text-lg md:text-xl font-medium tracking-wide shadow-[4px_4px_0px_#0b1018]"
+                className="inline-flex items-center px-3.5 py-1 rounded-[14px_11px_16px_12px] bg-[#9d613c] border-[1.8px] border-[#fbeee0] text-[#fbeee0] font-fredoka text-sm sm:text-base font-medium tracking-wide shadow-[3px_3px_0px_#0b1018]"
               >
                 {lang === 'id' ? 'Operator Node' : 'Node Operator'}
               </span>
@@ -144,10 +105,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Step 4: Tagline with Typing Animation (starts only after loading finishes!) */}
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={isLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
               transition={{ duration: 0.45, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              className="min-h-[4rem] sm:min-h-[3.75rem] max-w-lg mb-7 flex items-center"
+              className="min-h-[2.75rem] sm:min-h-[3rem] max-w-md mb-5 flex items-center justify-center lg:justify-start"
             >
               {isLoaded && (
                 <TypingText
@@ -159,7 +120,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   }
                   speed={38}
                   delay={420}
-                  className="text-[#d6c4b2] text-lg sm:text-xl font-normal leading-relaxed"
+                  className="text-[#d6c4b2] text-sm sm:text-base font-normal leading-relaxed"
                   cursorClassName="bg-[#e59b63]"
                 />
               )}
@@ -167,27 +128,27 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* Step 5: Primary Explore CTA & Social Action Doodle Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={
                 isLoaded
                   ? { opacity: 1, y: 0 }
-                  : { opacity: 0, y: 14 }
+                  : { opacity: 0, y: 12 }
               }
               transition={{
                 duration: 0.55,
                 delay: 0.42,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="flex flex-wrap items-center gap-3 sm:gap-3.5"
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5"
             >
               {/* Explore Node Ops CTA */}
               <button
                 type="button"
                 onClick={onScrollDown}
-                className="doodle-subcard group flex items-center gap-2.5 px-5 py-2.5 !bg-[#9d613c] hover:!bg-[#b06f44] text-white font-medium text-sm sm:text-base tracking-wide cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fbeee0]"
+                className="doodle-subcard group flex items-center gap-2 px-4 py-2 !bg-[#9d613c] hover:!bg-[#b06f44] text-white font-medium text-xs sm:text-sm tracking-wide cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fbeee0]"
               >
                 <span>{lang === 'id' ? 'Eksplorasi Node' : 'Explore Nodes'}</span>
-                <span className="font-mono text-sm group-hover:translate-y-0.5 transition-transform">
+                <span className="font-mono text-xs group-hover:translate-y-0.5 transition-transform">
                   ↓
                 </span>
               </button>
@@ -197,10 +158,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 href={SOCIAL_DATA.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="doodle-subcard group flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                className="doodle-subcard group flex items-center gap-2 px-3.5 py-2 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
-                <GitHubIcon className="w-5 h-5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[-6deg] transition-transform" />
-                <span className="font-mono text-xs sm:text-sm tracking-wide">
+                <GitHubIcon className="w-4 h-4 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[-6deg] transition-transform" />
+                <span className="font-mono text-xs tracking-wide">
                   {SOCIAL_DATA.github}
                 </span>
               </a>
@@ -210,10 +171,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 href={SOCIAL_DATA.twitterUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="doodle-subcard group flex items-center gap-2.5 px-4 sm:px-5 py-2.5 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
+                className="doodle-subcard group flex items-center gap-2 px-3.5 py-2 text-[#fbeee0] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e59b63]"
               >
-                <XIcon className="w-4 h-4 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[6deg] transition-transform" />
-                <span className="font-mono text-xs sm:text-sm tracking-wide">
+                <XIcon className="w-3.5 h-3.5 text-[#fbeee0] group-hover:scale-110 group-hover:rotate-[6deg] transition-transform" />
+                <span className="font-mono text-xs tracking-wide">
                   {SOCIAL_DATA.twitter}
                 </span>
               </a>
@@ -226,14 +187,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }
               }
               transition={{ duration: 0.5, delay: 0.55 }}
-              className="mt-6 ml-2 hidden sm:block"
+              className="mt-4 ml-2 hidden lg:block"
             >
-              <DoodleStar className="w-5 h-5 text-[#9d613c]" />
+              <DoodleStar className="w-4 h-4 text-[#9d613c]" />
             </motion.div>
           </div>
 
           {/* Right Column: Cute Chibi Character, Solar System Orrery, Speech Bubble */}
-          <div className="lg:col-span-6 relative flex flex-col items-center justify-center py-4 sm:py-6">
+          <div className="lg:col-span-6 relative flex flex-col items-center justify-center pt-5 pb-2 sm:py-4">
             {/* Floating Sparkle Stars */}
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -241,9 +202,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
               }
               transition={{ type: 'spring', delay: 0.55 }}
-              className="absolute -top-4 left-6 sm:left-12 pointer-events-none"
+              className="absolute -top-2 left-8 sm:left-14 pointer-events-none"
             >
-              <DoodleStar className="w-7 h-7 text-[#fbeee0]" />
+              <DoodleStar className="w-5 h-5 text-[#fbeee0]" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -251,9 +212,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
               }
               transition={{ type: 'spring', delay: 0.65 }}
-              className="absolute top-1/2 -left-4 sm:left-2 pointer-events-none"
+              className="absolute top-1/2 left-2 sm:left-6 pointer-events-none"
             >
-              <DoodleStar className="w-6 h-6 text-[#d8c3ad]" />
+              <DoodleStar className="w-4.5 h-4.5 text-[#d8c3ad]" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0 }}
@@ -261,9 +222,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 isLoaded ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
               }
               transition={{ type: 'spring', delay: 0.75 }}
-              className="absolute top-1/4 right-2 sm:right-6 pointer-events-none"
+              className="absolute top-1/4 right-4 sm:right-8 pointer-events-none"
             >
-              <DoodleStar className="w-5 h-5 text-[#fbeee0]" />
+              <DoodleStar className="w-4 h-4 text-[#fbeee0]" />
             </motion.div>
 
             {/* Speech Bubble: "Node Operator" smooth fade-in directly above character's head */}
@@ -279,7 +240,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.34,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="absolute -top-6 sm:-top-8 left-1/2 -translate-x-1/2 z-30"
+              className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 z-30"
             >
               <SpeechBubble text={lang === 'id' ? 'Operator Node' : 'Node Operator'} />
             </motion.div>
@@ -297,7 +258,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 delay: 0.16,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="relative w-full max-w-[320px] xs:max-w-[360px] sm:max-w-[440px] lg:max-w-[520px] aspect-square flex items-center justify-center"
+              className="relative w-full max-w-[260px] xs:max-w-[284px] sm:max-w-[336px] lg:max-w-[376px] aspect-square flex items-center justify-center"
             >
               {/* Soft warm aura backdrop behind character (zero filter:blur GPU cost) */}
               <div
@@ -309,7 +270,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               />
 
               {/* Photo Profile Card Wrapper + Perimeter Looping Paper Plane & Rocket System */}
-              <div className="relative w-[276px] xs:w-[312px] sm:w-[380px] lg:w-[440px] h-[276px] xs:h-[312px] sm:h-[380px] lg:h-[440px] flex items-center justify-center">
+              <div className="relative w-[220px] xs:w-[242px] sm:w-[288px] lg:w-[324px] h-[220px] xs:h-[242px] sm:h-[288px] lg:h-[324px] flex items-center justify-center">
                 {/* Character Illustration Doodle Frame */}
                 <div
                   role="button"
@@ -327,8 +288,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   }`}
                 >
                   {/* Top Sketchbook Tape on Avatar Frame */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
-                    <DoodleTape className="w-24 h-5" />
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rotate-[-2deg] pointer-events-none z-20">
+                    <DoodleTape className="w-20 h-4.5" />
                   </div>
 
                   <img
@@ -342,8 +303,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0f141d]/75 via-transparent to-transparent" />
 
                   {/* In-corner subtle aesthetic doodle badge */}
-                  <div className="absolute bottom-3.5 left-3.5 sm:left-4 flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-[#fbeee0] bg-[#0b1018]/95 px-3 py-1 rounded-xl border-[1.5px] border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+                  <div className="absolute bottom-2.5 left-2.5 sm:left-3 flex items-center gap-1.5 text-[9.5px] sm:text-[11px] font-mono text-[#fbeee0] bg-[#0b1018]/95 px-2.5 py-0.5 rounded-lg border border-dashed border-[#fbeee0]/60 max-w-[90%] truncate shadow-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                     <span className="truncate">
                       {lang === 'id'
                         ? 'Node Aktif Aptos · Sei · SubQuery'
@@ -351,273 +312,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     </span>
                   </div>
                 </div>
-
-                {/* =====================================================================
-                    SOLAR SYSTEM & PLANETARY ORRERY LOOPING SYSTEM (ANTI-AI-SLOP)
-                    3 Keplerian perimeter orbits with Helios Sun crest, Mercury, Venus,
-                    Terra + orbiting Luna moon, Mars, Saturn (double-ringed gas giant) +
-                    Titan moon, Jupiter, plus the Validator Rocket & Origami Paper Plane
-                   ===================================================================== */}
-                <svg
-                  ref={orrerySvgRef}
-                  viewBox="0 0 600 600"
-                  fill="none"
-                  aria-hidden="true"
-                  className="absolute -inset-6 xs:-inset-7 sm:-inset-10 lg:-inset-12 w-[calc(100%+3rem)] xs:w-[calc(100%+3.5rem)] sm:w-[calc(100%+5rem)] lg:w-[calc(100%+6rem)] h-[calc(100%+3rem)] xs:h-[calc(100%+3.5rem)] sm:h-[calc(100%+5rem)] lg:h-[calc(100%+6rem)] pointer-events-none overflow-visible z-20 select-none"
-                >
-                  {/* Astronomical Orrery Calibration Ticks & Ecliptic Crosshairs */}
-                  <g opacity="0.55" stroke="#E59B63" strokeWidth="1.3" strokeLinecap="round">
-                    {/* Top-Right & Bottom-Left Astrometric Crosshairs */}
-                    <line x1="546" y1="48" x2="558" y2="48" />
-                    <line x1="552" y1="42" x2="552" y2="54" />
-                    <line x1="42" y1="552" x2="54" y2="552" />
-                    <line x1="48" y1="546" x2="48" y2="558" />
-                    {/* Bottom-Right Orbital Node Ring */}
-                    <circle cx="550" cy="550" r="4" stroke="#FBEEE0" strokeDasharray="2 2" />
-                  </g>
-
-                  {/* Helios Solar Beacon (Top-Left Perihelion Anchor) */}
-                  <g transform="translate(46, 46)">
-                    {/* Soft Solar Corona Halo */}
-                    <circle r="14" fill="#E59B63" fillOpacity="0.18" />
-                    {/* 8-Point Solar Rays */}
-                    <g>
-                      <line x1="0" y1="-13.5" x2="0" y2="-10.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
-                      <line x1="0" y1="10.5" x2="0" y2="13.5" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
-                      <line x1="-13.5" y1="0" x2="-10.5" y2="0" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
-                      <line x1="10.5" y1="0" x2="13.5" y2="0" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
-                      <line x1="-9.5" y1="-9.5" x2="-7.4" y2="-7.4" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="7.4" y1="7.4" x2="9.5" y2="9.5" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="9.5" y1="-9.5" x2="7.4" y2="-7.4" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="-7.4" y1="7.4" x2="-9.5" y2="9.5" stroke="#E59B63" strokeWidth="1.4" strokeLinecap="round" />
-                    </g>
-                    {/* Solar Photosphere Core */}
-                    <circle r="7.5" fill="#E59B63" stroke="#0B1018" strokeWidth="1.8" />
-                    <circle r="4.5" fill="#FBEEE0" />
-                  </g>
-
-                  {/* -------------------------------------------------------------------
-                      ORBIT 1 (INNER TERRESTRIAL BELT — CLOCKWISE, 14s PERIOD)
-                      Planets: Mercury (Cratered World) & Venus (Golden Cloud Sphere)
-                     ------------------------------------------------------------------- */}
-                  <g transform="rotate(2 300 300)">
-                    <path
-                      d="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
-                      stroke="#FBEEE0"
-                      strokeWidth="1.1"
-                      strokeDasharray="2 7"
-                      strokeLinecap="round"
-                      opacity="0.32"
-                    />
-
-                    {/* Planet 1: Mercury (Compact Cratered Terrestrial Sphere) */}
-                    <g>
-                      <circle r="5.5" fill="#DEC6B0" stroke="#0B1018" strokeWidth="1.6" />
-                      <path d="M 1.5,-5.2 A 5.5,5.5 0 0,1 1.5,5.2 A 4,5.3 0 0,0 1.5,-5.2 Z" fill="#9D613C" opacity="0.65" />
-                      <circle cx="-1.8" cy="-1.2" r="1.1" fill="#9D613C" />
-                      <circle cx="0.8" cy="2" r="0.8" fill="#9D613C" />
-                      <animateMotion
-                        path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
-                        dur="14s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-
-                    {/* Planet 2: Venus (Golden Amber Cloud-Banded World — Opposite Phase) */}
-                    <g>
-                      <circle r="9" fill="#E59B63" fillOpacity="0.18" />
-                      <circle r="6.8" fill="#E59B63" stroke="#0B1018" strokeWidth="1.7" />
-                      <path d="M -5.2,-2 Q 0,-3.8 5.2,-1.5" stroke="#FBEEE0" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-                      <path d="M -4.8,2 Q 0,0.4 4.8,2.2" stroke="#9D613C" strokeWidth="1.3" strokeLinecap="round" fill="none" />
-                      <circle cx="-2.2" cy="-2.4" r="1.1" fill="#FBEEE0" />
-                      <animateMotion
-                        path="M 300,38 C 500,38 562,100 562,300 C 562,500 500,562 300,562 C 100,562 38,500 38,300 C 38,100 100,38 300,38 Z"
-                        dur="14s"
-                        begin="-7s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-                  </g>
-
-                  {/* -------------------------------------------------------------------
-                      ORBIT 2 (MIDDLE ECLIPTIC BELT — COUNTER-CLOCKWISE, 18s PERIOD)
-                      Planets: Terra + Orbiting Luna Moon, Mars, & Origami Paper Plane
-                     ------------------------------------------------------------------- */}
-                  <g transform="rotate(-5 300 300)">
-                    <path
-                      d="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                      stroke="#9D613C"
-                      strokeWidth="1.4"
-                      strokeDasharray="5 8"
-                      strokeLinecap="round"
-                      opacity="0.45"
-                    />
-
-                    {/* Planet 3: Terra (Earth) + Luna Moon */}
-                    <g>
-                      {/* Luna Sub-Orbit Track */}
-                      <circle r="13.5" stroke="#FBEEE0" strokeWidth="0.9" strokeDasharray="2 3" opacity="0.5" />
-                      {/* Luna Moon */}
-                      <circle cx="13.5" cy="0" r="2.5" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.2" />
-                      {/* Terra Globe */}
-                      <circle r="8.2" fill="#1E3A5F" stroke="#0B1018" strokeWidth="1.8" />
-                      <circle r="7.2" fill="#38BDF8" fillOpacity="0.88" />
-                      {/* Emerald Continents */}
-                      <path
-                        d="M -4,-3.5 C -1.5,-4.5 1,-2.5 0.5,0 C 0,2 -3,3.5 -4.8,1.5 Z"
-                        fill="#22C55E"
-                      />
-                      <path
-                        d="M 2.2,-1.5 C 4.5,-2 5.8,0.5 4.5,3.2 C 3.2,4.5 1.5,3 2.2,0.5 Z"
-                        fill="#22C55E"
-                      />
-                      {/* Polar Cloud Cap */}
-                      <path d="M -3.5,-6 A 6.5,6.5 0 0,1 3.5,-6" stroke="#FBEEE0" strokeWidth="1.4" strokeLinecap="round" />
-                      <animateMotion
-                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="18s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-
-                    {/* Planet 4: Mars (Red-Terracotta Oxide Planet — Opposite Phase) */}
-                    <g>
-                      <circle r="6.4" fill="#C85A32" stroke="#0B1018" strokeWidth="1.7" />
-                      {/* Martian Canyon Belt & North Polar Ice Cap */}
-                      <path d="M -4.2,0.8 Q 0,2.4 4.2,0.2" stroke="#7C2D12" strokeWidth="1.4" strokeLinecap="round" fill="none" />
-                      <path d="M -2.6,-5.2 A 5.5,5.5 0 0,1 2.6,-5.2" stroke="#FBEEE0" strokeWidth="1.5" strokeLinecap="round" />
-                      <circle cx="-1.8" cy="-1.6" r="1" fill="#E59B63" />
-                      <animateMotion
-                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="18s"
-                        begin="-9s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-
-                    {/* Origami Paper Plane Gliding on Orbit 2 */}
-                    <g>
-                      <g transform="scale(0.45) translate(-46, -26)">
-                        <SketchbookPaperPlaneDoodle />
-                      </g>
-                      <animateMotion
-                        path="M 300,24 C 86,24 24,86 24,300 C 24,514 86,576 300,576 C 514,576 576,514 576,300 C 576,86 514,24 300,24 Z"
-                        dur="18s"
-                        begin="-4.5s"
-                        repeatCount="indefinite"
-                        rotate="auto"
-                      />
-                    </g>
-                  </g>
-
-                  {/* -------------------------------------------------------------------
-                      ORBIT 3 (OUTER JOVIAN GAS GIANT BELT — CLOCKWISE, 24s PERIOD)
-                      Planets: Saturn (Double-Ringed Gas Giant + Titan), Jupiter, & Rocket
-                     ------------------------------------------------------------------- */}
-                  <g transform="rotate(5 300 300)">
-                    <path
-                      d="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                      stroke="#E59B63"
-                      strokeWidth="1.2"
-                      strokeDasharray="8 10"
-                      strokeLinecap="round"
-                      opacity="0.38"
-                    />
-
-                    {/* Planet 5: Saturn (Ringed Gas Giant with Cassini Division & Titan Moon) */}
-                    <g>
-                      {/* Titan Moon */}
-                      <circle cx="19" cy="-4" r="2.1" fill="#E59B63" stroke="#0B1018" strokeWidth="1.1" />
-
-                      <g transform="rotate(-22)">
-                        {/* Back Half of Planetary Rings (Behind Sphere) */}
-                        <path
-                          d="M -16.5,0 A 16.5,5.8 0 0,1 16.5,0"
-                          stroke="#9D613C"
-                          strokeWidth="2.6"
-                          fill="none"
-                        />
-                        <path
-                          d="M -13.5,0 A 13.5,4.4 0 0,1 13.5,0"
-                          stroke="#FBEEE0"
-                          strokeWidth="1.2"
-                          opacity="0.7"
-                          fill="none"
-                        />
-
-                        {/* Saturn Planetary Sphere */}
-                        <circle r="8.6" fill="#E59B63" stroke="#0B1018" strokeWidth="1.8" />
-                        {/* Atmospheric Bands */}
-                        <path d="M -7.4,-2.8 Q 0,-4.2 7.4,-2.8" stroke="#FBEEE0" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-                        <path d="M -7.8,0.5 Q 0,-0.8 7.8,0.5" stroke="#9D613C" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-                        <path d="M -6.8,3.6 Q 0,2.4 6.8,3.6" stroke="#FBEEE0" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-
-                        {/* Front Half of Planetary Rings (Crossing in Front of Sphere) */}
-                        <path
-                          d="M 16.5,0 A 16.5,5.8 0 0,1 -16.5,0"
-                          stroke="#FBEEE0"
-                          strokeWidth="2.8"
-                          strokeLinecap="round"
-                          fill="none"
-                        />
-                        <path
-                          d="M 13.5,0 A 13.5,4.4 0 0,1 -13.5,0"
-                          stroke="#E59B63"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          fill="none"
-                        />
-                      </g>
-
-                      <animateMotion
-                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="24s"
-                        begin="-2s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-
-                    {/* Planet 6: Jupiter (Banded Storm Giant with Great Red Spot & Io Moon) */}
-                    <g>
-                      {/* Galilean Moon Io */}
-                      <circle cx="14.5" cy="3" r="2.1" fill="#22C55E" stroke="#0B1018" strokeWidth="1.1" />
-                      {/* Jupiter Sphere */}
-                      <circle r="9.4" fill="#FBEEE0" stroke="#0B1018" strokeWidth="1.8" />
-                      {/* Equatorial Storm Belts */}
-                      <path d="M -8.2,-3.2 H 8.2" stroke="#9D613C" strokeWidth="2.2" strokeLinecap="round" />
-                      <path d="M -8.5,0.6 H 8.5" stroke="#E59B63" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M -7.4,4.2 H 7.4" stroke="#9D613C" strokeWidth="1.6" strokeLinecap="round" />
-                      {/* Great Red Spot */}
-                      <ellipse cx="2.6" cy="2.1" rx="2.6" ry="1.6" fill="#C85A32" stroke="#0B1018" strokeWidth="0.9" />
-                      <animateMotion
-                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="24s"
-                        begin="-14s"
-                        repeatCount="indefinite"
-                        rotate="0"
-                      />
-                    </g>
-
-                    {/* Validator Rocket Cruising Along Outer Orbit 3 */}
-                    <g>
-                      <g transform="scale(0.48) translate(-39, -22)">
-                        <SketchbookOrbitRocketDoodle />
-                      </g>
-                      <animateMotion
-                        path="M 300,10 C 524,10 590,76 590,300 C 590,524 524,590 300,590 C 76,590 10,524 10,300 C 10,76 76,10 300,10 Z"
-                        dur="24s"
-                        begin="-8s"
-                        repeatCount="indefinite"
-                        rotate="auto"
-                      />
-                    </g>
-                  </g>
-                </svg>
               </div>
             </motion.div>
 
