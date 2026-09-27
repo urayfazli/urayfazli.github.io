@@ -1,0 +1,6 @@
+{
+  "name": "Uray Fazli Alman — Web3 Explorer Portfolio",
+  "description": "Personal Web3 adventure journal and portfolio of Uray Fazli Alman — Node Operator, Airdrop Hunter, Meme Coin Trader, and Testnet Explorer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

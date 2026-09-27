@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    background-color: #07111F;
+    color: #F5EFE6;
+    font-family: 'Shantell Sans', cursive, sans-serif;
+  }
+
+  body {
+    background-color: #07111F;
+    overflow-x: clip;
+    selection-background-color: #F5D78E;
+    selection-color: #07111F;
+  }
+}
+
+.font-brush {
+  font-family: 'Caveat Brush', cursive, sans-serif;
+  letter-spacing: 0.015em;
+}
+
+.font-journal {
+  font-family: 'Shantell Sans', cursive, sans-serif;
+}
+
+.font-mono-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Organic hand-drawn card borders with asymmetric sketchbook curvature */
+.sketch-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(10, 22, 40, 0.95) 0%, rgba(7, 16, 30, 0.98) 100%);
+  border: 1.85px solid #2E5487;
+  border-radius: 19px 25px 17px 23px / 23px 17px 24px 18px;
+  box-shadow:
+    0 8px 22px rgba(2, 7, 15, 0.6),
+    inset 0 0 0 1px rgba(135, 180, 240, 0.09);
+  transition: transform 170ms cubic-bezier(0.16, 1, 0.3, 1), border-color 170ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sketch-card::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -2px;
+  border: 1px solid rgba(98, 146, 212, 0.22);
+  border-radius: 22px 18px 24px 19px / 18px 23px 19px 24px;
+  transform: rotate(-0.35deg);
+}
+
+.sketch-card:hover {
+  transform: translateY(-2px) rotate(-0.2deg);
+  border-color: #5485C4;
+}
+
+.sketch-card-exp {
+  position: relative;
+  background: linear-gradient(180deg, #081527 0%, #06101E 100%);
+  border: 2px solid #1B365C;
+  border-radius: 17px 22px 16px 20px / 21px 16px 22px 17px;
+  box-shadow: 0 5px 14px rgba(5, 12, 24, 0.32);
+  transition: transform 170ms cubic-bezier(0.16, 1, 0.3, 1), border-color 170ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sketch-card-exp:hover {
+  transform: translateY(-2px);
+  border-color: #3E6CA6;
+}
+
+.sketch-pill {
+  position: relative;
+  border: 1.85px solid #F5EFE6;
+  border-radius: 26px 34px 24px 32px / 24px 28px 22px 26px;
+  box-shadow: 0 2px 0 rgba(245, 239, 230, 0.16);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sketch-pill:hover {
+  transform: translateY(-1px) rotate(-0.5deg);
+  background-color: rgba(245, 239, 230, 0.1);
+}
+
+.sketch-pill-dark {
+  background-color: #091526;
+  color: #FAF6EE;
+  border: 2px solid #091526;
+  border-radius: 26px 34px 24px 32px / 24px 28px 22px 26px;
+  box-shadow: 0 3px 8px rgba(9, 21, 38, 0.28);
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sketch-pill-dark:hover {
+  transform: translateY(-1px);
+  background-color: #142B4B;
+  border-color: #142B4B;
+}
+
+/* Warm Cream Parchment Paper Surface */
+.parchment-box {
+  background-color: #EFE5D4;
+  background-image:
+    radial-gradient(at 16% 22%, rgba(255, 251, 242, 0.72) 0px, transparent 55%),
+    radial-gradient(at 84% 78%, rgba(212, 196, 170, 0.6) 0px, transparent 52%),
+    radial-gradient(at 50% 50%, rgba(239, 229, 212, 0.4) 0px, rgba(218, 203, 179, 0.45) 100%),
+    repeating-linear-gradient(
+      -12deg,
+      rgba(130, 108, 78, 0.025) 0px,
+      rgba(130, 108, 78, 0.025) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  box-shadow:
+    0 14px 32px rgba(2, 7, 15, 0.68),
+    inset 0 0 26px rgba(162, 138, 104, 0.26);
+}
+
+.text-balance-wrap {
+  text-wrap: balance;
+}
