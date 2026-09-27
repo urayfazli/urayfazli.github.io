@@ -17,60 +17,8 @@ export const GENERATED_ASSETS = {
   peekingBottomImg,
 };
 
-/** Global SVG Filters for Organic Torn Parchment Edges & Hand-Drawn Ink Wobble */
-export const GlobalSvgFilters: React.FC = () => (
-  <svg className="pointer-events-none fixed h-0 w-0 opacity-0" aria-hidden="true">
-    <defs>
-      <filter
-        id="torn-paper-edge"
-        x="-2%"
-        y="-4%"
-        width="104%"
-        height="108%"
-        colorInterpolationFilters="sRGB"
-      >
-        <feTurbulence
-          type="fractalNoise"
-          baseFrequency="0.035"
-          numOctaves="2"
-          seed="19"
-          result="roughNoise"
-        />
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="roughNoise"
-          scale="6.5"
-          xChannelSelector="R"
-          yChannelSelector="G"
-        />
-      </filter>
-
-      <filter
-        id="ink-wobble"
-        x="-4%"
-        y="-4%"
-        width="108%"
-        height="108%"
-        colorInterpolationFilters="sRGB"
-      >
-        <feTurbulence
-          type="turbulence"
-          baseFrequency="0.045"
-          numOctaves="1"
-          seed="7"
-          result="wobbleNoise"
-        />
-        <feDisplacementMap
-          in="SourceGraphic"
-          in2="wobbleNoise"
-          scale="1.5"
-          xChannelSelector="R"
-          yChannelSelector="G"
-        />
-      </filter>
-    </defs>
-  </svg>
-);
+/** Global SVG Filters (Disabled CPU-heavy feTurbulence/feDisplacementMap to prevent thermal throttling) */
+export const GlobalSvgFilters: React.FC = () => null;
 
 /** Hand-drawn 3-pointed crown doodle */
 export const CrownDoodle: React.FC<{ className?: string; color?: string }> = ({
@@ -276,38 +224,35 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
       }
       className="group relative mx-auto h-[265px] w-[265px] cursor-pointer overflow-visible touch-manipulation select-none focus:outline-none sm:h-[335px] sm:w-[335px] lg:h-[378px] lg:w-[378px]"
     >
-      {/* Warm Cozy Glow behind Chibi when Cozy & ASMR soundscape is playing */}
+      {/* Warm Cozy Glow behind Chibi when Cozy & ASMR soundscape is playing (0% idle CPU) */}
       <AnimatePresence>
         {isPlaying && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: [0.45, 0.72, 0.45], scale: [0.96, 1.04, 0.96] }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute inset-6 z-0 rounded-full bg-[radial-gradient(circle,rgba(245,215,142,0.28)_0%,rgba(92,149,236,0.12)_52%,transparent_74%)] blur-xl"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 0.75, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.35 }}
+            className="pointer-events-none absolute inset-6 z-0 rounded-full bg-[radial-gradient(circle,rgba(245,215,142,0.32)_0%,rgba(92,149,236,0.12)_54%,transparent_72%)]"
           />
         )}
       </AnimatePresence>
 
-      {/* Floating Hand-Drawn Musical Notes & ASMR Waves from Earphones when playing */}
+      {/* Hand-Drawn Musical Notes & ASMR Waves from Earphones when playing */}
       <AnimatePresence>
         {isPlaying && (
-          <div className="pointer-events-none absolute inset-0 z-30 overflow-visible" aria-hidden="true">
-            {/* Left earphone floating note */}
-            <motion.svg
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.28 }}
+            className="pointer-events-none absolute inset-0 z-30 overflow-visible"
+            aria-hidden="true"
+          >
+            {/* Left earphone note */}
+            <svg
               viewBox="0 0 36 36"
               fill="none"
-              initial={{ opacity: 0, y: 10, x: 0, scale: 0.7 }}
-              animate={{
-                opacity: [0, 1, 1, 0],
-                y: [6, -18, -38, -54],
-                x: [0, -8, -4, -12],
-                rotate: [-8, 10, -6, 8],
-                scale: [0.75, 1, 1.05, 0.85],
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 3.1, repeat: Infinity, ease: 'easeInOut' }}
-              className="top-[42%] left-[8%] sm:left-[10%] absolute h-7 w-7 sm:h-8 sm:w-8"
+              className="top-[32%] left-[8%] sm:left-[10%] absolute h-7 w-7 -rotate-6 sm:h-8 sm:w-8"
             >
               <path
                 d="M14 25V9L27 6V21"
@@ -318,23 +263,13 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
               />
               <ellipse cx="10.5" cy="25.5" rx="4.2" ry="3.2" fill="#F5D78E" stroke="#091321" strokeWidth="1.8" />
               <ellipse cx="23.5" cy="21.5" rx="4.2" ry="3.2" fill="#FAF6EE" stroke="#091321" strokeWidth="1.8" />
-            </motion.svg>
+            </svg>
 
-            {/* Right earphone floating single note */}
-            <motion.svg
+            {/* Right earphone single note */}
+            <svg
               viewBox="0 0 32 32"
               fill="none"
-              initial={{ opacity: 0, y: 10, x: 0, scale: 0.7 }}
-              animate={{
-                opacity: [0, 1, 1, 0],
-                y: [8, -16, -34, -50],
-                x: [0, 9, 5, 14],
-                rotate: [6, -10, 8, -6],
-                scale: [0.75, 1, 1.04, 0.85],
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 3.4, delay: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-              className="top-[40%] right-[10%] sm:right-[12%] absolute h-6 w-6 sm:h-7 sm:w-7"
+              className="top-[30%] right-[10%] sm:right-[12%] absolute h-6 w-6 rotate-6 sm:h-7 sm:w-7"
             >
               <path
                 d="M15 24V7C19 8 23 11 23 15"
@@ -344,57 +279,28 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
                 strokeLinejoin="round"
               />
               <ellipse cx="11.5" cy="24.5" rx="4.2" ry="3.2" fill="#F5D78E" stroke="#091321" strokeWidth="1.8" />
-            </motion.svg>
+            </svg>
 
             {/* Cozy ASMR acoustic wave arcs near ears */}
-            <motion.svg
+            <svg
               viewBox="0 0 40 40"
               fill="none"
-              animate={{ opacity: [0.35, 0.95, 0.35], scale: [0.94, 1.06, 0.94] }}
-              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               className="top-[52%] left-[3%] sm:left-[5%] absolute h-6 w-6"
             >
               <path d="M26 12C20 16 20 24 26 28" stroke="#F5D78E" strokeWidth="2.3" strokeLinecap="round" />
               <path d="M19 7C10 14 10 26 19 33" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
-            </motion.svg>
+            </svg>
 
             {/* Cute Hand-Drawn Anime Cozy Expression Bubble near top-right of head */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.7, y: 8, rotate: -6 }}
-              animate={{
-                opacity: 1,
-                scale: [0.96, 1.04, 0.96],
-                y: [0, -4, 0],
-                rotate: [-6, -2, -6],
-              }}
-              exit={{ opacity: 0, scale: 0.7, y: 6 }}
-              transition={{
-                opacity: { duration: 0.25 },
-                scale: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-                y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-                rotate: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-              }}
-              className="top-[14%] right-[6%] sm:top-[15%] sm:right-[8%] absolute flex items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[0_4px_12px_rgba(3,9,18,0.55)] sm:text-[11px]"
-            >
+            <div className="top-[14%] right-[6%] sm:top-[15%] sm:right-[8%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[0_4px_12px_rgba(3,9,18,0.55)] sm:text-[11px]">
               <span className="text-[#E05A47]">^◡^</span>
               <span>{isId ? 'Cozy Mode ♪' : 'Cozy Vibe ♪'}</span>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <motion.div
-        animate={{
-          y: [4, -3, 4],
-          rotate: [-0.6, 0.7, -0.6],
-        }}
-        transition={{
-          duration: 4.8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="relative h-full w-full overflow-hidden"
-      >
+      <div className="relative h-full w-full overflow-hidden">
         <div
           className={`relative h-full w-full transition-transform duration-150 ${
             tapBounce ? 'scale-[0.97]' : 'scale-100'
@@ -422,7 +328,7 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
             decoding="async"
             draggable={false}
             referrerPolicy="no-referrer"
-            className={`mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-all duration-300 group-hover:scale-[1.015] ${
+            className={`mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 group-hover:scale-[1.015] ${
               isPlaying ? 'opacity-0' : 'opacity-100'
             }`}
           />
@@ -435,23 +341,23 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
             draggable={false}
             referrerPolicy="no-referrer"
             aria-hidden={!isPlaying}
-            className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-all duration-300 group-hover:scale-[1.015] ${
+            className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 group-hover:scale-[1.015] ${
               isPlaying ? 'opacity-100' : 'opacity-0'
             }`}
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Subtle Hand-Drawn Earphone Backsound Status Note at Bottom Center of Chibi */}
       <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
         <div
-          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[0_4px_12px_rgba(3,9,18,0.75)] backdrop-blur-xs transition-colors sm:text-[11.5px] ${
+          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[0_4px_12px_rgba(3,9,18,0.75)] transition-colors sm:text-[11.5px] ${
             isPlaying
-              ? 'border-[#F5D78E] bg-[#091526]/92 text-[#F5D78E]'
-              : 'border-[#FAF6EE]/60 bg-[#091526]/80 text-[#FAF6EE]/90 group-hover:border-[#F5D78E]/85 group-hover:text-[#F5D78E]'
+              ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E]'
+              : 'border-[#FAF6EE]/60 bg-[#091526]/90 text-[#FAF6EE]/90 group-hover:border-[#F5D78E]/85 group-hover:text-[#F5D78E]'
           }`}
         >
-          <span className={isPlaying ? 'animate-pulse text-[#F5D78E]' : 'text-[#F5D78E]'}>♪</span>
+          <span className="text-[#F5D78E]">♪</span>
           <span>
             {singleTapHint
               ? isId
@@ -501,7 +407,7 @@ export const AboutMeOverlapChibi: React.FC = () => (
         decoding="async"
         draggable={false}
         referrerPolicy="no-referrer"
-        className="mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_10px_18px_rgba(7,17,31,0.34)]"
+        className="mx-auto block h-full w-full object-contain object-bottom"
       />
     </div>
   </div>
@@ -520,7 +426,7 @@ export const NodeOperatorChibiScene: React.FC = () => (
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="mx-auto block h-auto w-full object-contain drop-shadow-[0_14px_26px_rgba(3,9,18,0.8)]"
+      className="mx-auto block h-auto w-full object-contain"
     />
   </div>
 );
@@ -538,7 +444,7 @@ export const BackpackWalkerChibi: React.FC = () => (
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="-mb-0.5 block h-full w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(3,9,18,0.74)]"
+      className="-mb-0.5 block h-full w-full object-contain object-bottom"
     />
   </div>
 );
@@ -556,7 +462,7 @@ export const PeekingBottomChibi: React.FC = () => (
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="-mb-0.5 block h-full w-full object-contain object-bottom drop-shadow-[0_8px_18px_rgba(3,9,18,0.75)]"
+      className="-mb-0.5 block h-full w-full object-contain object-bottom"
     />
   </div>
 );

@@ -10,12 +10,8 @@ import {
   motion,
   MotionValue,
   useMotionValue,
-  useMotionValueEvent,
-  useSpring,
-  useTransform,
 } from 'motion/react';
 import {
-  GlobalSvgFilters,
   CrownDoodle,
   PlanetDoodle,
   SparkleStar,
@@ -65,50 +61,17 @@ const NAV_ITEMS: { id: NavSection; label: Record<Language, string> }[] = [
   { id: 'contact', label: { id: 'Kontak', en: 'Contact' } },
 ];
 
-/** Isolated Header Scroll Progress Bar so scrolling never re-renders the main App tree */
+/** GPU-composited Header Scroll Progress Bar with zero React re-renders during scroll */
 const HeaderScrollProgressBar: React.FC<{
-  smoothScrollProgress: MotionValue<number>;
-  progressWidthPercent: MotionValue<string>;
-}> = React.memo(({ smoothScrollProgress, progressWidthPercent }) => {
-  const [scrollPercent, setScrollPercent] = useState(0);
-
-  useMotionValueEvent(smoothScrollProgress, 'change', (latest) => {
-    const nextPct = Math.min(100, Math.max(0, Math.round(latest * 100)));
-    setScrollPercent((prev) => (prev === nextPct ? prev : nextPct));
-  });
-
-  return (
-    <div className="relative h-[5px] w-full bg-[#0C1D36] sm:h-[6px]">
-      <motion.div
-        style={{ width: progressWidthPercent }}
-        className="relative h-full rounded-r-full bg-gradient-to-r from-[#D9A44E] via-[#F5D78E] to-[#FFF5D1] shadow-[0_0_12px_rgba(245,215,142,0.9)] will-change-[width]"
-      >
-        {scrollPercent > 0 && (
-          <span
-            className="-right-1.5 top-1/2 absolute h-2.5 w-2.5 -translate-y-1/2 rotate-45 rounded-[2px] border border-[#091526] bg-[#FFF8DE] shadow-[0_0_10px_#F5D78E]"
-            aria-hidden="true"
-          />
-        )}
-      </motion.div>
-
-      <AnimatePresence>
-        {scrollPercent > 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.9 }}
-            transition={{ duration: 0.16 }}
-            className="pointer-events-none top-2 right-3 sm:right-8 absolute z-50 flex items-center gap-1 rounded-full border border-[#F5D78E]/70 bg-[#081528]/95 px-2 py-0.5 font-journal text-[10px] font-bold text-[#F5D78E] tabular-nums shadow-lg"
-            aria-hidden="true"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#F5D78E]" />
-            <span>{scrollPercent}%</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-});
+  scrollProgress: MotionValue<number>;
+}> = React.memo(({ scrollProgress }) => (
+  <div className="relative h-[5px] w-full overflow-hidden bg-[#0C1D36] sm:h-[6px]">
+    <motion.div
+      style={{ scaleX: scrollProgress, transformOrigin: '0% 50%' }}
+      className="h-full w-full bg-gradient-to-r from-[#D9A44E] via-[#F5D78E] to-[#FFF5D1] will-change-transform"
+    />
+  </div>
+));
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -137,19 +100,8 @@ export default function App() {
     };
   }, [isLoading, selectedEntryId, isConnectOpen]);
 
-  // Smooth spring-linked scroll progress & subtle background star parallax
+  // Direct GPU-composited scroll progress MotionValue (no continuous spring physics CPU loop)
   const rawScrollProgress = useMotionValue(0);
-  const smoothScrollProgress = useSpring(rawScrollProgress, {
-    stiffness: 130,
-    damping: 26,
-    mass: 0.35,
-    restDelta: 0.0005,
-  });
-  const starParallaxY = useTransform(smoothScrollProgress, [0, 1], [0, -75]);
-  const progressWidthPercent = useTransform(
-    smoothScrollProgress,
-    (v) => `${Math.min(100, Math.max(0, v * 100))}%`,
-  );
 
   const cancelProgrammaticScroll = useCallback(() => {
     if (scrollAnimFrameRef.current !== null) {
@@ -256,10 +208,7 @@ export default function App() {
       if (el) {
         const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 74;
         const headerOffset = headerHeight + 8;
-        const docHeight = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight,
-        );
+        const docHeight = document.documentElement.scrollHeight;
         const maxScroll = Math.max(0, docHeight - window.innerHeight);
         const rawTargetY = el.getBoundingClientRect().top + window.scrollY - headerOffset;
         const targetY = Math.min(maxScroll, Math.max(0, rawTargetY));
@@ -287,44 +236,46 @@ export default function App() {
     };
   }, []);
 
-  // RequestAnimationFrame-throttled scroll-spy & spring scroll progress updater
+  // Lightweight cached scroll-spy & progress updater (zero DOM reflow/layout thrashing on scroll)
   useEffect(() => {
     let rafId: number | null = null;
+    let cachedMaxScroll = 1;
+    let cachedWinHeight = window.innerHeight || 1;
+    let cachedSectionTops: { id: NavSection; top: number }[] = [];
+
+    const measureLayout = () => {
+      cachedWinHeight = window.innerHeight || document.documentElement.clientHeight || 1;
+      const docHeight = document.documentElement.scrollHeight || 1;
+      cachedMaxScroll = Math.max(1, docHeight - cachedWinHeight);
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      cachedSectionTops = NAV_ITEMS.map((item) => {
+        const el = document.getElementById(item.id);
+        return {
+          id: item.id,
+          top: el ? el.getBoundingClientRect().top + scrollTop : 0,
+        };
+      });
+    };
 
     const updateScrollMetrics = () => {
       rafId = null;
-      const scrollTop =
-        window.scrollY ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop ||
-        0;
-      const docHeight = Math.max(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.offsetHeight,
-      );
-      const winHeight = window.innerHeight || document.documentElement.clientHeight || 1;
-      const maxScroll = Math.max(1, docHeight - winHeight);
-      const progress = Math.min(1, Math.max(0, scrollTop / maxScroll));
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+      const progress = Math.min(1, Math.max(0, scrollTop / cachedMaxScroll));
 
       rawScrollProgress.set(progress);
 
-      // Avoid overwriting activeNav while a user-initiated nav click scroll is in flight
       if (scrollAnimFrameRef.current !== null) return;
 
       let matchedNav: NavSection = 'home';
       if (scrollTop <= 18) {
         matchedNav = 'home';
-      } else if (maxScroll > 10 && scrollTop >= maxScroll - 18) {
+      } else if (cachedMaxScroll > 10 && scrollTop >= cachedMaxScroll - 18) {
         matchedNav = 'contact';
       } else {
-        const triggerY = 120 + progress * (winHeight * 0.66);
-        for (let i = NAV_ITEMS.length - 1; i >= 0; i--) {
-          const section = document.getElementById(NAV_ITEMS[i].id);
-          if (section && section.getBoundingClientRect().top <= triggerY) {
-            matchedNav = NAV_ITEMS[i].id;
+        const triggerDocY = scrollTop + 120 + progress * (cachedWinHeight * 0.66);
+        for (let i = cachedSectionTops.length - 1; i >= 0; i--) {
+          if (cachedSectionTops[i].top <= triggerDocY) {
+            matchedNav = cachedSectionTops[i].id;
             break;
           }
         }
@@ -332,39 +283,39 @@ export default function App() {
       setActiveNav((prev) => (prev === matchedNav ? prev : matchedNav));
     };
 
-    const onScrollOrResize = () => {
+    const onScroll = () => {
       if (rafId === null) {
         rafId = requestAnimationFrame(updateScrollMetrics);
       }
     };
 
+    const onResize = () => {
+      measureLayout();
+      onScroll();
+    };
+
+    measureLayout();
     updateScrollMetrics();
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    document.addEventListener('scroll', onScrollOrResize, { passive: true, capture: true });
-    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
     window.addEventListener('wheel', cancelProgrammaticScroll, { passive: true });
     window.addEventListener('touchstart', cancelProgrammaticScroll, { passive: true });
 
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScrollOrResize);
-      document.removeEventListener('scroll', onScrollOrResize, true);
-      window.removeEventListener('resize', onScrollOrResize);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('wheel', cancelProgrammaticScroll);
       window.removeEventListener('touchstart', cancelProgrammaticScroll);
     };
-  }, [rawScrollProgress, isLoading, cancelProgrammaticScroll]);
+  }, [rawScrollProgress, isLoading, lang, cancelProgrammaticScroll]);
 
   return (
     <div className="relative min-h-screen w-full overflow-x-clip bg-[#07111F] text-[#F5EFE6] selection:bg-[#F5D78E] selection:text-[#07111F]">
-      <GlobalSvgFilters />
-
-      {/* Continuous Night Sky & Hand-Painted Cloud Atmosphere */}
+      {/* Static Night Sky & Hand-Painted Cloud Atmosphere (0% idle CPU) */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_62%_16%,#122849_0%,#091525_50%,#07111F_100%)]" />
-        {/* Subtle Night Sky Stars & Plus-Sparkles with Smooth Scroll Parallax */}
-        <motion.svg
-          style={{ y: starParallaxY }}
+        <svg
           viewBox="0 0 1440 960"
           fill="none"
           className="h-full w-full opacity-60"
@@ -380,7 +331,7 @@ export default function App() {
           <circle cx="1310" cy="620" r="1.4" fill="#F3EBDD" />
           <path d="M625 96V104M621 100H629" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
           <path d="M1045 270V278M1041 274H1049" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
-        </motion.svg>
+        </svg>
       </div>
 
       {/* Sketchbook Loading Screen Overlay */}
@@ -410,7 +361,7 @@ export default function App() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. STICKY HEADER (3-Zone Top Bar + Mobile Sketchbook Nav Strip)
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-[#07111F]/92 backdrop-blur-md">
+      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-[#07111F]/96">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3.5 py-2 sm:px-8 sm:py-2.5">
           {/* Zone 1: Brand Wordmark */}
           <a
@@ -565,11 +516,8 @@ export default function App() {
           })}
         </nav>
 
-        {/* Smooth Spring Scroll Progress Indicator Track & Glowing Bar */}
-        <HeaderScrollProgressBar
-          smoothScrollProgress={smoothScrollProgress}
-          progressWidthPercent={progressWidthPercent}
-        />
+        {/* GPU-Composited Scroll Progress Indicator Track & Bar */}
+        <HeaderScrollProgressBar scrollProgress={rawScrollProgress} />
         <SketchDividerLine />
       </header>
 
@@ -636,8 +584,8 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: -24, y: 14 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.25 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-20 pt-2 text-center sm:text-left lg:col-span-5 lg:pl-6 lg:pb-6"
           >
             <div className="relative inline-block">
@@ -731,30 +679,22 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: 24, y: 16 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.25 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-10 flex items-end justify-center lg:col-span-7"
           >
             <div className="relative mx-auto flex w-full max-w-[360px] items-end justify-center pt-5 sm:max-w-[500px] sm:pt-3 lg:max-w-[560px] lg:pt-1">
               {/* Top-Left Empty Space Fill: Floating Airdrop Parachute + "Airdrop Alpha" Callout */}
-              <motion.div
-                animate={{ y: [0, -6, 0], rotate: [-4, 3, -4] }}
-                transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
-                className="top-2 left-0 sm:top-5 sm:left-2 lg:top-6 lg:left-3 absolute z-20 flex flex-col items-center select-none"
-              >
+              <div className="top-2 left-0 sm:top-5 sm:left-2 lg:top-6 lg:left-3 absolute z-20 flex flex-col items-center select-none">
                 <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-12 sm:w-10" />
                 <div className="-mt-0.5 -rotate-8 text-center font-journal text-[10.5px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-[13px]">
                   <span className="block text-[#F5D78E]">Airdrop</span>
                   <span className="block">Alpha Drop</span>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Bottom-Left Empty Space Fill: Floating Meme Coin & Solana + "100x Meme Gems" */}
-              <motion.div
-                animate={{ y: [0, 5, 0], rotate: [3, -3, 3] }}
-                transition={{ duration: 3.9, repeat: Infinity, ease: 'easeInOut' }}
-                className="bottom-4 left-0 sm:bottom-8 sm:left-1 lg:bottom-10 lg:left-2 absolute z-20 flex flex-col items-center select-none"
-              >
+              <div className="bottom-4 left-0 sm:bottom-8 sm:left-1 lg:bottom-10 lg:left-2 absolute z-20 flex flex-col items-center select-none">
                 <div className="flex items-center -space-x-2">
                   <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-10 sm:w-11" />
                   <SolanaCoinDoodle className="h-7 w-8 sm:h-9 sm:w-10" />
@@ -763,7 +703,7 @@ export default function App() {
                   <span className="block">Meme Coin</span>
                   <span className="block text-[#F5D78E]">Early Narrative</span>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Left Sparkle Star for Cosmic Framing */}
               <SparkleStar className="top-28 left-6 sm:top-34 sm:left-12 absolute h-4 w-4 opacity-80" />
@@ -809,13 +749,9 @@ export default function App() {
               </div>
 
               {/* Middle-Right Ringed Saturn Planet Doodle + Stars */}
-              <motion.div
-                animate={{ y: [0, -7, 0], rotate: [-3, 4, -3] }}
-                transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="top-20 -right-1 sm:top-24 sm:right-1 lg:top-26 lg:right-3 absolute z-20"
-              >
+              <div className="top-20 -right-1 sm:top-24 sm:right-1 lg:top-26 lg:right-3 absolute z-20">
                 <PlanetDoodle className="h-11 w-16 sm:h-15 sm:w-22" />
-              </motion.div>
+              </div>
 
               {/* Bottom-Right Annotation: "Web3 / No Limits" + Gold Bitcoin Doodle */}
               <div className="right-1 bottom-3 sm:right-8 sm:bottom-8 lg:right-14 lg:bottom-10 absolute z-20 -rotate-8 select-none">
@@ -847,8 +783,8 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: -24, y: 16 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="relative lg:col-span-7"
           >
             <div className="relative px-5 pt-5 pb-4 text-[#0B192C] sm:px-7 sm:pt-6 sm:pb-5">
@@ -857,22 +793,25 @@ export default function App() {
                 viewBox="0 0 780 270"
                 fill="none"
                 preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-[0_14px_28px_rgba(2,7,15,0.72)]"
+                className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
                 aria-hidden="true"
               >
+                <path
+                  d="M22 18L56 13L100 19L152 12L214 18L279 13L346 20L414 14L482 19L550 13L619 20L686 14L746 19L770 32L776 72L769 116L777 162L770 208L774 246L752 262L694 257L628 264L556 258L484 265L409 258L334 264L259 257L186 264L116 258L52 263L18 250L12 206L19 156L11 108L18 58Z"
+                  fill="#040A14"
+                  opacity="0.55"
+                />
                 <path
                   d="M18 14L52 9L96 15L148 8L210 14L275 9L342 16L410 10L478 15L546 9L615 16L682 10L742 15L766 28L772 68L765 112L773 158L766 204L770 242L748 258L690 253L624 260L552 254L480 261L405 254L330 260L255 253L182 260L112 254L48 259L14 246L8 202L15 152L7 104L14 54Z"
                   fill="#EFE5D4"
                   stroke="#091526"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
-                  filter="url(#torn-paper-edge)"
                 />
                 <path
                   d="M28 24L740 24L752 240L26 242Z"
                   fill="#E5D8C3"
                   opacity="0.35"
-                  filter="url(#torn-paper-edge)"
                 />
               </svg>
 
@@ -960,8 +899,8 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.25 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             className="flex items-center justify-center gap-2 select-none lg:col-span-1 lg:flex-col"
           >
             <MiniAirdropParachuteDoodle className="h-8 w-7 lg:h-10 lg:w-8" />
@@ -995,8 +934,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
@@ -1016,8 +955,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('aptos')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
@@ -1037,8 +976,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
@@ -1058,8 +997,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: 0.27, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('airdrop')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
@@ -1101,8 +1040,8 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: -22, y: 16 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.18 }}
-            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="relative lg:col-span-8"
           >
             <div className="relative px-4 pt-4 pb-5 text-[#091526] sm:px-6 sm:pt-5 sm:pb-6">
@@ -1111,16 +1050,20 @@ export default function App() {
                 viewBox="0 0 920 250"
                 fill="none"
                 preserveAspectRatio="none"
-                className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-[0_14px_28px_rgba(2,7,15,0.72)]"
+                className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
                 aria-hidden="true"
               >
+                <path
+                  d="M20 18L72 12L138 19L214 13L294 18L379 12L464 19L552 13L639 18L726 12L812 19L886 14L910 28L916 76L909 130L917 186L910 232L888 244L809 239L722 246L632 240L539 246L446 239L354 245L262 239L172 245L88 239L24 244L12 218L18 166L11 112L18 58Z"
+                  fill="#040A14"
+                  opacity="0.55"
+                />
                 <path
                   d="M16 14L68 8L134 15L210 9L290 14L375 8L460 15L548 9L635 14L722 8L808 15L882 10L906 24L912 72L905 126L913 182L906 228L884 240L805 235L718 242L628 236L535 242L442 235L350 241L258 235L168 241L84 235L20 240L8 214L14 162L7 108L14 54Z"
                   fill="#EFE5D4"
                   stroke="#091526"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
-                  filter="url(#torn-paper-edge)"
                 />
               </svg>
 
@@ -1182,8 +1125,8 @@ export default function App() {
                   type="button"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.2 }}
-                  transition={{ duration: 0.52, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.48, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('aptos')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
@@ -1224,8 +1167,8 @@ export default function App() {
                   type="button"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.2 }}
-                  transition={{ duration: 0.52, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.48, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('sei')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
@@ -1266,8 +1209,8 @@ export default function App() {
                   type="button"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.2 }}
-                  transition={{ duration: 0.52, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.48, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('subquery')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
@@ -1310,29 +1253,21 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: 24, y: 16 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="relative flex flex-col items-center justify-end pt-7 sm:pt-8 lg:col-span-4 lg:pt-5"
           >
             {/* Top-Left Empty Space Fill around Node Chibi: Airdrop Parachute + Node Airdrop Note */}
-            <motion.div
-              animate={{ y: [0, -5, 0], rotate: [-4, 3, -4] }}
-              transition={{ duration: 4.1, repeat: Infinity, ease: 'easeInOut' }}
-              className="top-0 left-2 sm:left-10 lg:left-1 absolute z-20 flex flex-col items-center select-none"
-            >
+            <div className="top-0 left-2 sm:left-10 lg:left-1 absolute z-20 flex flex-col items-center select-none">
               <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-11 sm:w-9" />
               <div className="-mt-0.5 -rotate-8 text-center font-journal text-[10px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-xs">
                 <span className="block text-[#F5D78E]">Node Drop</span>
                 <span className="block">&amp; Airdrop</span>
               </div>
-            </motion.div>
+            </div>
 
             {/* Bottom-Left Empty Space Fill around Node Chibi: Floating Crypto Coins */}
-            <motion.div
-              animate={{ y: [0, 4, 0] }}
-              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="bottom-3 left-2 sm:left-12 lg:left-1 absolute z-20 flex flex-col items-center select-none"
-            >
+            <div className="bottom-3 left-2 sm:left-12 lg:left-1 absolute z-20 flex flex-col items-center select-none">
               <div className="flex items-center -space-x-2">
                 <GoldBitcoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
                 <EthereumCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
@@ -1340,7 +1275,7 @@ export default function App() {
               <span className="-rotate-6 font-journal text-[9.5px] font-bold text-[#9BB8DF] sm:text-[11px]">
                 $APT · $SEI · $SQT
               </span>
-            </motion.div>
+            </div>
 
             <div className="-top-1 right-4 sm:right-12 lg:right-2 absolute z-20 -rotate-12 select-none text-center">
               <div className="font-journal text-xs leading-[1.12] font-bold text-[#FAF6EE] sm:text-[14px]">
@@ -1360,16 +1295,12 @@ export default function App() {
             </div>
 
             {/* Bottom-Right Empty Space Fill around Node Chibi: Meme Coin Doodle */}
-            <motion.div
-              animate={{ y: [0, -4, 0], rotate: [4, -3, 4] }}
-              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-              className="right-2 bottom-3 sm:right-12 lg:right-1 absolute z-20 flex flex-col items-center select-none"
-            >
+            <div className="right-2 bottom-3 sm:right-12 lg:right-1 absolute z-20 flex flex-col items-center select-none">
               <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
               <span className="rotate-6 font-journal text-[9.5px] font-bold text-[#F5D78E] sm:text-[11px]">
                 Meme Alpha
               </span>
-            </motion.div>
+            </div>
 
             <NodeOperatorChibiScene />
           </motion.div>
@@ -1387,8 +1318,8 @@ export default function App() {
         <motion.div
           initial={{ opacity: 0, x: -18, y: 12 }}
           whileInView={{ opacity: 1, x: 0, y: 0 }}
-          viewport={{ once: false, amount: 0.25 }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="mb-4 flex flex-wrap items-center justify-between gap-3"
         >
           <div className="flex items-center gap-2">
@@ -1459,8 +1390,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 22, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.18 }}
-              transition={{ duration: 0.56, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('airdrop')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
             >
@@ -1517,8 +1448,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 22, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.18 }}
-              transition={{ duration: 0.56, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('memecoin')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
             >
@@ -1572,8 +1503,8 @@ export default function App() {
               type="button"
               initial={{ opacity: 0, y: 22, scale: 0.97 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, amount: 0.18 }}
-              transition={{ duration: 0.56, delay: 0.21, ease: [0.22, 1, 0.36, 1] }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-1"
             >
@@ -1624,8 +1555,8 @@ export default function App() {
           <motion.div
             initial={{ opacity: 0, x: 16, y: 12 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: false, amount: 0.25 }}
-            transition={{ duration: 0.6, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="hidden flex-col items-center justify-center gap-1.5 select-none lg:col-span-1 lg:flex"
           >
             <SolanaCoinDoodle className="h-8 w-9" />
@@ -1640,12 +1571,9 @@ export default function App() {
                   <path d="M2 5C22 2 42 2 62 5" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
-              <motion.div
-                animate={{ y: [0, -6, 0], x: [0, 3, 0] }}
-                transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-              >
+              <div>
                 <RocketSketchDoodle className="-mt-3 -ml-1 h-8 w-8 shrink-0" />
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -1701,8 +1629,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, x: -20, y: 14 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
                 className="relative flex items-end justify-center lg:col-span-3"
               >
                 <div className="relative flex items-end gap-1">
@@ -1733,8 +1661,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
                 className="pb-5 text-left lg:col-span-3"
               >
                 <h2 className="font-brush text-[36px] leading-none text-[#FAF6EE]">
@@ -1771,8 +1699,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 18, scale: 0.97 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
                 className="flex items-center justify-center gap-4 pb-4 lg:col-span-4"
               >
                 <svg
@@ -1835,8 +1763,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                 className="relative flex flex-col items-center justify-end lg:col-span-2"
               >
                 <div className="-mb-2 flex items-center gap-1 -rotate-6 select-none">
@@ -1855,8 +1783,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.56, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="text-center"
               >
                 <h2 className="font-brush text-3xl leading-none text-[#FAF6EE] sm:text-[36px]">
@@ -1883,8 +1811,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 18, scale: 0.96 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.56, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-4 grid w-full max-w-[285px] grid-cols-2 items-stretch gap-3"
               >
                 <a
@@ -1921,8 +1849,8 @@ export default function App() {
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.56, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-3 flex w-full max-w-md items-end justify-between gap-2 px-2 sm:max-w-lg"
               >
                 <BackpackWalkerChibi />
@@ -1956,8 +1884,8 @@ export default function App() {
       <motion.footer
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        viewport={{ once: true, amount: 0.15 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-20 bg-[#050C17] py-3.5 text-[#D8E3F2]"
       >
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-2 px-4 sm:px-8 lg:flex-row">
@@ -2086,7 +2014,18 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
     // Increment on page load
     requestCounter('up');
 
-    // Subscribe to real-time SSE stream for instant live visitor updates
+    // Subscribe to real-time SSE stream for instant live visitor updates (only when tab visible)
+    let pollInterval: number | null = null;
+
+    const startFallbackPolling = () => {
+      if (pollInterval !== null) return;
+      pollInterval = window.setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          requestCounter('get');
+        }
+      }, 30000);
+    };
+
     if (typeof window !== 'undefined' && 'EventSource' in window) {
       try {
         eventSource = new EventSource(
@@ -2102,17 +2041,17 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
             // Ignore malformed SSE message
           }
         };
+        eventSource.onerror = () => {
+          eventSource?.close();
+          eventSource = null;
+          startFallbackPolling();
+        };
       } catch {
-        // Fallback to polling below if EventSource fails
+        startFallbackPolling();
       }
+    } else {
+      startFallbackPolling();
     }
-
-    // Periodic real-time sync every 10s + on tab focus
-    const pollInterval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        requestCounter('get');
-      }
-    }, 10000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -2126,7 +2065,9 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
       if (eventSource) {
         eventSource.close();
       }
-      window.clearInterval(pollInterval);
+      if (pollInterval !== null) {
+        window.clearInterval(pollInterval);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
@@ -2137,8 +2078,7 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
       title={isId ? 'Total Pengunjung Real-Time (Vercel)' : 'Real-Time Visitors (Vercel)'}
     >
       <span className="relative flex h-2 w-2" aria-hidden="true">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ADE80] opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ADE80]" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
       </span>
       <span className="text-[#D0DDF0]">{isId ? 'Pengunjung:' : 'Visitors:'}</span>
       <span className="font-bold tracking-wide text-[#F5D78E]">

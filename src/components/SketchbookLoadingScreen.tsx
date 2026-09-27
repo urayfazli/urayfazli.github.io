@@ -156,7 +156,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
           viewBox="0 0 1440 90"
           fill="none"
           preserveAspectRatio="none"
-          className="-mt-[26px] relative z-10 h-[62px] w-full drop-shadow-[0_16px_24px_rgba(2,7,15,0.92)]"
+          className="-mt-[26px] relative z-10 h-[62px] w-full"
         >
           {/* Exposed Cream Parchment Paper Fiber Strip Along Tear */}
           <path
@@ -213,7 +213,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
           viewBox="0 0 1440 90"
           fill="none"
           preserveAspectRatio="none"
-          className="-mb-[26px] relative z-10 h-[62px] w-full drop-shadow-[0_-14px_22px_rgba(2,7,15,0.88)]"
+          className="-mb-[26px] relative z-10 h-[62px] w-full"
         >
           {/* Exposed Cream Parchment Paper Fiber Strip Along Tear */}
           <path
@@ -269,29 +269,17 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
         }}
         className="relative z-10 w-full max-w-md will-change-transform"
       >
-        <motion.div
-          animate={{ y: [0, -8, 0], rotate: [-6, 4, -6] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-          className="-top-12 left-4 sm:-left-6 pointer-events-none absolute z-10"
-        >
+        <div className="-top-12 left-4 sm:-left-6 pointer-events-none absolute z-10">
           <PlanetDoodle className="h-12 w-18 sm:h-14 sm:w-20" />
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={{ y: [0, -10, 0], x: [0, 5, 0], rotate: [0, 8, 0] }}
-          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="-top-10 right-4 sm:-right-4 pointer-events-none absolute z-10"
-        >
+        <div className="-top-10 right-4 sm:-right-4 pointer-events-none absolute z-10">
           <RocketSketchDoodle className="h-9 w-9 sm:h-11 sm:w-11" />
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-          className="-bottom-6 left-8 pointer-events-none absolute z-10"
-        >
+        <div className="-bottom-6 left-8 pointer-events-none absolute z-10">
           <SparkleStar className="h-4 w-4" />
-        </motion.div>
+        </div>
 
         {/* Central Pinned Torn-Parchment Paper Card */}
         <motion.div
@@ -397,14 +385,14 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             viewBox="0 0 520 430"
             fill="none"
             preserveAspectRatio="none"
-            className="pointer-events-none absolute inset-0 -z-10 h-full w-full drop-shadow-[0_22px_42px_rgba(2,7,15,0.88)]"
+            className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
             aria-hidden="true"
           >
             {/* Dark Offset Paper Shadow Layer */}
             <path
               d="M22 24L58 17L98 25L142 16L194 23L246 15L298 22L352 15L402 24L454 17L496 26L506 62L497 104L508 148L490 176L507 204L498 252L506 302L496 352L504 396L474 414L428 404L384 417L338 405L290 418L244 402L198 417L152 405L104 416L58 404L20 412L12 368L22 320L11 272L26 242L10 212L19 162L11 114L20 66Z"
               fill="#050D1A"
-              opacity="0.55"
+              opacity="0.65"
               transform="translate(6, 10)"
             />
 
@@ -415,7 +403,6 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
               stroke="#091526"
               strokeWidth="4"
               strokeLinejoin="round"
-              filter="url(#torn-paper-edge)"
             />
 
             {/* Exposed White/Cream Inner Paper Fiber Along Torn Edges */}
@@ -423,7 +410,6 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
               d="M30 32L488 32L492 392L28 396Z"
               fill="#E5D8C3"
               opacity="0.42"
-              filter="url(#torn-paper-edge)"
             />
 
             {/* Subtle Sketchbook Ruled Journal Lines & Crease Marks */}
@@ -446,20 +432,13 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
 
           {/* Floating Crown + Chibi Explorer Badge */}
           <div className="relative mx-auto flex flex-col items-center">
-            <motion.div
-              animate={{ y: [0, -4, 0], rotate: [-5, 5, -5] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <div>
               <CrownDoodle className="mb-1 h-6 w-8" color="#091526" />
-            </motion.div>
+            </div>
 
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative rounded-full border-2 border-[#091526] bg-[#091526] p-1.5 shadow-md"
-            >
+            <div className="relative rounded-full border-2 border-[#091526] bg-[#091526] p-1.5 shadow-md">
               <ChibiMiniAvatar className="h-16 w-16 sm:h-20 sm:w-20" />
-            </motion.div>
+            </div>
           </div>
 
           {/* Journal Title & Subtitle */}
