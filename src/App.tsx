@@ -2028,12 +2028,17 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
 
   useEffect(() => {
     let isMounted = true;
-    const sessionKey = 'urayfazli_vercel_visitor_counted';
-    const hasCountedInSession = sessionStorage.getItem(sessionKey) === '1';
+    let eventSource: EventSource | null = null;
 
-    const fetchVisitors = async () => {
+    const updateCount = (val: unknown) => {
+      if (!isMounted || typeof val !== 'number' || Number.isNaN(val)) return;
+      setVisitors((prev) => (prev === null || val >= prev ? val : prev));
+    };
+
+    const requestCounter = async (mode: 'up' | 'get') => {
+      const ts = Date.now();
       try {
-        if (!hasCountedInSession) {
+        if (mode === 'up') {
           try {
             track('portfolio_visitor');
           } catch {
@@ -2041,59 +2046,95 @@ const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
           }
         }
 
-        // 1. Try Vercel Serverless Function (/api/visitors)
-        const mode = hasCountedInSession ? 'get' : 'up';
-        const res = await fetch(`/api/visitors?mode=${mode}`, {
-          headers: { Accept: 'application/json' },
+        // 1. Try Vercel Serverless Function (/api/visitors) with cache-busting
+        const res = await fetch(`/api/visitors?mode=${mode}&_t=${ts}`, {
+          cache: 'no-store',
+          headers: {
+            Accept: 'application/json',
+            'Cache-Control': 'no-cache',
+          },
         });
         const contentType = res.headers.get('content-type') || '';
 
         if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
-          if (typeof data?.count === 'number' && isMounted) {
-            sessionStorage.setItem(sessionKey, '1');
-            setVisitors(data.count);
+          const count = typeof data?.count === 'number' ? data.count : data?.value;
+          if (typeof count === 'number') {
+            updateCount(count);
             return;
           }
         }
 
-        // 2. Direct fallback for local preview / static environment
-        const directUrl = hasCountedInSession
-          ? 'https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/'
-          : 'https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/up';
-        const directRes = await fetch(directUrl);
+        // 2. Direct real-time counter API for Vite dev / preview
+        const action = mode === 'up' ? 'hit' : 'get';
+        const directRes = await fetch(
+          `https://abacus.jasoncameron.dev/${action}/urayfazli-web3-portfolio/site-visitors?_t=${ts}`,
+          { cache: 'no-store' }
+        );
         if (directRes.ok) {
           const directData = await directRes.json();
-          if (typeof directData?.count === 'number' && isMounted) {
-            sessionStorage.setItem(sessionKey, '1');
-            setVisitors(directData.count);
+          if (typeof directData?.value === 'number') {
+            updateCount(directData.value);
             return;
           }
         }
       } catch {
-        // Offline / blocked fallback
-      }
-
-      if (isMounted) {
-        const localKey = 'urayfazli_local_visitor_count';
-        const stored = parseInt(localStorage.getItem(localKey) || '128', 10);
-        const nextVal = hasCountedInSession ? stored : stored + 1;
-        localStorage.setItem(localKey, String(nextVal));
-        sessionStorage.setItem(sessionKey, '1');
-        setVisitors(nextVal);
+        // Offline fallback below
       }
     };
 
-    fetchVisitors();
+    // Increment on page load
+    requestCounter('up');
+
+    // Subscribe to real-time SSE stream for instant live visitor updates
+    if (typeof window !== 'undefined' && 'EventSource' in window) {
+      try {
+        eventSource = new EventSource(
+          'https://abacus.jasoncameron.dev/stream/urayfazli-web3-portfolio/site-visitors'
+        );
+        eventSource.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (typeof parsed?.value === 'number') {
+              updateCount(parsed.value);
+            }
+          } catch {
+            // Ignore malformed SSE message
+          }
+        };
+      } catch {
+        // Fallback to polling below if EventSource fails
+      }
+    }
+
+    // Periodic real-time sync every 10s + on tab focus
+    const pollInterval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        requestCounter('get');
+      }
+    }, 10000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestCounter('get');
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       isMounted = false;
+      if (eventSource) {
+        eventSource.close();
+      }
+      window.clearInterval(pollInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   return (
     <div
       className="inline-flex items-center gap-1.5 rounded-md border border-[#E5B869]/45 bg-[#0D1E36]/90 px-2.5 py-0.5 font-journal text-[11px] font-bold text-[#FAF6EE] shadow-[0_2px_8px_rgba(3,9,18,0.6)] sm:text-xs"
-      title={isId ? 'Total Pengunjung (Vercel Analytics & Counter)' : 'Total Visitors (Vercel Analytics & Counter)'}
+      title={isId ? 'Total Pengunjung Real-Time (Vercel)' : 'Real-Time Visitors (Vercel)'}
     >
       <span className="relative flex h-2 w-2" aria-hidden="true">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ADE80] opacity-75" />
