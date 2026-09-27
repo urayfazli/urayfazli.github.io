@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import {
   AnimatePresence,
   motion,
@@ -2015,6 +2016,7 @@ export default function App() {
         onClose={() => setIsConnectOpen(false)}
         onCopyText={handleCopyText}
       />
+      <Analytics />
     </div>
   );
 }
