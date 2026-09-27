@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   CrownDoodle,
   ChibiMiniAvatar,
+  BackpackWalkerChibi,
   HandArrowRight,
   GoldBitcoinDoodle,
   EthereumCoinDoodle,
@@ -628,152 +629,225 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
       </div>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-          INTERACTIVE TORN-PARCHMENT MILESTONE FIELD LOG INSPECTOR
+          INTERACTIVE TORN-PARCHMENT MILESTONE FIELD LOG INSPECTOR + EXPLORER CHIBI
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeMilestone.id}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-          className="relative mt-6 lg:mt-8"
-        >
-          <div className="relative px-5 pt-6 pb-6 text-[#091526] sm:px-8 sm:pt-7 sm:pb-7 lg:px-10">
-            {/* Irregular Torn-Parchment SVG Background */}
-            <svg
-              viewBox="0 0 1100 260"
-              fill="none"
-              preserveAspectRatio="none"
-              className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
-              aria-hidden="true"
+      <div className="mt-6 grid grid-cols-1 items-end gap-5 lg:mt-8 lg:grid-cols-12 lg:gap-5">
+        {/* LEFT 9 COLS: Interactive Torn-Parchment Milestone Field Log Inspector */}
+        <div className="lg:col-span-9">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeMilestone.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+              className="relative"
             >
-              <path
-                d="M20 16L88 11L176 18L278 12L390 18L510 11L630 18L752 12L868 18L982 12L1072 18L1092 32L1086 92L1094 158L1086 226L1068 248L970 242L856 249L734 242L612 248L486 241L362 248L240 241L128 248L32 242L12 222L18 154L10 88Z"
-                fill="#040A14"
-                opacity="0.58"
-              />
-              <path
-                d="M16 12L84 7L172 14L274 8L386 14L506 7L626 14L748 8L864 14L978 8L1068 14L1088 28L1082 88L1090 154L1082 222L1064 244L966 238L852 245L730 238L608 244L482 237L358 244L236 237L124 244L28 238L8 218L14 150L6 84Z"
-                fill="#EFE5D4"
-                stroke="#091526"
-                strokeWidth="3.5"
-                strokeLinejoin="round"
-              />
-            </svg>
+              <div className="relative px-5 pt-6 pb-6 text-[#091526] sm:px-7 sm:pt-7 sm:pb-7 lg:px-8">
+                {/* Irregular Torn-Parchment SVG Background */}
+                <svg
+                  viewBox="0 0 1100 260"
+                  fill="none"
+                  preserveAspectRatio="none"
+                  className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M20 16L88 11L176 18L278 12L390 18L510 11L630 18L752 12L868 18L982 12L1072 18L1092 32L1086 92L1094 158L1086 226L1068 248L970 242L856 249L734 242L612 248L486 241L362 248L240 241L128 248L32 242L12 222L18 154L10 88Z"
+                    fill="#040A14"
+                    opacity="0.58"
+                  />
+                  <path
+                    d="M16 12L84 7L172 14L274 8L386 14L506 7L626 14L748 8L864 14L978 8L1068 14L1088 28L1082 88L1090 154L1082 222L1064 244L966 238L852 245L730 238L608 244L482 237L358 244L236 237L124 244L28 238L8 218L14 150L6 84Z"
+                    fill="#EFE5D4"
+                    stroke="#091526"
+                    strokeWidth="3.5"
+                    strokeLinejoin="round"
+                  />
+                </svg>
 
-            <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-12 lg:gap-6">
-              {/* Left 7 Cols: Milestone Story & Achievements */}
-              <div className="lg:col-span-7">
-                <div className="flex flex-wrap items-center gap-2 font-journal text-xs font-bold text-[#233F6B]">
-                  <span>MILESTONE {activeMilestone.stepNumber}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{activeMilestone.year}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="text-[#091526]">{activeMilestone.tag[lang]}</span>
-                </div>
+                <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-12 lg:gap-5">
+                  {/* Left 7 Cols: Milestone Story & Achievements */}
+                  <div className="lg:col-span-7">
+                    <div className="flex flex-wrap items-center gap-2 font-journal text-xs font-bold text-[#233F6B]">
+                      <span>MILESTONE {activeMilestone.stepNumber}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{activeMilestone.year}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-[#091526]">{activeMilestone.tag[lang]}</span>
+                    </div>
 
-                <div className="mt-1 flex flex-wrap items-center gap-2.5">
-                  <h3 className="font-brush text-2xl leading-none text-[#091526] sm:text-3xl">
-                    {activeMilestone.title[lang]}
-                  </h3>
-                  <span className="-rotate-2 font-journal text-xs font-bold text-[#1B365C]">
-                    — &ldquo;{activeMilestone.annotation}&rdquo;
-                  </span>
-                </div>
-
-                <p className="mt-2.5 font-journal text-[12.5px] leading-relaxed font-semibold text-[#102136] sm:text-[13.5px]">
-                  {activeMilestone.fullStory[lang]}
-                </p>
-
-                <ul className="mt-3 space-y-1.5 font-journal text-xs font-semibold text-[#091526] sm:text-[13px]">
-                  {activeMilestone.achievements[lang].map((ach, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.6px] border-[#091526] bg-[#F5D78E] text-[10px] font-bold text-[#091526]">
-                        ✓
+                    <div className="mt-1 flex flex-wrap items-center gap-2.5">
+                      <h3 className="font-brush text-2xl leading-none text-[#091526] sm:text-3xl">
+                        {activeMilestone.title[lang]}
+                      </h3>
+                      <span className="-rotate-2 font-journal text-xs font-bold text-[#1B365C]">
+                        — &ldquo;{activeMilestone.annotation}&rdquo;
                       </span>
-                      <span>{ach}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Right 5 Cols: Hand-Drawn Dark Summary Card + Action Triggers */}
-              <div className="lg:col-span-5">
-                <div className="sketch-card-exp group relative p-4 text-[#FAF6EE] sm:p-5">
-                  <HandDrawnCardCornerDoodles variant="exp" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between gap-2 border-b border-dashed border-[#2E5487] pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <MilestoneSketchIcon
-                          type={activeMilestone.iconType}
-                          isActive={true}
-                        />
-                        <div>
-                          <div className="font-journal text-[11px] text-[#9BB8DF]">
-                            {isId ? 'Catatan Log Petualangan' : 'Adventure Field Log'}
-                          </div>
-                          <div className="font-brush text-xl text-[#F5D78E] sm:text-2xl">
-                            {activeMilestone.title[lang]} ({activeMilestone.year})
-                          </div>
-                        </div>
-                      </div>
-                      <div className="hidden items-center -space-x-1.5 sm:flex">
-                        <MiniAirdropParachuteDoodle className="h-8 w-7" />
-                        <RocketSketchDoodle className="h-7 w-7" />
-                      </div>
                     </div>
 
-                    {/* Metrics List */}
-                    <div className="mt-3 space-y-2">
-                      {activeMilestone.metrics.map((m, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center justify-between gap-2 font-journal text-xs"
-                        >
-                          <span className="text-[#B2C5DF]">{m.label[lang]}</span>
-                          <span className="font-mono-num font-bold text-[#FAF6EE]">
-                            {m.value}
+                    <p className="mt-2.5 font-journal text-[12.5px] leading-relaxed font-semibold text-[#102136] sm:text-[13.5px]">
+                      {activeMilestone.fullStory[lang]}
+                    </p>
+
+                    <ul className="mt-3 space-y-1.5 font-journal text-xs font-semibold text-[#091526] sm:text-[13px]">
+                      {activeMilestone.achievements[lang].map((ach, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-[1.6px] border-[#091526] bg-[#F5D78E] text-[10px] font-bold text-[#091526]">
+                            ✓
                           </span>
-                        </div>
+                          <span>{ach}</span>
+                        </li>
                       ))}
+                    </ul>
+                  </div>
+
+                  {/* Right 5 Cols: Hand-Drawn Dark Summary Card + Action Triggers */}
+                  <div className="lg:col-span-5">
+                    <div className="sketch-card-exp group relative p-4 text-[#FAF6EE] sm:p-5">
+                      <HandDrawnCardCornerDoodles variant="exp" />
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-2 border-b border-dashed border-[#2E5487] pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <MilestoneSketchIcon
+                              type={activeMilestone.iconType}
+                              isActive={true}
+                            />
+                            <div>
+                              <div className="font-journal text-[11px] text-[#9BB8DF]">
+                                {isId ? 'Catatan Log Petualangan' : 'Adventure Field Log'}
+                              </div>
+                              <div className="font-brush text-xl text-[#F5D78E] sm:text-2xl">
+                                {activeMilestone.title[lang]} ({activeMilestone.year})
+                              </div>
+                            </div>
+                          </div>
+                          <div className="hidden items-center -space-x-1.5 sm:flex">
+                            <MiniAirdropParachuteDoodle className="h-8 w-7" />
+                            <RocketSketchDoodle className="h-7 w-7" />
+                          </div>
+                        </div>
+
+                        {/* Metrics List */}
+                        <div className="mt-3 space-y-2">
+                          {activeMilestone.metrics.map((m, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center justify-between gap-2 font-journal text-xs"
+                            >
+                              <span className="text-[#B2C5DF]">{m.label[lang]}</span>
+                              <span className="font-mono-num font-bold text-[#FAF6EE]">
+                                {m.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Interactive Buttons: Open Journal Entry Modal or Collaborate */}
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-dashed border-[#2E5487] pt-3.5">
+                          <button
+                            type="button"
+                            onClick={() => onSelectEntry(activeMilestone.journalEntryId)}
+                            className="sketch-pill min-h-[38px] flex-1 cursor-pointer bg-[#F5D78E] px-3.5 py-1.5 text-center font-journal text-xs font-bold text-[#091526] hover:bg-[#FCE5A8]"
+                          >
+                            {isId ? '📖 Buka Halaman Jurnal' : '📖 Open Journal Page'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={onOpenConnect}
+                            className="sketch-pill min-h-[38px] cursor-pointer bg-[#122644] px-3.5 py-1.5 font-journal text-xs font-bold text-[#FAF6EE] hover:text-[#F5D78E]"
+                          >
+                            {isId ? 'Kolaborasi →' : 'Collaborate →'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Interactive Buttons: Open Journal Entry Modal or Collaborate */}
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2.5 border-t border-dashed border-[#2E5487] pt-3.5">
-                      <button
-                        type="button"
-                        onClick={() => onSelectEntry(activeMilestone.journalEntryId)}
-                        className="sketch-pill min-h-[38px] flex-1 cursor-pointer bg-[#F5D78E] px-3.5 py-1.5 text-center font-journal text-xs font-bold text-[#091526] hover:bg-[#FCE5A8]"
-                      >
-                        {isId ? '📖 Buka Halaman Jurnal' : '📖 Open Journal Page'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onOpenConnect}
-                        className="sketch-pill min-h-[38px] cursor-pointer bg-[#122644] px-3.5 py-1.5 font-journal text-xs font-bold text-[#FAF6EE] hover:text-[#F5D78E]"
-                      >
-                        {isId ? 'Kolaborasi →' : 'Collaborate →'}
-                      </button>
+                    {/* Decorative Crypto Coins Strip under Inspector Box */}
+                    <div className="mt-2.5 flex flex-wrap items-center justify-end gap-1.5 select-none">
+                      <span className="font-journal text-[11px] font-bold text-[#091526]">
+                        {isId ? 'Jejak Ekosistem:' : 'Ecosystem Trail:'}
+                      </span>
+                      <GoldBitcoinDoodle className="h-6 w-7" />
+                      <EthereumCoinDoodle className="h-6 w-7" />
+                      <SolanaCoinDoodle className="h-6 w-7" />
+                      <MemeDogeCoinMiniDoodle className="h-6 w-7" />
                     </div>
                   </div>
                 </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-                {/* Decorative Crypto Coins Strip under Inspector Box */}
-                <div className="mt-2.5 flex flex-wrap items-center justify-end gap-1.5 select-none">
-                  <span className="font-journal text-[11px] font-bold text-[#091526]">
-                    {isId ? 'Jejak Ekosistem:' : 'Ecosystem Trail:'}
+        {/* RIGHT 3 COLS: Relocated Backpack Explorer Chibi Character + Hand-Drawn Trail Annotations */}
+        <motion.div
+          initial={{ opacity: 0, x: 20, y: 14 }}
+          whileInView={{ opacity: 1, x: 0, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          className="relative flex flex-col items-center justify-end pt-2 lg:col-span-3 lg:pt-0"
+        >
+          <div className="relative flex items-end justify-center gap-2">
+            <BackpackWalkerChibi />
+
+            <div className="mb-4 -ml-1 flex flex-col items-start select-none">
+              <div className="mb-1 flex items-center -space-x-1.5">
+                <MiniAirdropParachuteDoodle className="h-8 w-7" />
+                <GoldBitcoinDoodle className="h-7 w-8" />
+                <MemeDogeCoinMiniDoodle className="h-7 w-8" />
+              </div>
+
+              <div className="-rotate-8">
+                <div className="relative font-journal text-xs leading-[1.15] font-bold text-[#FAF6EE] sm:text-[13px]">
+                  <span className="-top-1 -left-2.5 absolute text-xs text-[#F5D78E]" aria-hidden="true">
+                    ⑊
                   </span>
-                  <GoldBitcoinDoodle className="h-6 w-7" />
-                  <EthereumCoinDoodle className="h-6 w-7" />
-                  <SolanaCoinDoodle className="h-6 w-7" />
-                  <MemeDogeCoinMiniDoodle className="h-6 w-7" />
+                  <span className="block">
+                    {isId ? 'Terus Jelajahi' : 'Keep Exploring'}
+                  </span>
+                  <span className="block text-[#F5D78E]">
+                    {isId ? 'Jejak Web3!' : 'The Web3 Trail!'}
+                  </span>
                 </div>
+                <svg
+                  viewBox="0 0 82 8"
+                  fill="none"
+                  className="mt-0.5 h-2 w-18"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2 5C28 2 54 2 80 5"
+                    stroke="#F5D78E"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="mt-0.5 block font-journal text-[10px] font-bold text-[#9BB8DF]">
+                  {isId ? 'Step ' : 'Stop '}
+                  {activeMilestone.stepNumber} · {activeMilestone.year}
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Hand-drawn Sketchbook Ground Line under the Explorer Chibi */}
+          <svg
+            viewBox="0 0 240 10"
+            fill="none"
+            className="-mt-0.5 h-2.5 w-52 max-w-full select-none"
+            aria-hidden="true"
+          >
+            <path
+              d="M6 5C72 2.5 168 2.5 234 5.5M38 8C95 6.5 148 6.5 202 8"
+              stroke="#9BB8DF"
+              strokeOpacity="0.6"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </motion.div>
-      </AnimatePresence>
+      </div>
     </section>
   );
 };
