@@ -83,7 +83,7 @@
   transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.sketch-card:hover {
+.sketch-card:not(.sketch-card-static):hover {
   translate: -1px -3px;
   rotate: -0.45deg;
   border-color: #F5D78E;
@@ -93,16 +93,16 @@
     inset 0 0 0 1.5px rgba(245, 215, 142, 0.28);
 }
 
-.sketch-card:hover::before {
+.sketch-card:not(.sketch-card-static):hover::before {
   border-color: rgba(245, 215, 142, 0.62);
   rotate: 0.45deg;
 }
 
-.sketch-card:hover::after {
+.sketch-card:not(.sketch-card-static):hover::after {
   border-color: rgba(245, 215, 142, 0.45);
 }
 
-.sketch-card:active {
+.sketch-card:not(.sketch-card-static):active {
   translate: 1px 1px;
   box-shadow:
     2px 2px 0px #030913,
@@ -279,3 +279,13 @@
 .text-balance-wrap {
   text-wrap: balance;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+

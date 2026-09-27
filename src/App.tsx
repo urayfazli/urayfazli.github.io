@@ -51,14 +51,16 @@ import {
   ConnectJournalModal,
 } from './components/JournalModals';
 import { SketchbookLoadingScreen } from './components/SketchbookLoadingScreen';
+import { AdventureRoadmapSection } from './components/AdventureRoadmap';
 
-type NavSection = 'home' | 'about' | 'experience' | 'activities' | 'contact';
+type NavSection = 'home' | 'about' | 'experience' | 'activities' | 'roadmap' | 'contact';
 
 const NAV_ITEMS: { id: NavSection; label: Record<Language, string> }[] = [
   { id: 'home', label: { id: 'Beranda', en: 'Home' } },
   { id: 'about', label: { id: 'Tentang', en: 'About' } },
   { id: 'experience', label: { id: 'Pengalaman', en: 'Experience' } },
   { id: 'activities', label: { id: 'Aktivitas', en: 'Activities' } },
+  { id: 'roadmap', label: { id: 'Roadmap', en: 'Roadmap' } },
   { id: 'contact', label: { id: 'Kontak', en: 'Contact' } },
 ];
 
@@ -381,7 +383,7 @@ export default function App() {
           {/* Zone 2: Desktop Handwritten Navigation Links */}
           <nav
             aria-label="Primary Navigation"
-            className="hidden items-center gap-7 md:flex lg:gap-10"
+            className="hidden items-center gap-5 md:flex lg:gap-8"
           >
             {NAV_ITEMS.map((item) => {
               const isActive = activeNav === item.id;
@@ -476,7 +478,7 @@ export default function App() {
         {/* Mobile Quick-Jump Sketchbook Navigation Bar (< 768px) */}
         <nav
           aria-label="Mobile Navigation"
-          className="flex items-center justify-around border-t border-[#1D3558]/60 bg-[#06101E]/95 px-2 py-1.5 md:hidden"
+          className="no-scrollbar flex items-center justify-between gap-1 overflow-x-auto border-t border-[#1D3558]/60 bg-[#06101E]/95 px-3 py-1.5 sm:justify-around md:hidden"
         >
           {NAV_ITEMS.map((item) => {
             const isActive = activeNav === item.id;
@@ -488,7 +490,7 @@ export default function App() {
                   e.preventDefault();
                   scrollToSection(item.id);
                 }}
-                className={`relative whitespace-nowrap px-2 py-0.5 font-journal text-[12px] transition-colors ${
+                className={`relative shrink-0 whitespace-nowrap px-2 py-1 font-journal text-[11.5px] transition-colors sm:text-xs ${
                   isActive
                     ? 'font-bold text-[#FAF6EE]'
                     : 'font-medium text-[#B4C6DF] hover:text-[#FAF6EE]'
@@ -684,7 +686,7 @@ export default function App() {
             transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-10 flex items-end justify-center lg:col-span-7"
           >
-            <div className="relative mx-auto flex w-full max-w-[360px] items-end justify-center pt-5 sm:max-w-[500px] sm:pt-3 lg:max-w-[560px] lg:pt-1">
+            <div className="relative mx-auto flex w-full max-w-[350px] items-end justify-center pt-5 pb-5 sm:max-w-[500px] sm:pt-3 sm:pb-2 lg:max-w-[560px] lg:pt-1 lg:pb-0">
               {/* Top-Left Empty Space Fill: Floating Airdrop Parachute + "Airdrop Alpha" Callout */}
               <div className="top-2 left-0 sm:top-5 sm:left-2 lg:top-6 lg:left-3 absolute z-20 flex flex-col items-center select-none">
                 <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-12 sm:w-10" />
@@ -695,12 +697,12 @@ export default function App() {
               </div>
 
               {/* Bottom-Left Empty Space Fill: Floating Meme Coin & Solana + "100x Meme Gems" */}
-              <div className="bottom-4 left-0 sm:bottom-8 sm:left-1 lg:bottom-10 lg:left-2 absolute z-20 flex flex-col items-center select-none">
+              <div className="bottom-11 left-0 sm:bottom-9 sm:left-1 lg:bottom-10 lg:left-2 absolute z-20 flex flex-col items-center select-none">
                 <div className="flex items-center -space-x-2">
-                  <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-10 sm:w-11" />
-                  <SolanaCoinDoodle className="h-7 w-8 sm:h-9 sm:w-10" />
+                  <MemeDogeCoinMiniDoodle className="h-7 w-8 sm:h-10 sm:w-11" />
+                  <SolanaCoinDoodle className="h-6 w-7 sm:h-9 sm:w-10" />
                 </div>
-                <div className="-rotate-6 text-center font-journal text-[10px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-[12.5px]">
+                <div className="-rotate-6 text-center font-journal text-[9.5px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-[12.5px]">
                   <span className="block">Meme Coin</span>
                   <span className="block text-[#F5D78E]">Early Narrative</span>
                 </div>
@@ -755,14 +757,14 @@ export default function App() {
               </div>
 
               {/* Bottom-Right Annotation: "Web3 / No Limits" + Gold Bitcoin Doodle */}
-              <div className="right-1 bottom-3 sm:right-8 sm:bottom-8 lg:right-14 lg:bottom-10 absolute z-20 -rotate-8 select-none">
-                <GoldBitcoinDoodle className="mx-auto -mb-1 h-7 w-8 sm:h-9 sm:w-10" />
-                <div className="font-journal text-[12px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[16px]">
+              <div className="right-0 bottom-11 sm:right-8 sm:bottom-9 lg:right-14 lg:bottom-10 absolute z-20 -rotate-8 select-none">
+                <GoldBitcoinDoodle className="mx-auto -mb-1 h-6 w-7 sm:h-9 sm:w-10" />
+                <div className="font-journal text-[11px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[16px]">
                   <span className="block">Web3</span>
                   <span className="block">No</span>
                   <span className="block">Limits</span>
                 </div>
-                <svg viewBox="0 0 72 14" fill="none" className="mt-0.5 h-3 w-12 sm:h-3.5 sm:w-16" aria-hidden="true">
+                <svg viewBox="0 0 72 14" fill="none" className="mt-0.5 h-3 w-11 sm:h-3.5 sm:w-16" aria-hidden="true">
                   <path d="M2 5C24 2 48 2 68 4.5" stroke="#FAF6EE" strokeWidth="2.4" strokeLinecap="round" />
                   <path d="M10 10C28 8 46 8 60 9.5" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" />
                 </svg>
@@ -929,87 +931,79 @@ export default function App() {
           </motion.div>
 
           {/* RIGHT: 2x2 Statistic Cards Grid (2x2 on both Mobile and Desktop!) */}
-          <div className="grid grid-cols-2 items-stretch gap-2.5 sm:gap-3 lg:col-span-4">
+          <div className="grid grid-cols-2 items-stretch gap-3.5 sm:gap-4 lg:col-span-4">
             {/* Stat 1: 3+ Years in Web3 */}
-            <motion.button
-              type="button"
+            <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => setSelectedEntryId('testnet')}
-              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
+              className="sketch-card sketch-card-static flex h-full w-full select-none items-center gap-2.5 px-3.5 py-3.5 text-left sm:gap-3 sm:px-4 sm:py-4"
             >
               <HandDrawnCardCornerDoodles />
               <StatShieldBadge />
               <div className="relative z-10 min-w-0 flex-1">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3+
                 </div>
                 <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Tahun di Web3' : 'Years in Web3'}
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
 
             {/* Stat 2: 3 Node Networks */}
-            <motion.button
-              type="button"
+            <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => setSelectedEntryId('aptos')}
-              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
+              className="sketch-card sketch-card-static flex h-full w-full select-none items-center gap-2.5 px-3.5 py-3.5 text-left sm:gap-3 sm:px-4 sm:py-4"
             >
               <HandDrawnCardCornerDoodles />
               <StatNodeBadge />
               <div className="relative z-10 min-w-0 flex-1">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3
                 </div>
                 <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Jaringan Node' : 'Node Networks'}
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
 
             {/* Stat 3: 100+ Testnet Joined */}
-            <motion.button
-              type="button"
+            <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => setSelectedEntryId('testnet')}
-              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
+              className="sketch-card sketch-card-static flex h-full w-full select-none items-center gap-2.5 px-3.5 py-3.5 text-left sm:gap-3 sm:px-4 sm:py-4"
             >
               <HandDrawnCardCornerDoodles />
               <StatCubeBadge />
               <div className="relative z-10 min-w-0 flex-1">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   100+
                 </div>
                 <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Testnet Diikuti' : 'Testnet Joined'}
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
 
             {/* Stat 4: 1000+ Airdrop & Meme Opportunities */}
-            <motion.button
-              type="button"
+            <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.96 }}
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              onClick={() => setSelectedEntryId('airdrop')}
-              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
+              className="sketch-card sketch-card-static flex h-full w-full select-none items-center gap-2.5 px-3.5 py-3.5 text-left sm:gap-3 sm:px-4 sm:py-4"
             >
               <HandDrawnCardCornerDoodles />
               <StatRocketBadge />
               <div className="relative z-10 min-w-0 flex-1">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   1000+
                 </div>
                 <div className="mt-0.5 font-journal text-[10.5px] leading-tight font-medium text-[#C9D7EA] sm:text-[11.5px]">
@@ -1028,7 +1022,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-            </motion.button>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -1124,7 +1118,7 @@ export default function App() {
               </div>
 
               {/* 3 Compact Dark Navy Node Cards Inside Parchment */}
-              <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
                 {/* CARD 1: Aptos Network */}
                 <motion.button
                   type="button"
@@ -1133,7 +1127,7 @@ export default function App() {
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.48, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('aptos')}
-                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between p-4 text-left text-[#F5EFE6]"
                 >
                   <HandDrawnCardCornerDoodles variant="exp" />
                   <div className="relative z-10 flex items-center gap-2.5">
@@ -1176,7 +1170,7 @@ export default function App() {
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.48, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('sei')}
-                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between p-4 text-left text-[#F5EFE6]"
                 >
                   <HandDrawnCardCornerDoodles variant="exp" />
                   <div className="relative z-10 flex items-center gap-2.5">
@@ -1219,7 +1213,7 @@ export default function App() {
                   viewport={{ once: true, amount: 0.15 }}
                   transition={{ duration: 0.48, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('subquery')}
-                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between p-4 text-left text-[#F5EFE6]"
                 >
                   <HandDrawnCardCornerDoodles variant="exp" />
                   <div className="relative z-10 flex items-center gap-2.5">
@@ -1391,8 +1385,8 @@ export default function App() {
         </motion.div>
 
         {/* 3 Equal-Width Activity Cards + Far-Right "Web3 Friends = More Opportunities" Column */}
-        <div className="grid grid-cols-1 items-stretch gap-3.5 lg:grid-cols-12 lg:gap-4">
-          <div className="grid grid-cols-1 items-stretch gap-3.5 md:grid-cols-2 lg:col-span-11 lg:grid-cols-3 lg:gap-3.5 xl:gap-4">
+        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-12 lg:gap-4">
+          <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-2 lg:col-span-11 lg:grid-cols-3 lg:gap-4 xl:gap-5">
             {/* CARD 1: Airdrop Hunter */}
             <motion.button
               type="button"
@@ -1401,7 +1395,7 @@ export default function App() {
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('airdrop')}
-              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2.5 px-4 py-4 text-left"
             >
               <HandDrawnCardCornerDoodles variant="tape" />
               <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
@@ -1460,7 +1454,7 @@ export default function App() {
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('memecoin')}
-              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2.5 px-4 py-4 text-left"
             >
               <HandDrawnCardCornerDoodles variant="tape" />
               <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
@@ -1516,7 +1510,7 @@ export default function App() {
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.5, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
-              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-1"
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2.5 px-4 py-4 text-left md:col-span-2 lg:col-span-1"
             >
               <HandDrawnCardCornerDoodles variant="tape" />
               <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
@@ -1589,6 +1583,15 @@ export default function App() {
           </motion.div>
         </div>
       </section>
+
+      {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          5.5 ADVENTURE ROADMAP SECTION (Interactive Hand-Drawn Timeline Trail)
+      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <AdventureRoadmapSection
+        lang={lang}
+        onSelectEntry={(entryId) => setSelectedEntryId(entryId)}
+        onOpenConnect={() => setIsConnectOpen(true)}
+      />
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           6. GET IN TOUCH (CONTACT) SECTION (Mobile & Desktop Flush Chibi Strip)
@@ -1737,18 +1740,19 @@ export default function App() {
                     <EthereumCoinDoodle className="h-6 w-7 shrink-0" />
                   </div>
 
-                  <div className="grid w-full grid-cols-2 items-stretch gap-3">
+                  <div className="grid w-full grid-cols-2 items-stretch gap-3.5">
                     <a
                       href="https://x.com/urayfazli17"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="sketch-card group flex h-full flex-col items-center justify-center px-2.5 py-2.5 text-center"
+                      className="sketch-card group relative flex h-full flex-col items-center justify-center px-3 py-3 text-center"
                     >
-                      <HandXIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
-                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
+                      <HandDrawnCardCornerDoodles />
+                      <HandXIcon className="relative z-10 h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                      <span className="relative z-10 mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                         X
                       </span>
-                      <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                      <span className="relative z-10 font-journal text-[9px] whitespace-nowrap text-[#9BB8DF]">
                         @urayfazli17
                       </span>
                     </a>
@@ -1756,13 +1760,14 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
-                      className="sketch-card group flex h-full cursor-pointer flex-col items-center justify-center px-2.5 py-2.5 text-center"
+                      className="sketch-card group relative flex h-full cursor-pointer flex-col items-center justify-center px-3 py-3 text-center"
                     >
-                      <HandEmailIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
-                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
+                      <HandDrawnCardCornerDoodles />
+                      <HandEmailIcon className="relative z-10 h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                      <span className="relative z-10 mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                         Email
                       </span>
-                      <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                      <span className="relative z-10 font-journal text-[9px] whitespace-nowrap text-[#9BB8DF]">
                         fazliuray@gmail.com
                       </span>
                     </button>
@@ -1824,19 +1829,20 @@ export default function App() {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-4 grid w-full max-w-[285px] grid-cols-2 items-stretch gap-3"
+                className="mt-4 grid w-full max-w-[300px] grid-cols-2 items-stretch gap-3.5"
               >
                 <a
                   href="https://x.com/urayfazli17"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="sketch-card group flex h-full flex-col items-center justify-center px-2.5 py-2.5 text-center"
+                  className="sketch-card group relative flex h-full flex-col items-center justify-center px-3 py-3 text-center"
                 >
-                  <HandXIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
-                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
+                  <HandDrawnCardCornerDoodles />
+                  <HandXIcon className="relative z-10 h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                  <span className="relative z-10 mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                     X
                   </span>
-                  <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                  <span className="relative z-10 font-journal text-[9px] whitespace-nowrap text-[#9BB8DF]">
                     @urayfazli17
                   </span>
                 </a>
@@ -1844,13 +1850,14 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
-                  className="sketch-card group flex h-full cursor-pointer flex-col items-center justify-center px-2.5 py-2.5 text-center"
+                  className="sketch-card group relative flex h-full cursor-pointer flex-col items-center justify-center px-3 py-3 text-center"
                 >
-                  <HandEmailIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
-                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
+                  <HandDrawnCardCornerDoodles />
+                  <HandEmailIcon className="relative z-10 h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                  <span className="relative z-10 mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                     Email
                   </span>
-                  <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                  <span className="relative z-10 font-journal text-[9px] whitespace-nowrap text-[#9BB8DF]">
                     fazliuray@gmail.com
                   </span>
                 </button>
