@@ -2386,7 +2386,7 @@ export default function App() {
 
           {/* Right Visitors Badge + Copyright + Gold Crown + Back to Top */}
           <div className="flex flex-wrap items-center justify-center gap-2 font-journal text-[11.5px] text-[#D0DDF0] sm:text-[12.5px]">
-            <FooterVisitorBadge isId={isId} />
+            <FooterVisitorBadge isId={isId} isDay={isDay} />
             <span className="text-[#E5B869]" aria-hidden="true">•</span>
             <span>© 2025 Uray Fazli Alman</span>
             <span className="text-[#E5B869]" aria-hidden="true">•</span>
@@ -2425,138 +2425,309 @@ export default function App() {
   );
 }
 
-const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
-  const [visitors, setVisitors] = useState<number | null>(null);
+const VISITOR_REALTIME_KEY = 'uray_portfolio_realtime_visitors_v2';
+
+const FooterVisitorBadge: React.FC<{ isId: boolean; isDay?: boolean }> = ({
+  isId,
+  isDay = false,
+}) => {
+  const [visitors, setVisitors] = useState<number | null>(() => {
+    try {
+      window.localStorage.removeItem('uray_portfolio_visitors_count_v1');
+      const saved = window.localStorage.getItem(VISITOR_REALTIME_KEY);
+      const parsed = saved ? Number.parseInt(saved, 10) : Number.NaN;
+      return !Number.isNaN(parsed) && parsed > 0 ? parsed : null;
+    } catch {
+      return null;
+    }
+  });
+  const [justUpdated, setJustUpdated] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     let eventSource: EventSource | null = null;
+    let reconnectTimer: number | null = null;
+    let pulseTimer: number | null = null;
+    let bc: BroadcastChannel | null = null;
 
-    const updateCount = (val: unknown) => {
-      if (!isMounted || typeof val !== 'number' || Number.isNaN(val)) return;
-      setVisitors((prev) => (prev === null || val >= prev ? val : prev));
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        bc = new BroadcastChannel('uray_visitors_live_sync');
+      }
+    } catch {
+      bc = null;
+    }
+
+    const applyRealtimeCount = (val: unknown, broadcast = true) => {
+      if (!isMounted || typeof val !== 'number' || Number.isNaN(val) || val <= 0) return;
+      const cleanVal = Math.floor(val);
+      setVisitors((prev) => {
+        if (prev !== null && prev !== cleanVal) {
+          setJustUpdated(true);
+          if (pulseTimer !== null) window.clearTimeout(pulseTimer);
+          pulseTimer = window.setTimeout(() => {
+            if (isMounted) setJustUpdated(false);
+          }, 900);
+        }
+        return cleanVal;
+      });
+      try {
+        window.localStorage.setItem(VISITOR_REALTIME_KEY, String(cleanVal));
+      } catch {
+        // Ignore storage errors
+      }
+      if (broadcast && bc) {
+        try {
+          bc.postMessage({ type: 'VISITOR_COUNT', value: cleanVal });
+        } catch {
+          // Ignore broadcast errors
+        }
+      }
+    };
+
+    if (bc) {
+      bc.onmessage = (ev) => {
+        if (ev?.data?.type === 'VISITOR_COUNT' && typeof ev.data.value === 'number') {
+          applyRealtimeCount(ev.data.value, false);
+        }
+      };
+    }
+
+    const handleStorageSync = (e: StorageEvent) => {
+      if (e.key === VISITOR_REALTIME_KEY && e.newValue) {
+        const parsed = Number.parseInt(e.newValue, 10);
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          applyRealtimeCount(parsed, false);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageSync);
+
+    const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = 3200) => {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...options, signal: controller.signal });
+      } finally {
+        window.clearTimeout(timer);
+      }
     };
 
     const requestCounter = async (mode: 'up' | 'get') => {
       const ts = Date.now();
-      try {
-        if (mode === 'up') {
-          try {
-            track('portfolio_visitor');
-          } catch {
-            // Ignore if outside Vercel runtime
-          }
+      if (mode === 'up') {
+        try {
+          track('portfolio_visitor');
+        } catch {
+          // Ignore if outside Vercel runtime
         }
+      }
 
-        // 1. Try Vercel Serverless Function (/api/visitors) with cache-busting
-        const res = await fetch(`/api/visitors?mode=${mode}&_t=${ts}`, {
-          cache: 'no-store',
-          headers: {
-            Accept: 'application/json',
-            'Cache-Control': 'no-cache',
+      // 1. Try Vercel Serverless Function (/api/visitors)
+      try {
+        const res = await fetchWithTimeout(
+          `/api/visitors?mode=${mode}&_t=${ts}`,
+          {
+            cache: 'no-store',
+            headers: {
+              Accept: 'application/json',
+              'Cache-Control': 'no-cache, no-store',
+              Pragma: 'no-cache',
+            },
           },
-        });
+          2400
+        );
         const contentType = res.headers.get('content-type') || '';
 
         if (res.ok && contentType.includes('application/json')) {
           const data = await res.json();
           const count = typeof data?.count === 'number' ? data.count : data?.value;
-          if (typeof count === 'number') {
-            updateCount(count);
-            return;
-          }
-        }
-
-        // 2. Direct real-time counter API for Vite dev / preview
-        const action = mode === 'up' ? 'hit' : 'get';
-        const directRes = await fetch(
-          `https://abacus.jasoncameron.dev/${action}/urayfazli-web3-portfolio/site-visitors?_t=${ts}`,
-          { cache: 'no-store' }
-        );
-        if (directRes.ok) {
-          const directData = await directRes.json();
-          if (typeof directData?.value === 'number') {
-            updateCount(directData.value);
+          if (typeof count === 'number' && count > 0) {
+            applyRealtimeCount(count);
             return;
           }
         }
       } catch {
-        // Offline fallback below
+        // Proceed to direct Abacus real-time API
+      }
+
+      // 2. Direct Real-Time Abacus Counter API
+      try {
+        const action = mode === 'up' ? 'hit' : 'get';
+        const directRes = await fetchWithTimeout(
+          `https://abacus.jasoncameron.dev/${action}/urayfazli-web3-portfolio/site-visitors?_t=${ts}`,
+          {
+            cache: 'no-store',
+            headers: {
+              Accept: 'application/json',
+            },
+          },
+          3200
+        );
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          const count =
+            typeof directData?.value === 'number' ? directData.value : directData?.count;
+          if (typeof count === 'number' && count > 0) {
+            applyRealtimeCount(count);
+            return;
+          }
+        }
+      } catch {
+        // Proceed to secondary real-time CounterAPI
+      }
+
+      // 3. Secondary Real-Time CounterAPI.dev fallback
+      try {
+        const counterUrl =
+          mode === 'up'
+            ? `https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/up?_t=${ts}`
+            : `https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/?_t=${ts}`;
+        const backupRes = await fetchWithTimeout(counterUrl, { cache: 'no-store' }, 3200);
+        if (backupRes.ok) {
+          const backupData = await backupRes.json();
+          const count =
+            typeof backupData?.count === 'number' ? backupData.count : backupData?.value;
+          if (typeof count === 'number' && count > 0) {
+            applyRealtimeCount(count);
+            return;
+          }
+        }
+      } catch {
+        // Keep last known value if completely offline
       }
     };
 
-    // Increment on page load
+    // Increment real-time visitor counter on initial page load
     requestCounter('up');
 
-    // Subscribe to real-time SSE stream for instant live visitor updates (only when tab visible)
-    let pollInterval: number | null = null;
+    // Continuous 6-second real-time sync while tab is visible
+    const pollInterval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        requestCounter('get');
+      }
+    }, 6000);
 
-    const startFallbackPolling = () => {
-      if (pollInterval !== null) return;
-      pollInterval = window.setInterval(() => {
-        if (document.visibilityState === 'visible') {
-          requestCounter('get');
-        }
-      }, 30000);
-    };
-
-    if (typeof window !== 'undefined' && 'EventSource' in window) {
+    // Real-time Server-Sent Events (SSE) stream with automatic reconnect
+    const connectSseStream = () => {
+      if (!isMounted || typeof window === 'undefined' || !('EventSource' in window)) return;
       try {
+        eventSource?.close();
         eventSource = new EventSource(
           'https://abacus.jasoncameron.dev/stream/urayfazli-web3-portfolio/site-visitors'
         );
         eventSource.onmessage = (event) => {
           try {
             const parsed = JSON.parse(event.data);
-            if (typeof parsed?.value === 'number') {
-              updateCount(parsed.value);
+            const liveVal =
+              typeof parsed?.value === 'number' ? parsed.value : parsed?.count;
+            if (typeof liveVal === 'number' && liveVal > 0) {
+              applyRealtimeCount(liveVal);
             }
           } catch {
-            // Ignore malformed SSE message
+            // Ignore malformed SSE frame
           }
         };
         eventSource.onerror = () => {
           eventSource?.close();
           eventSource = null;
-          startFallbackPolling();
+          if (isMounted && reconnectTimer === null) {
+            reconnectTimer = window.setTimeout(() => {
+              reconnectTimer = null;
+              connectSseStream();
+            }, 5000);
+          }
         };
       } catch {
-        startFallbackPolling();
+        // Polling interval handles sync
       }
-    } else {
-      startFallbackPolling();
-    }
+    };
 
-    const handleVisibilityChange = () => {
+    connectSseStream();
+
+    const handleVisibilityOrFocus = () => {
       if (document.visibilityState === 'visible') {
         requestCounter('get');
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    window.addEventListener('online', handleVisibilityOrFocus);
 
     return () => {
       isMounted = false;
-      if (eventSource) {
-        eventSource.close();
-      }
-      if (pollInterval !== null) {
-        window.clearInterval(pollInterval);
-      }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      eventSource?.close();
+      bc?.close();
+      window.clearInterval(pollInterval);
+      if (reconnectTimer !== null) window.clearTimeout(reconnectTimer);
+      if (pulseTimer !== null) window.clearTimeout(pulseTimer);
+      window.removeEventListener('storage', handleStorageSync);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      window.removeEventListener('online', handleVisibilityOrFocus);
     };
   }, []);
 
   return (
     <div
-      className="inline-flex items-center gap-1.5 rounded-md border border-[#E5B869]/45 bg-[#0D1E36]/90 px-2.5 py-0.5 font-journal text-[11px] font-bold text-[#FAF6EE] shadow-[0_2px_8px_rgba(3,9,18,0.6)] sm:text-xs"
-      title={isId ? 'Total Pengunjung Real-Time (Vercel)' : 'Real-Time Visitors (Vercel)'}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-[225px_14px_205px_14px/14px_205px_14px_225px] border-2 px-2.5 py-1 font-journal text-[11px] font-bold transition-all sm:px-3 sm:text-xs ${
+        isDay
+          ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF8] to-[#F6ECDA] !text-[#091526] shadow-[2.5px_3px_0px_#091526]'
+          : 'border-[#F5EFE6]/90 bg-[#0B1B32] text-[#FAF6EE] shadow-[2.5px_3px_0px_#030913]'
+      }`}
+      title={
+        isId
+          ? 'Total Pengunjung Real-Time (Live Sync)'
+          : 'Real-Time Portfolio Visitors (Live Sync)'
+      }
     >
-      <span className="relative flex h-2 w-2" aria-hidden="true">
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ADE80] shadow-[0_0_6px_#4ADE80]" />
+      {/* Live Status Indicator Dot */}
+      <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+        <span
+          className={`inline-flex h-2 w-2 rounded-full border border-[#091526]/40 bg-[#22C55E] shadow-[0_0_6px_#22C55E] transition-transform duration-300 ${
+            justUpdated ? 'scale-150' : 'scale-100'
+          }`}
+        />
       </span>
-      <span className="text-[#D0DDF0]">{isId ? 'Pengunjung:' : 'Visitors:'}</span>
-      <span className="font-bold tracking-wide text-[#F5D78E]">
-        {visitors !== null ? visitors.toLocaleString() : '...'}
+
+      {/* Hand-Drawn Explorer / Visitor Mini Icon */}
+      <svg
+        viewBox="0 0 18 18"
+        fill="none"
+        className="h-3.5 w-3.5 shrink-0"
+        aria-hidden="true"
+      >
+        <circle
+          cx="9"
+          cy="6"
+          r="3"
+          fill={isDay ? '#F5D78E' : '#142B4B'}
+          stroke={isDay ? '#091526' : '#F5D78E'}
+          strokeWidth="1.6"
+        />
+        <path
+          d="M3.5 15C4.2 12.2 6.2 11 9 11C11.8 11 13.8 12.2 14.5 15"
+          stroke={isDay ? '#091526' : '#FAF6EE'}
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+
+      <span className={isDay ? '!text-[#1B3252]' : 'text-[#D0DDF0]'}>
+        {isId ? 'Pengunjung:' : 'Visitors:'}
+      </span>
+
+      <span
+        aria-live="polite"
+        className={`font-mono-num rounded-full border px-1.5 py-0.2 text-[10.5px] font-bold tracking-tight transition-transform duration-300 sm:text-[11px] ${
+          justUpdated ? 'scale-110' : 'scale-100'
+        } ${
+          isDay
+            ? 'border-[#091526] bg-[#FCE5A2] !text-[#091526]'
+            : 'border-[#F5D78E]/60 bg-[#142B4B] text-[#F5D78E]'
+        }`}
+      >
+        {visitors !== null ? visitors.toLocaleString(isId ? 'id-ID' : 'en-US') : '...'}
       </span>
     </div>
   );

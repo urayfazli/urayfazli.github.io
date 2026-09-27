@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "CollaborationNote": {
+      "title": "CollaborationNote",
+      "description": "A public Web3 collaboration note posted by portfolio visitors on the Papan Catatan Kolaborasi, with automatic 1-month (30-day) expiration.",
+      "type": "object",
+      "properties": {
+        "senderName": {
+          "type": "string",
+          "description": "Name or alias of the visitor leaving the note (1-60 chars)."
+        },
+        "senderHandle": {
+          "type": "string",
+          "description": "Contact handle (X, Telegram, or Email) of the visitor (1-80 chars)."
+        },
+        "topic": {
+          "type": "string",
+          "description": "Collaboration topic selected by the visitor."
+        },
+        "message": {
+          "type": "string",
+          "description": "Collaboration message content (1-500 chars)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when the note was created."
+        },
+        "createdAtMs": {
+          "type": "number",
+          "description": "Epoch milliseconds when the note was created."
+        },
+        "expiresAtMs": {
+          "type": "number",
+          "description": "Epoch milliseconds when the note expires (1 month / 30 days after creation)."
+        },
+        "authorToken": {
+          "type": "string",
+          "description": "Client token allowing the original author to delete their note."
+        }
+      },
+      "required": [
+        "senderName",
+        "senderHandle",
+        "topic",
+        "message",
+        "createdAt",
+        "createdAtMs",
+        "expiresAtMs"
+      ]
+    }
+  },
+  "firestore": {
+    "/collaboration_notes/{noteId}": {
+      "schema": {
+        "$ref": "#/entities/CollaborationNote"
+      },
+      "description": "Public collaboration notes stored in Firestore that automatically expire and get deleted 1 month (30 days) after creation."
+    }
+  }
+}

@@ -68,7 +68,7 @@ const ROADMAP_MILESTONES: RoadmapMilestone[] = [
       { label: { id: 'Ekosistem Awal', en: 'Initial Chains' }, value: 'ETH · BNB · Polygon' },
       { label: { id: 'Status', en: 'Status' }, value: 'Completed ✓' },
     ],
-    journalEntryId: 'testnet',
+    journalEntryId: 'roadmap-started',
     annotation: 'Day 1 Explorer!',
     iconType: 'started',
   },
@@ -109,7 +109,7 @@ const ROADMAP_MILESTONES: RoadmapMilestone[] = [
       { label: { id: 'Fokus Kontribusi', en: 'Contribution' }, value: 'QA & Bug Reports' },
       { label: { id: 'Status', en: 'Status' }, value: 'Completed ✓' },
     ],
-    journalEntryId: 'testnet',
+    journalEntryId: 'roadmap-testnet',
     annotation: 'Early Tester Alpha',
     iconType: 'testnet',
   },
@@ -150,7 +150,7 @@ const ROADMAP_MILESTONES: RoadmapMilestone[] = [
       { label: { id: 'Rekor Uptime', en: 'Uptime SLA' }, value: '99.94%' },
       { label: { id: 'Status', en: 'Status' }, value: 'Active Node ✓' },
     ],
-    journalEntryId: 'aptos',
+    journalEntryId: 'roadmap-node',
     annotation: 'Node Run The Chain!',
     iconType: 'node',
   },
@@ -191,7 +191,7 @@ const ROADMAP_MILESTONES: RoadmapMilestone[] = [
       { label: { id: 'Ekosistem Aktif', en: 'Active Chains' }, value: '25+ Networks' },
       { label: { id: 'Status', en: 'Status' }, value: 'Harvested ✓' },
     ],
-    journalEntryId: 'airdrop',
+    journalEntryId: 'roadmap-airdrop',
     annotation: 'Small Steps Big Bags!',
     iconType: 'airdrop',
   },
@@ -232,7 +232,7 @@ const ROADMAP_MILESTONES: RoadmapMilestone[] = [
       { label: { id: 'Kolaborasi', en: 'Collaboration' }, value: 'Open 24/7' },
       { label: { id: 'Status', en: 'Status' }, value: 'In Progress 🚀' },
     ],
-    journalEntryId: 'memecoin',
+    journalEntryId: 'roadmap-horizon',
     annotation: 'Web3 No Limits!',
     iconType: 'future',
   },
@@ -620,14 +620,35 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
                     </div>
                   </div>
 
-                  {/* Bottom: Handwritten Callout + Arrow */}
-                  <div className="relative z-10 mt-3.5 flex items-center justify-between border-t border-dashed border-[#2E5487]/60 pt-2.5">
-                    <span className="-rotate-2 font-journal text-[10.5px] font-bold text-[#F5D78E]">
+                  {/* Bottom: Handwritten Callout + Direct Journal Trigger */}
+                  <div className="relative z-10 mt-3.5 flex items-center justify-between gap-1.5 border-t border-dashed border-[#2E5487]/60 pt-2.5">
+                    <span className="-rotate-2 truncate font-journal text-[10px] font-bold text-[#F5D78E]">
                       ✎ {milestone.annotation}
                     </span>
-                    <span className="inline-flex items-center gap-1 font-journal text-[11px] font-bold text-[#FAF6EE] group-hover:text-[#F5D78E]">
-                      <span>{isActive ? (isId ? 'Aktif' : 'Selected') : isId ? 'Buka' : 'View'}</span>
-                      <HandArrowRight className="h-3 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveIdx(idx);
+                        onSelectEntry(milestone.journalEntryId);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveIdx(idx);
+                          onSelectEntry(milestone.journalEntryId);
+                        }
+                      }}
+                      className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 font-journal text-[10px] font-bold transition-colors ${
+                        isDay
+                          ? 'border-[#091526] bg-[#FFFDF7] !text-[#091526] shadow-[1.5px_1.5px_0px_#091526] hover:bg-[#F5D78E]'
+                          : 'border-[#F5D78E]/55 bg-[#122849]/85 text-[#FAF6EE] hover:border-[#F5D78E] hover:bg-[#F5D78E] hover:!text-[#091526]'
+                      }`}
+                    >
+                      <span>📖 {isId ? 'Buka Jurnal' : 'Open Journal'}</span>
+                      <HandArrowRight className="h-2.5 w-3 transition-transform group-hover:translate-x-0.5" />
                     </span>
                   </div>
                 </button>

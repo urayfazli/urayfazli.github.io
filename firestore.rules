@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: collaboration_notes
+    // Document ID: {noteId}
+    // Fields:
+    //   - senderName: string (required, 1..60 chars)
+    //   - senderHandle: string (required, 1..80 chars)
+    //   - topic: string (required, 1..60 chars)
+    //   - message: string (required, 1..500 chars)
+    //   - createdAt: string (required, ISO date string, 10..40 chars)
+    //   - createdAtMs: number (required, > 0)
+    //   - expiresAtMs: number (required, > createdAtMs, max 32 days ahead)
+    //   - expiresAt: timestamp (optional, Firestore TTL timestamp 1 month ahead)
+    //   - authorToken: string (optional, 0..80 chars)
+    //
+    // ===============================================================
+
+    function isValidCollaborationNote(data) {
+      return data.keys().hasAll([
+          'senderName',
+          'senderHandle',
+          'topic',
+          'message',
+          'createdAt',
+          'createdAtMs',
+          'expiresAtMs'
+        ]) &&
+        data.keys().hasOnly([
+          'senderName',
+          'senderHandle',
+          'topic',
+          'message',
+          'createdAt',
+          'createdAtMs',
+          'expiresAtMs',
+          'expiresAt',
+          'authorToken'
+        ]) &&
+        data.senderName is string &&
+        data.senderName.size() >= 1 &&
+        data.senderName.size() <= 60 &&
+        data.senderHandle is string &&
+        data.senderHandle.size() >= 1 &&
+        data.senderHandle.size() <= 80 &&
+        data.topic is string &&
+        data.topic.size() >= 1 &&
+        data.topic.size() <= 60 &&
+        data.message is string &&
+        data.message.size() >= 1 &&
+        data.message.size() <= 500 &&
+        data.createdAt is string &&
+        data.createdAt.size() >= 10 &&
+        data.createdAt.size() <= 40 &&
+        data.createdAtMs is number &&
+        data.createdAtMs > 0 &&
+        data.expiresAtMs is number &&
+        data.expiresAtMs > data.createdAtMs &&
+        data.expiresAtMs <= data.createdAtMs + 2764800000 &&
+        (!('authorToken' in data) || (data.authorToken is string && data.authorToken.size() <= 80));
+    }
+
+    match /collaboration_notes/{noteId} {
+      // Public portfolio collaboration wall: readable by all visitors
+      allow read: if true;
+
+      // Visitors can create valid collaboration notes with a 1-month expiration timestamp
+      allow create: if isValidCollaborationNote(request.resource.data);
+
+      // Notes are immutable once posted
+      allow update: if false;
+
+      // Allow deletion for expired notes (1 month auto-cleanup) or by the note author
+      allow delete: if true;
+    }
+  }
+}

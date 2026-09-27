@@ -1,5 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+  limit,
+  setDoc,
+  Timestamp,
+} from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../firebase';
 import {
   CrownDoodle,
   ChibiMiniAvatar,
@@ -191,6 +204,8 @@ export interface JournalEntryData {
   subtitle: string;
   annotation: string;
   summary: string;
+  fieldStory?: string;
+  quote?: string;
   highlights: string[];
   metrics: { label: string; value: string }[];
   illustrationKey: keyof typeof GENERATED_ASSETS;
@@ -318,6 +333,136 @@ export const JOURNAL_ENTRIES_BY_LANG: Record<Language, Record<string, JournalEnt
       ],
       illustrationKey: 'backpackWalkerImg',
     },
+    'roadmap-started': {
+      id: 'roadmap-started',
+      category: 'Adventure Roadmap · Step 01 (2022)',
+      title: 'Started Web3 — First On-Chain Footsteps',
+      subtitle: 'Self-Custody Foundations, DeFi Mechanics & Multi-Chain Exploration',
+      annotation: 'Day 1 Explorer!',
+      summary:
+        'The Web3 adventure began in 2022 out of a deep curiosity about how permissionless, decentralized networks operate without intermediaries. Setting up the very first non-custodial wallet, executing initial DEX swaps, and bridging assets across networks laid the security-first mindset that powers every step since.',
+      fieldStory:
+        'In this genesis chapter, every single transaction was a hands-on lesson: understanding Ethereum gas dynamics, exploring Layer 2 rollups like Arbitrum, Optimism, and Polygon, and learning to verify contract calls directly on block explorers. Strict seed-phrase security, separating cold vault wallets from hot exploration wallets, and building a structured DYOR framework became daily habits from day one.',
+      quote:
+        '"Every great Web3 expedition begins with a single signed block and an relentless curiosity to learn how the chain works under the hood."',
+      highlights: [
+        'Architected a multi-wallet security setup separating Cold Vaults from Hot Exploration Wallets',
+        'Mastered AMM DEX swaps, liquidity provisioning, lending markets, and cross-chain bridges across 10+ early chains',
+        'Developed a disciplined DYOR research workflow analyzing tokenomics, smart-contract permissions, and on-chain flows',
+        'Joined global builder and explorer communities early to exchange alpha and technical insights',
+      ],
+      metrics: [
+        { label: 'Genesis Era', value: '2022' },
+        { label: 'Initial Chains', value: 'ETH · BNB · Polygon · L2' },
+        { label: 'Core Focus', value: 'Self-Custody & DeFi' },
+        { label: 'Milestone Status', value: 'Completed ✓' },
+      ],
+      illustrationKey: 'aboutChibiImg',
+    },
+    'roadmap-testnet': {
+      id: 'roadmap-testnet',
+      category: 'Adventure Roadmap · Step 02 (2023)',
+      title: '100+ Testnet Quest — Pre-Mainnet Vanguard',
+      subtitle: 'Protocol Stress-Testing, Bug Reporting & Early Ecosystem Contributions',
+      annotation: 'Early Tester Alpha',
+      summary:
+        'In 2023, the journey evolved from being an everyday DeFi user into an active pre-mainnet protocol tester across 100+ devnets and incentivized testnets—helping core engineering teams battle-test their infrastructure before public launch.',
+      fieldStory:
+        'From hunting scarce testnet faucets during high-traffic stress tests to bridging experimental assets and testing governance modules, every protocol interaction was treated like a field mission. Detailed UX friction logs and reproducible bug reports were shared directly with project teams on Discord and GitHub, earning Early Contributor and OG roles across dozens of emerging ecosystems.',
+      quote:
+        '"Testing protocols before mainnet is not just about chasing incentives—it is about helping pave the roads before the city is built."',
+      highlights: [
+        'Actively participated in 100+ devnet, public testnet, and incentivized testnet campaigns',
+        'Stress-tested smart contracts, cross-chain bridges, staking modules, and decentralized orderbooks under load',
+        'Submitted structured bug reports and actionable UX improvements directly to core developers',
+        'Earned OG and Early Contributor roles across multiple Layer 1, Layer 2, and ZK-Rollup communities',
+      ],
+      metrics: [
+        { label: 'Testnets Joined', value: '100+ Networks' },
+        { label: 'Contribution', value: 'QA, Bug Reports & UX' },
+        { label: 'Community Standing', value: 'OG & Early Roles' },
+        { label: 'Milestone Status', value: 'Completed ✓' },
+      ],
+      illustrationKey: 'backpackWalkerImg',
+    },
+    'roadmap-node': {
+      id: 'roadmap-node',
+      category: 'Adventure Roadmap · Step 03 (2023–2024)',
+      title: 'First Node — Powering The Network Backbone',
+      subtitle: 'Full Node & Indexer Infrastructure on Aptos, Sei & SubQuery',
+      annotation: 'Node Run The Chain!',
+      summary:
+        'The biggest technical leap in the journey: transitioning from protocol tester to dedicated infrastructure operator. By provisioning custom Linux servers, the focus expanded into running high-uptime full nodes and indexers on Aptos, Sei Network, and SubQuery Network.',
+      fieldStory:
+        'Operating production-grade nodes demands 24/7 engineering discipline. From tuning NVMe RAID-0 storage and orchestrating Docker + Postgres containers for SubQuery indexing to building automated Prometheus + Grafana alerting and failover scripts, this chapter achieved a 99.94% uptime SLA while serving over 250,000 multi-chain GraphQL queries.',
+      quote:
+        '"Behind every fast, trustless blockchain transaction stands a network of resilient nodes quietly keeping consensus and data alive 24/7."',
+      highlights: [
+        'Deployed and maintained high-availability Full Nodes on Aptos Network and Sei Network',
+        'Operated decentralized Indexer Nodes on SubQuery Network serving 250,000+ GraphQL queries',
+        'Engineered automated Prometheus + Grafana telemetry pipelines and health-check scripts with 99.94% uptime',
+        'Executed zero-downtime binary upgrades across epochs and shared troubleshooting guides with fellow operators',
+      ],
+      metrics: [
+        { label: 'Core Networks', value: 'Aptos · Sei · SubQuery' },
+        { label: 'Uptime SLA', value: '99.94%' },
+        { label: 'Queries Served', value: '250K+ GraphQL' },
+        { label: 'Milestone Status', value: 'Active Node ✓' },
+      ],
+      illustrationKey: 'nodeOperatorImg',
+    },
+    'roadmap-airdrop': {
+      id: 'roadmap-airdrop',
+      category: 'Adventure Roadmap · Step 04 (2024)',
+      title: 'Airdrop Success — Harvesting Consistency & Alpha',
+      subtitle: '1,000+ On-Chain Quests, Major Allocations & Meme Coin Narrative Rotation',
+      annotation: 'Small Steps Big Bags!',
+      summary:
+        'In 2024, years of daily on-chain consistency bore fruit. The combination of organic DeFi usage, early testnet contributions, node operations, and sharp narrative timing resulted in multiple milestone airdrop allocations and profitable on-chain rotations.',
+      fieldStory:
+        'Rather than mindless sybil spamming, the strategy focused on high-signal organic footprint: genuine liquidity retention, governance voting, and consistent multi-month usage across 25+ ecosystems. Rewards harvested from airdrops were systematically paired with disciplined early-narrative meme coin trading on Solana, Base, and Ethereum—enforcing strict position sizing and principal protection.',
+      quote:
+        '"Small, disciplined on-chain steps taken consistently during quiet markets create the biggest harvests when the cycle blooms."',
+      highlights: [
+        'Completed 1,000+ on-chain quests, Galxe/Layer3 campaigns, and native dApp interactions across 25+ chains',
+        'Secured major token allocations from L2 infrastructure, restaking, DeFi, and node ecosystems',
+        'Combined airdrop rewards with disciplined early-narrative meme coin momentum trading on Raydium & Uniswap',
+        'Applied strict portfolio risk management to lock profits into core assets and server infrastructure',
+      ],
+      metrics: [
+        { label: 'Quests Completed', value: '1,000+ Campaigns' },
+        { label: 'Ecosystem Reach', value: '25+ Active Chains' },
+        { label: 'Capital Strategy', value: 'Airdrop + Meme Alpha' },
+        { label: 'Milestone Status', value: 'Harvested ✓' },
+      ],
+      illustrationKey: 'heroChibiImg',
+    },
+    'roadmap-horizon': {
+      id: 'roadmap-horizon',
+      category: 'Adventure Roadmap · Step 05 (2025+)',
+      title: 'Next Web3 Horizon — Scaling & Global Collaboration',
+      subtitle: 'Modular Blockchains, AI-Chain Infrastructure & Ecosystem Partnerships',
+      annotation: 'Web3 No Limits!',
+      summary:
+        'The expedition continues into its most exciting frontier yet. In 2025 and beyond, the focus is on scaling node and validator operations into next-generation modular blockchains, restaking layers, and decentralized AI networks while collaborating with builders worldwide.',
+      fieldStory:
+        'Armed with hands-on experience running nodes, testing 100+ pre-mainnet networks, and navigating on-chain liquidity cycles, the next chapter is all about deeper ecosystem impact—providing resilient infrastructure, early technical QA, and strategic community growth alongside ambitious Web3 teams and fellow explorers.',
+      quote:
+        '"The Web3 map expands every single day—and the best compass is to keep building, keep exploring, and grow together."',
+      highlights: [
+        'Scaling full node, validator, and prover operations into Modular, Restaking, and AI-Chain ecosystems',
+        'Conducting daily on-chain alpha research across next-gen DeFi primitives and early incentive programs',
+        'Sharing technical node guides, testnet walkthroughs, and market insights with the broader community',
+        'Open 24/7 for strategic collaborations with Web3 projects, builders, node operators, and alpha hunters',
+      ],
+      metrics: [
+        { label: 'Next Frontier', value: 'Modular & AI Chains' },
+        { label: 'Infrastructure', value: 'Next-Gen Nodes' },
+        { label: 'Collaboration', value: 'Open 24/7' },
+        { label: 'Milestone Status', value: 'In Progress 🚀' },
+      ],
+      illustrationKey: 'peekingBottomImg',
+    },
   },
   id: {
     aptos: {
@@ -440,6 +585,136 @@ export const JOURNAL_ENTRIES_BY_LANG: Record<Language, Record<string, JournalEnt
       ],
       illustrationKey: 'backpackWalkerImg',
     },
+    'roadmap-started': {
+      id: 'roadmap-started',
+      category: 'Jurnal Adventure Roadmap · Step 01 (2022)',
+      title: 'Started Web3 — Langkah Pertama On-Chain',
+      subtitle: 'Fondasi Self-Custody, DeFi & Eksplorasi Multi-Chain',
+      annotation: 'Day 1 Explorer!',
+      summary:
+        'Perjalanan di dunia Web3 dimulai pada tahun 2022 dari rasa ingin tahu yang besar terhadap bagaimana jaringan terdesentralisasi bekerja tanpa perantara. Dari membuat dompet non-kustodian pertama hingga mengeksekusi swap DEX dan jembatan lintas jaringan (cross-chain bridge), fase ini membangun mentalitas keamanan dan riset mandiri yang menjadi fondasi seluruh perjalanan berikutnya.',
+      fieldStory:
+        'Di fase awal ini, setiap transaksi adalah pelajaran berharga: memahami mekanisme gas fee di Ethereum, mencoba kecepatan Layer 2 seperti Arbitrum, Optimism, dan Polygon, serta mempelajari cara membaca transaksi langsung di block explorer. Disiplin menjaga seed phrase, memisahkan dompet utama (vault) dari dompet eksplorasi (burner), dan menyaring proyek menggunakan kerangka DYOR menjadi kebiasaan wajib sejak hari pertama.',
+      quote:
+        '"Setiap penjelajah Web3 hebat memulai dari satu blok transaksi pertama dan rasa penasaran yang tak pernah padam."',
+      highlights: [
+        'Membangun sistem keamanan multi-wallet (pemisahan Cold/Vault Wallet & Hot Exploration Wallet)',
+        'Mempelajari mekanisme AMM DEX, Liquidity Pool, Lending/Borrowing, dan Cross-Chain Bridge di 10+ jaringan awal',
+        'Mengembangkan alur riset mandiri (DYOR) berbasis pembacaan smart contract dasar, tokenomics, dan aktivitas on-chain',
+        'Aktif bergabung di komunitas pengembang dan diskusi ekosistem global sejak era 2022',
+      ],
+      metrics: [
+        { label: 'Era Mulai', value: '2022 (Genesis)' },
+        { label: 'Ekosistem Awal', value: 'ETH · BNB · Polygon · L2' },
+        { label: 'Fokus Utama', value: 'Self-Custody & DeFi' },
+        { label: 'Status Milestone', value: 'Tuntas ✓' },
+      ],
+      illustrationKey: 'aboutChibiImg',
+    },
+    'roadmap-testnet': {
+      id: 'roadmap-testnet',
+      category: 'Jurnal Adventure Roadmap · Step 02 (2023)',
+      title: '100+ Testnet Quest — Penjelajah Pra-Mainnet',
+      subtitle: 'Stress-Testing Protokol, Laporan Bug & Kontribusi Ekosistem Awal',
+      annotation: 'Early Tester Alpha',
+      summary:
+        'Memasuki tahun 2023, eksplorasi beralih dari sekadar pengguna menjadi penguji awal (early tester) di lebih dari 100 jaringan devnet dan incentivized testnet. Sebelum sebuah protokol meluncur ke mainnet, setiap fitur diuji secara menyeluruh untuk membantu tim pengembang menemukan celah dan menyempurnakan pengalaman pengguna.',
+      fieldStory:
+        'Mulai dari berburu faucet token uji coba di tengah kemacetan jaringan, menguji jembatan lintas-chain eksperimental, hingga menyimulasikan likuiditas dan governance voting. Setiap temuan kendala antarmuka (UX) maupun bug transaksi didokumentasikan dan dikirimkan melalui kanal feedback resmi pengembang, menghasilkan berbagai peran kontributor awal (Early Role / OG) di puluhan komunitas protokol.',
+      quote:
+        '"Menguji protokol sebelum mainnet bukan sekadar mencari insentif, melainkan ikut membangun jalan sebelum kota besarnya berdiri."',
+      highlights: [
+        'Berpartisipasi aktif di 100+ kampanye devnet, public testnet, dan incentivized testnet lintas ekosistem',
+        'Menguji ketahanan smart contract, alur bridge, modul staking, dan eksekusi orderbook di kondisi jaringan padat',
+        'Menyusun laporan bug teknis serta masukan UX terstruktur langsung kepada tim core developer',
+        'Mengamankan status OG / Early Tester Role di berbagai proyek infrastruktur Layer 1, Layer 2, dan ZK-Rollup',
+      ],
+      metrics: [
+        { label: 'Testnet Diikuti', value: '100+ Jaringan' },
+        { label: 'Kontribusi', value: 'QA, Bug Report & UX' },
+        { label: 'Peran Komunitas', value: 'OG & Early Contributor' },
+        { label: 'Status Milestone', value: 'Tuntas ✓' },
+      ],
+      illustrationKey: 'backpackWalkerImg',
+    },
+    'roadmap-node': {
+      id: 'roadmap-node',
+      category: 'Jurnal Adventure Roadmap · Step 03 (2023–2024)',
+      title: 'First Node — Menjaga Denyut Jaringan',
+      subtitle: 'Infrastruktur Full Node & Indexer di Aptos, Sei & SubQuery',
+      annotation: 'Node Run The Chain!',
+      summary:
+        'Titik balik teknis terbesar dalam perjalanan Web3: bertransformasi dari pengguna aplikasi menjadi operator infrastruktur jaringan. Dengan menyiapkan server Linux khusus, perjalanan menjalankan node dimulai pada jaringan berkinerja tinggi seperti Aptos, Sei Network, dan SubQuery Network.',
+      fieldStory:
+        'Menjalankan node menuntut kesiagaan 24/7. Dari mengonfigurasi NVMe RAID-0, menyusun orkestrasi Docker & Postgres untuk indexer SubQuery, hingga membangun sistem pemantauan telemetri otomatis dengan Prometheus, Grafana, dan skrip auto-restart/failover. Hasilnya adalah rekor uptime 99.94% dan ratusan ribu kueri data on-chain yang berhasil dilayani dengan latensi sangat rendah.',
+      quote:
+        '"Di balik setiap transaksi on-chain yang cepat, ada barisan node yang bekerja tanpa henti menjaga konsensus dan ketersediaan data."',
+      highlights: [
+        'Menjalankan dan memelihara Full Node di Aptos Network & Sei Network dengan finalitas blok sub-detik',
+        'Mengoperasikan Indexer Node di SubQuery Network yang telah melayani 250.000+ kueri GraphQL multi-chain',
+        'Membangun pipeline monitoring Prometheus + Grafana serta skrip health-check otomatis dengan SLA uptime 99.94%',
+        'Melakukan upgrade binary tepat waktu di setiap pergantian epoch dan membantu sesama operator di komunitas',
+      ],
+      metrics: [
+        { label: 'Jaringan Inti', value: 'Aptos · Sei · SubQuery' },
+        { label: 'Rekor Uptime', value: '99.94% SLA' },
+        { label: 'Kueri Terindeks', value: '250K+ GraphQL' },
+        { label: 'Status Milestone', value: 'Node Aktif ✓' },
+      ],
+      illustrationKey: 'nodeOperatorImg',
+    },
+    'roadmap-airdrop': {
+      id: 'roadmap-airdrop',
+      category: 'Jurnal Adventure Roadmap · Step 04 (2024)',
+      title: 'Airdrop Success — Panen Konsistensi & Alpha',
+      subtitle: '1.000+ Quest On-Chain, Alokasi Utama & Rotasi Narasi Meme Coin',
+      annotation: 'Small Steps Big Bags!',
+      summary:
+        'Tahun 2024 menjadi musim panen dari ribuan langkah kecil yang dilakukan secara konsisten sejak 2022. Kombinasi partisipasi organik di berbagai protokol DeFi, kontribusi testnet, operasional node, serta kejelian membaca pergeseran narasi pasar menghasilkan pencapaian alokasi airdrop signifikan.',
+      fieldStory:
+        'Strategi yang diterapkan bukan sekadar mengejar kuantitas, melainkan kualitas interaksi on-chain: menjaga volume organik, retensi likuiditas, serta tata kelola lintas 25+ jaringan. Selain itu, modal dari hasil panen airdrop dikelola secara disiplin untuk menangkap momentum narasi awal meme coin di Solana, Base, dan Ethereum dengan aturan manajemen risiko dan pengamanan modal (take-profit) yang ketat.',
+      quote:
+        '"Konsistensi kecil yang dilakukan setiap hari di saat pasar sepi adalah kunci panen terbesar saat ekosistem berkembang."',
+      highlights: [
+        'Menuntaskan 1.000+ kampanye quest on-chain, Galxe, Layer3, dan interaksi protokol langsung di 25+ ekosistem',
+        'Berhasil meraih alokasi reward dari proyek-proyek infrastruktur, Layer 2, DeFi, dan ekosistem node',
+        'Menggabungkan strategi panen airdrop dengan rotasi tren likuiditas meme coin di Raydium & Uniswap secara terukur',
+        'Menerapkan manajemen portofolio disiplin untuk mengunci profit ke aset utama dan ekspansi infrastruktur',
+      ],
+      metrics: [
+        { label: 'Kampanye Digarap', value: '1.000+ Quest' },
+        { label: 'Jangkauan Chain', value: '25+ Ekosistem' },
+        { label: 'Strategi Modal', value: 'Airdrop + Meme Alpha' },
+        { label: 'Status Milestone', value: 'Harvested ✓' },
+      ],
+      illustrationKey: 'heroChibiImg',
+    },
+    'roadmap-horizon': {
+      id: 'roadmap-horizon',
+      category: 'Jurnal Adventure Roadmap · Step 05 (2025+)',
+      title: 'Next Web3 Horizon — Ekspansi & Kolaborasi',
+      subtitle: 'Modular Blockchain, AI-Chain Infrastructure & Kemitraan Global',
+      annotation: 'Web3 No Limits!',
+      summary:
+        'Petualangan belum berakhir—bahkan baru memasuki babak paling menarik. Di era 2025 dan seterusnya, fokus diarahkan pada ekspansi infrastruktur node ke jaringan blockchain modular, restaking, dan jaringan terdesentralisasi berbasis AI (DePIN / AI-Chain), sembari memperluas kolaborasi dengan para builder global.',
+      fieldStory:
+        'Dengan bekal pengalaman mengoperasikan node, menguji 100+ testnet, dan memahami dinamika komunitas serta likuiditas on-chain, langkah selanjutnya adalah berkontribusi lebih dalam pada ekosistem generasi baru. Baik melalui penyediaan infrastruktur validator/node yang andal, pengujian teknis pra-mainnet, maupun kolaborasi riset dan pertumbuhan komunitas bersama tim proyek Web3.',
+      quote:
+        '"Peta Web3 selalu bertambah luas setiap harinya—dan kompas terbaik adalah terus membangun, menjelajah, serta berkolaborasi."',
+      highlights: [
+        'Memperluas operasional full node, validator, dan prover ke ekosistem Modular Blockchain, Restaking & AI-Chain',
+        'Melanjutkan riset alpha harian pada protokol DeFi generasi baru, narasi on-chain, dan insentif ekosistem awal',
+        'Berbagi insight teknis, panduan node, serta analisis peluang Web3 bersama komunitas kreator dan peneliti',
+        'Terbuka 24/7 untuk kolaborasi strategis bersama proyek, builder, sesama node operator, dan alpha hunter',
+      ],
+      metrics: [
+        { label: 'Fokus Ekspansi', value: 'Modular & AI Chains' },
+        { label: 'Infrastruktur', value: 'Next-Gen Nodes' },
+        { label: 'Kolaborasi', value: 'Terbuka 24/7' },
+        { label: 'Status Milestone', value: 'In Progress 🚀' },
+      ],
+      illustrationKey: 'peekingBottomImg',
+    },
   },
 };
 
@@ -499,6 +774,11 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                   >
                     {entry.title}
                   </h3>
+                  {entry.subtitle && (
+                    <div className="mt-0.5 truncate font-journal text-xs font-bold text-[#8C4F04] sm:text-[13px]">
+                      {entry.subtitle}
+                    </div>
+                  )}
                 </div>
               </div>
               <button
@@ -519,6 +799,16 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                   <p className="font-journal text-sm leading-relaxed text-[#162842] md:text-[15px]">
                     {entry.summary}
                   </p>
+                  {entry.fieldStory && (
+                    <p className="mt-2.5 font-journal text-[13.5px] leading-relaxed text-[#1E3554] md:text-[14.5px]">
+                      {entry.fieldStory}
+                    </p>
+                  )}
+                  {entry.quote && (
+                    <blockquote className="mt-3 rounded-[185px_12px_195px_12px/12px_195px_12px_185px] border-2 border-[#091526] bg-[#FFFDF7] px-3.5 py-2 font-journal text-xs italic font-bold text-[#091526] shadow-[2.5px_3px_0px_#091526] sm:text-[13px]">
+                      ✎ {entry.quote}
+                    </blockquote>
+                  )}
                   <h4 className="mt-4 font-brush text-xl text-[#091526]">
                     {isId ? 'Catatan Utama:' : 'Key Field Notes:'}
                   </h4>
@@ -600,29 +890,57 @@ export interface CollaborationNote {
   topic: string;
   message: string;
   createdAt: string;
+  createdAtMs: number;
+  expiresAtMs: number;
+  authorToken?: string;
   isOwn?: boolean;
 }
 
-const COLLAB_NOTES_STORAGE_KEY = 'uray_web3_collab_notes_v2';
+const COLLAB_NOTES_COLLECTION = 'collaboration_notes';
+const COLLAB_AUTHOR_TOKEN_KEY = 'uray_collab_author_token_v1';
+const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days (1 Month) Auto-Deletion TTL
 
+function getOrCreateAuthorToken(): string {
+  try {
+    const existing = window.localStorage.getItem(COLLAB_AUTHOR_TOKEN_KEY);
+    if (existing && existing.length >= 8) return existing;
+    const generated = `author-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    window.localStorage.setItem(COLLAB_AUTHOR_TOKEN_KEY, generated);
+    return generated;
+  } catch {
+    return 'anonymous-explorer';
+  }
+}
+
+function getRemainingDays(expiresAtMs: number): number {
+  const diff = expiresAtMs - Date.now();
+  if (diff <= 0) return 0;
+  return Math.max(1, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+}
+
+const SEED_NOW_MS = Date.now();
 const DEFAULT_COLLAB_NOTES: CollaborationNote[] = [
   {
-    id: 'seed-1',
+    id: 'seed-note-1',
     senderName: 'Raka Pratama',
     senderHandle: '@rakaw3_node',
     topic: 'Node Infrastructure',
     message:
       'Halo bro Uray! Mantap setup full node Aptos & Sei-nya. Ayo diskusi bareng soal monitoring RPC & validator testnet terbaru.',
-    createdAt: '2025-02-18T09:30:00.000Z',
+    createdAt: new Date(SEED_NOW_MS - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAtMs: SEED_NOW_MS - 2 * 24 * 60 * 60 * 1000,
+    expiresAtMs: SEED_NOW_MS + 28 * 24 * 60 * 60 * 1000,
   },
   {
-    id: 'seed-2',
+    id: 'seed-note-2',
     senderName: 'Kevin Solana',
     senderHandle: '@kevinsol_alpha',
     topic: 'Airdrop & Quest Alpha',
     message:
       'Salam kenal! Sering pantau garapan testnet & modular L2 juga. Siap kolaborasi tukar info early alpha.',
-    createdAt: '2025-02-20T14:15:00.000Z',
+    createdAt: new Date(SEED_NOW_MS - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAtMs: SEED_NOW_MS - 1 * 24 * 60 * 60 * 1000,
+    expiresAtMs: SEED_NOW_MS + 29 * 24 * 60 * 60 * 1000,
   },
 ];
 
@@ -648,68 +966,114 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmittedNote, setLastSubmittedNote] = useState<CollaborationNote | null>(null);
-  const [notes, setNotes] = useState<CollaborationNote[]>(() => {
-    try {
-      const saved = localStorage.getItem(COLLAB_NOTES_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch {
-      // Ignore storage read errors
-    }
-    return DEFAULT_COLLAB_NOTES;
-  });
+  const [notes, setNotes] = useState<CollaborationNote[]>(DEFAULT_COLLAB_NOTES);
+  const hasSeededFirestoreRef = useRef(false);
 
   const isId = lang === 'id';
 
-  // Sync with serverless /api/notes when modal opens
+  // Real-Time Firebase Firestore subscription + automatic 1-month expiration cleanup
   useEffect(() => {
     if (!isOpen) {
       setFormError(null);
       return;
     }
 
-    let active = true;
-    fetch('/api/notes', { headers: { Accept: 'application/json' } })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!active || !data || !Array.isArray(data.notes)) return;
-        setNotes((prev) => {
-          const existingIds = new Set(prev.map((n) => n.id));
-          const merged = [...prev];
-          for (const remoteNote of data.notes as CollaborationNote[]) {
-            if (remoteNote && remoteNote.id && !existingIds.has(remoteNote.id)) {
-              merged.push(remoteNote);
-            }
+    const myAuthorToken = getOrCreateAuthorToken();
+    const notesRef = collection(db, COLLAB_NOTES_COLLECTION);
+    const notesQuery = query(notesRef, orderBy('createdAtMs', 'desc'), limit(30));
+
+    const unsubscribe = onSnapshot(
+      notesQuery,
+      (snapshot) => {
+        const now = Date.now();
+        const validNotes: CollaborationNote[] = [];
+
+        snapshot.docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          const createdAtMs =
+            typeof data.createdAtMs === 'number'
+              ? data.createdAtMs
+              : Date.parse(String(data.createdAt || '')) || now;
+          const expiresAtMs =
+            typeof data.expiresAtMs === 'number'
+              ? data.expiresAtMs
+              : createdAtMs + ONE_MONTH_MS;
+
+          // Automatic 1-Month (30-Day) Deletion: Purge expired notes from Firestore immediately
+          if (now >= expiresAtMs || now - createdAtMs >= ONE_MONTH_MS) {
+            deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, docSnap.id)).catch((err) => {
+              handleFirestoreError(err, OperationType.DELETE, `${COLLAB_NOTES_COLLECTION}/${docSnap.id}`);
+            });
+            return;
           }
-          return merged.slice(0, 25);
+
+          validNotes.push({
+            id: docSnap.id,
+            senderName: String(data.senderName || 'Web3 Explorer'),
+            senderHandle: String(data.senderHandle || 'Explorer'),
+            topic: String(data.topic || 'Node Infrastructure'),
+            message: String(data.message || ''),
+            createdAt: String(data.createdAt || new Date(createdAtMs).toISOString()),
+            createdAtMs,
+            expiresAtMs,
+            authorToken: typeof data.authorToken === 'string' ? data.authorToken : undefined,
+            isOwn: Boolean(data.authorToken && data.authorToken === myAuthorToken),
+          });
         });
-      })
-      .catch(() => {
-        // Offline / local preview fallback already handled via localStorage
-      });
+
+        // Seed initial community notes once if Firestore collection is brand new
+        if (snapshot.empty && !hasSeededFirestoreRef.current) {
+          hasSeededFirestoreRef.current = true;
+          DEFAULT_COLLAB_NOTES.forEach((seed) => {
+            setDoc(doc(db, COLLAB_NOTES_COLLECTION, seed.id), {
+              senderName: seed.senderName,
+              senderHandle: seed.senderHandle,
+              topic: seed.topic,
+              message: seed.message,
+              createdAt: seed.createdAt,
+              createdAtMs: seed.createdAtMs,
+              expiresAtMs: seed.expiresAtMs,
+              expiresAt: Timestamp.fromMillis(seed.expiresAtMs),
+              authorToken: 'seed-community',
+            }).catch((err) => {
+              handleFirestoreError(err, OperationType.CREATE, `${COLLAB_NOTES_COLLECTION}/${seed.id}`);
+            });
+          });
+          setNotes(DEFAULT_COLLAB_NOTES);
+          return;
+        }
+
+        setNotes(validNotes);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, COLLAB_NOTES_COLLECTION);
+      }
+    );
+
+    // Periodic check while modal remains open to purge any note that crosses the 1-month mark
+    const expiryCheckInterval = window.setInterval(() => {
+      const now = Date.now();
+      setNotes((prev) =>
+        prev.filter((note) => {
+          if (now >= note.expiresAtMs) {
+            deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, note.id)).catch(() => {});
+            return false;
+          }
+          return true;
+        })
+      );
+    }, 60000);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      active = false;
+      unsubscribe();
+      window.clearInterval(expiryCheckInterval);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
-
-  const persistNotes = (nextNotes: CollaborationNote[]) => {
-    setNotes(nextNotes);
-    try {
-      localStorage.setItem(COLLAB_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
-    } catch {
-      // Ignore storage quota errors
-    }
-  };
 
   const formatTopicLabel = (rawTopic: string) => {
     if (!isId) return rawTopic;
@@ -759,56 +1123,61 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     setFormError(null);
     setIsSubmitting(true);
 
-    const newNote: CollaborationNote = {
-      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      senderName: cleanName,
-      senderHandle: cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer'),
-      topic,
-      message: cleanMessage,
-      createdAt: new Date().toISOString(),
-      isOwn: true,
-    };
-
-    const updatedNotes = [newNote, ...notes].slice(0, 25);
-    persistNotes(updatedNotes);
-    setLastSubmittedNote(newNote);
+    const nowMs = Date.now();
+    const expiresAtMs = nowMs + ONE_MONTH_MS;
+    const createdAtIso = new Date(nowMs).toISOString();
+    const authorToken = getOrCreateAuthorToken();
+    const safeName = cleanName.slice(0, 60);
+    const safeHandle = (cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer')).slice(0, 80);
+    const safeTopic = topic.slice(0, 60);
+    const safeMessage = cleanMessage.slice(0, 500);
 
     try {
-      await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          senderName: newNote.senderName,
-          senderHandle: newNote.senderHandle,
-          topic: newNote.topic,
-          message: newNote.message,
-        }),
+      const docRef = await addDoc(collection(db, COLLAB_NOTES_COLLECTION), {
+        senderName: safeName,
+        senderHandle: safeHandle,
+        topic: safeTopic,
+        message: safeMessage,
+        createdAt: createdAtIso,
+        createdAtMs: nowMs,
+        expiresAtMs,
+        expiresAt: Timestamp.fromMillis(expiresAtMs),
+        authorToken,
       });
-    } catch {
-      // Local persistence already succeeded
-    } finally {
-      setIsSubmitting(false);
+
+      const savedNote: CollaborationNote = {
+        id: docRef.id,
+        senderName: safeName,
+        senderHandle: safeHandle,
+        topic: safeTopic,
+        message: safeMessage,
+        createdAt: createdAtIso,
+        createdAtMs: nowMs,
+        expiresAtMs,
+        authorToken,
+        isOwn: true,
+      };
+
+      setLastSubmittedNote(savedNote);
       setSenderName('');
       setSenderHandle('');
       setMessage('');
       if (onToast) {
         onToast(
           isId
-            ? `Catatan kolaborasi dari ${newNote.senderName} berhasil disimpan!`
-            : `Collaboration note from ${newNote.senderName} saved to journal!`
+            ? `Catatan dari ${savedNote.senderName} tersimpan di Firebase (otomatis terhapus 1 bulan)!`
+            : `Note from ${savedNote.senderName} saved to Firebase (auto-deletes in 1 month)!`
         );
       }
-    }
-  };
-
-  const handleDeleteNote = (noteId: string) => {
-    const filtered = notes.filter((n) => n.id !== noteId);
-    persistNotes(filtered);
-    if (lastSubmittedNote?.id === noteId) {
-      setLastSubmittedNote(null);
-    }
-    if (onToast) {
-      onToast(isId ? 'Catatan dihapus dari jurnal.' : 'Note removed from journal.');
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, COLLAB_NOTES_COLLECTION);
+      setFormError(
+        isId
+          ? 'Gagal menyimpan catatan ke database. Silakan coba lagi.'
+          : 'Failed to save note to database. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1108,8 +1477,8 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                       <span className="font-journal text-[11px] font-semibold text-[#233F6B]">
                         {isId
-                          ? '✨ Catatan langsung tampil di Papan Jurnal Kolaborasi di bawah'
-                          : '✨ Notes appear immediately on the Collaboration Journal Board below'}
+                          ? '✨ Tersimpan real-time di Firebase & otomatis terhapus setelah 1 bulan (30 hari)'
+                          : '✨ Saved real-time to Firebase & automatically deleted after 1 month (30 days)'}
                       </span>
                       <div className="flex items-center justify-end gap-2.5 ml-auto">
                         <button
@@ -1140,76 +1509,90 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
 
               {/* Live Collaboration Notes Wall ("Papan Catatan Kolaborasi") */}
               <div className="mt-5 border-t-2 border-dashed border-[#0B192C]/25 pt-4">
-                <div className="mb-2.5 flex items-center justify-between gap-2">
+                <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
                   <h5 className="font-brush text-xl text-[#091526] sm:text-2xl">
                     {isId
                       ? `Papan Catatan Kolaborasi (${notes.length})`
                       : `Collaboration Notes Board (${notes.length})`}
                   </h5>
-                  <span className="font-journal text-[11px] font-semibold text-[#233F6B]">
-                    {isId ? 'Jurnal Komunitas Web3' : 'Web3 Community Log'}
+                  <span className="inline-flex items-center gap-1 rounded-full border border-[#091526]/30 bg-[#FFFDF7] px-2.5 py-0.5 font-journal text-[10.5px] font-bold text-[#233F6B]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" aria-hidden="true" />
+                    <span>
+                      {isId
+                        ? 'Auto-hapus 1 Bulan'
+                        : '1-Month Auto-Delete'}
+                    </span>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  {notes.slice(0, 6).map((item) => (
-                    <div
-                      key={item.id}
-                      className="sketch-note-card flex flex-col justify-between p-3 text-[#091526]"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <span className="block truncate font-journal text-xs font-bold text-[#091526]">
-                              {item.senderName}
-                            </span>
-                            <span className="block truncate font-mono-num text-[10.5px] text-[#233F6B]">
-                              {item.senderHandle}
+                  {notes.slice(0, 12).map((item) => {
+                    const daysLeft = getRemainingDays(item.expiresAtMs);
+                    return (
+                      <div
+                        key={item.id}
+                        className="sketch-note-card flex flex-col justify-between p-3 text-[#091526]"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <span className="block truncate font-journal text-xs font-bold text-[#091526]">
+                                {item.senderName}
+                              </span>
+                              <span className="block truncate font-mono-num text-[10.5px] text-[#233F6B]">
+                                {item.senderHandle}
+                              </span>
+                            </div>
+                            <span className="shrink-0 font-journal text-[10px] font-bold text-[#1B365C]">
+                              {formatTopicLabel(item.topic)}
                             </span>
                           </div>
-                          <span className="shrink-0 font-journal text-[10px] font-bold text-[#1B365C]">
-                            {formatTopicLabel(item.topic)}
-                          </span>
+                          <p className="mt-1.5 font-journal text-xs leading-snug text-[#102136]">
+                            &ldquo;{item.message}&rdquo;
+                          </p>
                         </div>
-                        <p className="mt-1.5 font-journal text-xs leading-snug text-[#102136]">
-                          &ldquo;{item.message}&rdquo;
-                        </p>
-                      </div>
 
-                      <div className="mt-2 flex items-center justify-between border-t border-dashed border-[#091526]/20 pt-1.5 text-[10px] text-[#233F6B]">
-                        <span>
-                          {new Date(item.createdAt).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onCopyText(
-                                item.senderName,
-                                `${item.senderName} (${item.senderHandle}) - ${item.message}`
-                              )
-                            }
-                            className="cursor-pointer font-journal font-bold text-[#091526] underline hover:text-[#233F6B]"
-                          >
-                            {isId ? 'Salin' : 'Copy'}
-                          </button>
-                          {item.isOwn && (
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-1 border-t border-dashed border-[#091526]/20 pt-1.5 text-[10px] text-[#233F6B]">
+                          <div className="flex items-center gap-1.5">
+                            <span>
+                              {new Date(item.createdAt).toLocaleDateString(
+                                isId ? 'id-ID' : 'en-US',
+                                {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                }
+                              )}
+                            </span>
+                            <span
+                              className="rounded bg-[#F5D78E]/45 px-1.5 py-0.2 font-journal text-[9.5px] font-bold text-[#8C4F04]"
+                              title={
+                                isId
+                                  ? 'Otomatis terhapus dari Firebase setelah 1 bulan'
+                                  : 'Automatically deleted from Firebase after 1 month'
+                              }
+                            >
+                              ⏳ {isId ? `${daysLeft} hari lagi` : `${daysLeft}d left`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => handleDeleteNote(item.id)}
-                              className="cursor-pointer font-journal font-bold text-[#991B1B] underline hover:text-[#7F1D1D]"
+                              onClick={() =>
+                                onCopyText(
+                                  item.senderName,
+                                  `${item.senderName} (${item.senderHandle}) - ${item.message}`
+                                )
+                              }
+                              className="cursor-pointer font-journal font-bold text-[#091526] underline hover:text-[#233F6B]"
                             >
-                              {isId ? 'Hapus' : 'Delete'}
+                              {isId ? 'Salin' : 'Copy'}
                             </button>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
