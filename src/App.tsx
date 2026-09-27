@@ -820,24 +820,246 @@ export default function App() {
           >
             <div className="relative inline-block">
               <h1
+                aria-label="URAY FAZLI ALMAN"
                 className={`font-brush text-[46px] leading-[0.88] tracking-wide text-[#FAF6EE] sm:text-[64px] lg:text-[74px] ${
                   isDay
                     ? 'drop-shadow-[0_3px_0_rgba(212,193,161,0.95)]'
                     : 'drop-shadow-[0_4px_0_rgba(5,12,22,0.85)]'
                 }`}
               >
-                <span className="block -rotate-1">
+                {/* LINE 1: URAY FAZLI — Hand-written letter-by-letter stroke reveal (Slower, natural pace) */}
+                <span className="relative block -rotate-1" aria-hidden="true">
                   <span className="relative inline-block">
-                    URAY
-                    {/* Crown anchored directly to the 'Y' of URAY on all screen sizes */}
-                    <CrownDoodle
-                      className="-top-5 -right-1 sm:-top-7 sm:-right-1.5 absolute h-6 w-8 -rotate-6 sm:h-8 sm:w-10"
-                      color="#F5E1B5"
-                    />
+                    {'URAY'.split('').map((char, idx) => (
+                      <motion.span
+                        key={`uray-${idx}`}
+                        initial={{
+                          opacity: 0,
+                          clipPath: 'inset(-20% 100% -20% -10%)',
+                          y: 6,
+                          x: -3,
+                          rotate: -6,
+                          scale: 0.92,
+                        }}
+                        animate={
+                          !isLoading
+                            ? {
+                                opacity: 1,
+                                clipPath: 'inset(-25% -15% -25% -15%)',
+                                y: 0,
+                                x: 0,
+                                rotate: 0,
+                                scale: 1,
+                              }
+                            : undefined
+                        }
+                        transition={{
+                          duration: 0.42,
+                          delay: 0.22 + idx * 0.18,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="inline-block origin-bottom-left"
+                      >
+                        {char}
+                      </motion.span>
+                    ))}
+                    {/* Crown anchored directly to the 'Y' of URAY — sketches in right after URAY is written */}
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.4, rotate: -22, y: 6 }}
+                      animate={
+                        !isLoading
+                          ? { opacity: 1, scale: 1, rotate: -6, y: 0 }
+                          : undefined
+                      }
+                      transition={{
+                        type: 'spring',
+                        stiffness: 240,
+                        damping: 18,
+                        delay: 1.02,
+                      }}
+                      className="-top-5 -right-1 sm:-top-7 sm:-right-1.5 pointer-events-none absolute h-6 w-8 sm:h-8 sm:w-10"
+                    >
+                      <CrownDoodle className="h-full w-full" color="#F5E1B5" />
+                    </motion.span>
                   </span>{' '}
-                  FAZLI
+                  <span className="relative inline-block">
+                    {'FAZLI'.split('').map((char, idx) => (
+                      <motion.span
+                        key={`fazli-${idx}`}
+                        initial={{
+                          opacity: 0,
+                          clipPath: 'inset(-20% 100% -20% -10%)',
+                          y: 6,
+                          x: -3,
+                          rotate: -6,
+                          scale: 0.92,
+                        }}
+                        animate={
+                          !isLoading
+                            ? {
+                                opacity: 1,
+                                clipPath: 'inset(-25% -15% -25% -15%)',
+                                y: 0,
+                                x: 0,
+                                rotate: 0,
+                                scale: 1,
+                              }
+                            : undefined
+                        }
+                        transition={{
+                          duration: 0.42,
+                          delay: 1.06 + idx * 0.18,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="inline-block origin-bottom-left"
+                      >
+                        {char}
+                      </motion.span>
+                    ))}
+                  </span>
+
+                  {/* Animated Fountain Pen Nib gliding across Line 1 while writing "URAY FAZLI" */}
+                  <motion.span
+                    initial={{ opacity: 0, left: '2%', top: '18%' }}
+                    animate={
+                      !isLoading
+                        ? {
+                            opacity: [0, 1, 1, 1, 1, 0],
+                            left: ['2%', '24%', '46%', '72%', '98%', '103%'],
+                            top: ['22%', '10%', '20%', '11%', '21%', '8%'],
+                            rotate: [-14, -4, -13, -5, -12, -2],
+                          }
+                        : undefined
+                    }
+                    transition={{
+                      duration: 1.92,
+                      delay: 0.18,
+                      times: [0, 0.22, 0.44, 0.7, 0.93, 1],
+                      ease: 'easeInOut',
+                    }}
+                    className="pointer-events-none absolute z-30 h-6 w-6 sm:h-8 sm:w-8"
+                  >
+                    <svg viewBox="0 0 32 32" fill="none" className="h-full w-full drop-shadow-md">
+                      <path
+                        d="M5 27L11 15L23 3L29 9L17 21L5 27Z"
+                        fill={isDay ? '#B4690E' : '#F5D78E'}
+                        stroke="#091526"
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M5 27L11.5 20.5"
+                        stroke="#091526"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="13" cy="19" r="1.6" fill="#091526" />
+                    </svg>
+                  </motion.span>
                 </span>
-                <span className="mt-1 block -rotate-1">ALMAN</span>
+
+                {/* LINE 2: ALMAN — Hand-written letter-by-letter stroke reveal + pen nib + underline flourish */}
+                <span className="relative mt-1 inline-block -rotate-1" aria-hidden="true">
+                  {'ALMAN'.split('').map((char, idx) => (
+                    <motion.span
+                      key={`alman-${idx}`}
+                      initial={{
+                        opacity: 0,
+                        clipPath: 'inset(-20% 100% -20% -10%)',
+                        y: 6,
+                        x: -3,
+                        rotate: -6,
+                        scale: 0.92,
+                      }}
+                      animate={
+                        !isLoading
+                          ? {
+                              opacity: 1,
+                              clipPath: 'inset(-25% -15% -25% -15%)',
+                              y: 0,
+                              x: 0,
+                              rotate: 0,
+                              scale: 1,
+                            }
+                          : undefined
+                      }
+                      transition={{
+                        duration: 0.44,
+                        delay: 2.12 + idx * 0.19,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="inline-block origin-bottom-left"
+                    >
+                      {char}
+                    </motion.span>
+                  ))}
+
+                  {/* Animated Fountain Pen Nib gliding across Line 2 while writing "ALMAN" */}
+                  <motion.span
+                    initial={{ opacity: 0, left: '0%', top: '20%' }}
+                    animate={
+                      !isLoading
+                        ? {
+                            opacity: [0, 1, 1, 1, 0],
+                            left: ['0%', '34%', '68%', '98%', '106%'],
+                            top: ['24%', '11%', '22%', '12%', '4%'],
+                            rotate: [-12, -3, -13, -4, 6],
+                          }
+                        : undefined
+                    }
+                    transition={{
+                      duration: 1.25,
+                      delay: 2.08,
+                      times: [0, 0.3, 0.62, 0.9, 1],
+                      ease: 'easeInOut',
+                    }}
+                    className="pointer-events-none absolute z-30 h-6 w-6 sm:h-8 sm:w-8"
+                  >
+                    <svg viewBox="0 0 32 32" fill="none" className="h-full w-full drop-shadow-md">
+                      <path
+                        d="M5 27L11 15L23 3L29 9L17 21L5 27Z"
+                        fill={isDay ? '#B4690E' : '#F5D78E'}
+                        stroke="#091526"
+                        strokeWidth="2"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M5 27L11.5 20.5"
+                        stroke="#091526"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="13" cy="19" r="1.6" fill="#091526" />
+                    </svg>
+                  </motion.span>
+
+                  {/* Hand-Drawn Ink Underline Flourish drawn right as "ALMAN" finishes */}
+                  <svg
+                    viewBox="0 0 220 14"
+                    fill="none"
+                    className="-bottom-1.5 left-0 pointer-events-none absolute h-2.5 w-full sm:-bottom-2 sm:h-3.5"
+                    aria-hidden="true"
+                  >
+                    <motion.path
+                      d="M4 9.5C58 3.5 148 3.2 214 8.2C182 10.5 124 11.2 68 10.8"
+                      stroke={isDay ? '#B4690E' : '#F5D78E'}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={
+                        !isLoading
+                          ? { pathLength: 1, opacity: 0.92 }
+                          : undefined
+                      }
+                      transition={{
+                        duration: 0.78,
+                        delay: 3.18,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    />
+                  </svg>
+                </span>
               </h1>
             </div>
 
