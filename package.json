@@ -1,13 +1,14 @@
 {
   "name": "react-example",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
+    "postinstall": "if [ ! -f ./node_modules/vite/bin/vite.js ]; then npm install --no-save --include=prod --include=dev --legacy-peer-deps vite@6.2.0 @vitejs/plugin-react@4.3.4 @tailwindcss/vite@4.0.9 tailwindcss@4.0.9 typescript@5.7.3; fi && mkdir -p ./node_modules/.bin && ln -sf ../vite/bin/vite.js ./node_modules/.bin/vite && chmod +x ./node_modules/vite/bin/vite.js ./node_modules/.bin/* 2>/dev/null || true",
     "prebuild": "chmod +x ./node_modules/.bin/* ./node_modules/vite/bin/vite.js 2>/dev/null || true",
     "build": "node ./node_modules/vite/bin/vite.js build",
-    "preview": "vite preview",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
