@@ -34,6 +34,10 @@ import {
   SubQueryNetworkIcon,
   AirdropParachuteIllustration,
   GoldBitcoinDoodle,
+  EthereumCoinDoodle,
+  SolanaCoinDoodle,
+  MemeDogeCoinMiniDoodle,
+  MiniAirdropParachuteDoodle,
   MemeCoinDogeIllustration,
   TestnetCubesIllustration,
   RocketSketchDoodle,
@@ -712,6 +716,14 @@ export default function App() {
                 </a>
               </div>
             </div>
+
+            {/* Handwritten Crypto Coins Strip in Hero Left Empty Space */}
+            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 select-none sm:justify-start">
+              <GoldBitcoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+              <EthereumCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+              <SolanaCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+              <MemeDogeCoinMiniDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+            </div>
           </motion.div>
 
           {/* RIGHT COLUMN: Oversized Hero Chibi Explorer + Callouts (7 cols) */}
@@ -723,12 +735,41 @@ export default function App() {
             className="relative z-10 flex items-end justify-center lg:col-span-7"
           >
             <div className="relative mx-auto flex w-full max-w-[360px] items-end justify-center pt-5 sm:max-w-[500px] sm:pt-3 lg:max-w-[560px] lg:pt-1">
+              {/* Top-Left Empty Space Fill: Floating Airdrop Parachute + "Airdrop Alpha" Callout */}
+              <motion.div
+                animate={{ y: [0, -6, 0], rotate: [-4, 3, -4] }}
+                transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="top-2 left-0 sm:top-5 sm:left-2 lg:top-6 lg:left-3 absolute z-20 flex flex-col items-center select-none"
+              >
+                <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-12 sm:w-10" />
+                <div className="-mt-0.5 -rotate-8 text-center font-journal text-[10.5px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-[13px]">
+                  <span className="block text-[#F5D78E]">Airdrop</span>
+                  <span className="block">Alpha Drop</span>
+                </div>
+              </motion.div>
+
+              {/* Bottom-Left Empty Space Fill: Floating Meme Coin & Solana + "100x Meme Gems" */}
+              <motion.div
+                animate={{ y: [0, 5, 0], rotate: [3, -3, 3] }}
+                transition={{ duration: 3.9, repeat: Infinity, ease: 'easeInOut' }}
+                className="bottom-4 left-0 sm:bottom-8 sm:left-1 lg:bottom-10 lg:left-2 absolute z-20 flex flex-col items-center select-none"
+              >
+                <div className="flex items-center -space-x-2">
+                  <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-10 sm:w-11" />
+                  <SolanaCoinDoodle className="h-7 w-8 sm:h-9 sm:w-10" />
+                </div>
+                <div className="-rotate-6 text-center font-journal text-[10px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-[12.5px]">
+                  <span className="block">Meme Coin</span>
+                  <span className="block text-[#F5D78E]">Early Narrative</span>
+                </div>
+              </motion.div>
+
               {/* Left Sparkle Star for Cosmic Framing */}
-              <SparkleStar className="top-12 left-4 sm:top-16 sm:left-10 absolute h-4 w-4 opacity-80" />
+              <SparkleStar className="top-28 left-6 sm:top-34 sm:left-12 absolute h-4 w-4 opacity-80" />
 
               {/* Center-Left Shifted Chibi Bust Sitting Flush on Horizon */}
               <div className="relative z-10 sm:-ml-6 lg:-ml-10">
-                <HeroChibiCharacter />
+                <HeroChibiCharacter isId={isId} />
               </div>
 
               {/* Top-Right Annotation: Crown + "Small Steps / Big Bags" + Burst Ticks */}
@@ -775,8 +816,9 @@ export default function App() {
                 <PlanetDoodle className="h-11 w-16 sm:h-15 sm:w-22" />
               </motion.div>
 
-              {/* Bottom-Right Annotation: "Web3 / No Limits" + Double Hand-Drawn Underline */}
+              {/* Bottom-Right Annotation: "Web3 / No Limits" + Gold Bitcoin Doodle */}
               <div className="right-1 bottom-3 sm:right-8 sm:bottom-8 lg:right-14 lg:bottom-10 absolute z-20 -rotate-8 select-none">
+                <GoldBitcoinDoodle className="mx-auto -mb-1 h-7 w-8 sm:h-9 sm:w-10" />
                 <div className="font-journal text-[12px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[16px]">
                   <span className="block">Web3</span>
                   <span className="block">No</span>
@@ -833,21 +875,40 @@ export default function App() {
                 />
               </svg>
 
-              {/* Heading Row: Mini Chibi Sticker Overlapping Top-Left + "About Me" */}
-              <div className="flex items-center gap-3">
-                <ChibiMiniAvatar className="-mt-3 -ml-2 h-12 w-12 shrink-0 drop-shadow-sm sm:-mt-4 sm:-ml-3 sm:h-15 sm:w-15" />
-                <div>
-                  <h2 className="font-brush text-3xl leading-none text-[#091526] sm:text-[36px]">
-                    {isId ? 'Tentang Saya' : 'About Me'}
-                  </h2>
-                  <svg viewBox="0 0 146 10" fill="none" className="mt-0.5 h-2.5 w-32 sm:w-36" aria-hidden="true">
-                    <path
-                      d="M2 6C48 2.5 98 2.5 144 5.5"
-                      stroke="#091526"
-                      strokeWidth="3.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+              {/* Heading Row: Mini Chibi Sticker Overlapping Top-Left + "About Me" + Top-Right Crypto & Airdrop/Meme Stamp */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <ChibiMiniAvatar className="-mt-3 -ml-2 h-12 w-12 shrink-0 drop-shadow-sm sm:-mt-4 sm:-ml-3 sm:h-15 sm:w-15" />
+                  <div>
+                    <h2 className="font-brush text-3xl leading-none text-[#091526] sm:text-[36px]">
+                      {isId ? 'Tentang Saya' : 'About Me'}
+                    </h2>
+                    <svg viewBox="0 0 146 10" fill="none" className="mt-0.5 h-2.5 w-32 sm:w-36" aria-hidden="true">
+                      <path
+                        d="M2 6C48 2.5 98 2.5 144 5.5"
+                        stroke="#091526"
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Top-Right Empty Parchment Space Fill: Crypto Coin Trio + Meme Coin & Airdrop Note */}
+                <div className="ml-auto flex items-center gap-1.5 select-none">
+                  <div className="flex items-center -space-x-2">
+                    <GoldBitcoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+                    <EthereumCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+                    <MemeDogeCoinMiniDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+                  </div>
+                  <div className="-rotate-3 text-right font-journal text-[10.5px] leading-[1.12] font-bold text-[#091526] sm:text-[12px]">
+                    <span className="block">
+                      {isId ? 'Garap Airdrop Awal' : 'Early Airdrop Farming'}
+                    </span>
+                    <span className="block text-[#22426E]">
+                      {isId ? '& Trading Meme Coin' : '& Meme Coin Trading'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -860,14 +921,17 @@ export default function App() {
                       : 'Hello! I am Uray Fazli Alman, a Web3 enthusiast actively involved in the blockchain space over the past several years. I focus on operating nodes, hunting airdrops, trading meme coins, and exploring early-stage testnet projects. My goal is simple: keep learning, keep growing, and uncover the best opportunities across the Web3 ecosystem.'}
                   </p>
 
-                  {/* Desktop/Tablet Signature Line */}
-                  <div className="mt-3.5 hidden flex-wrap items-center gap-1.5 font-journal text-xs font-bold text-[#091526] sm:flex sm:text-[12.5px]">
+                  {/* Desktop/Tablet Signature Line + Crypto Token Tickers */}
+                  <div className="mt-3 hidden flex-wrap items-center gap-1.5 font-journal text-xs font-bold text-[#091526] sm:flex sm:text-[12.5px]">
                     <span>— Same Guy</span>
                     <span aria-hidden="true">•</span>
                     <span>Web3</span>
                     <span aria-hidden="true">•</span>
                     <span>Better Future —</span>
                     <CrownDoodle className="h-4 w-5" color="#091526" />
+                    <span className="ml-1 text-[11px] font-bold text-[#22426E]">
+                      $BTC · $ETH · $SOL · $DOGE · Airdrop
+                    </span>
                   </div>
                 </div>
 
@@ -879,6 +943,9 @@ export default function App() {
                       <span>• Better Future —</span>
                       <CrownDoodle className="h-3.5 w-4" color="#091526" />
                     </span>
+                    <span className="mt-1 block text-[10.5px] text-[#22426E]">
+                      $BTC · $SOL · Meme Coin · Airdrop
+                    </span>
                   </div>
                   <div className="shrink-0">
                     <AboutMeOverlapChibi />
@@ -888,7 +955,7 @@ export default function App() {
             </div>
           </motion.div>
 
-          {/* CENTER BRIDGE (Desktop Vertical / Mobile Compact Horizontal Callout) */}
+          {/* CENTER BRIDGE (Desktop Vertical / Mobile Compact Horizontal Callout + Crypto & Airdrop Icons) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92, y: 12 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -896,12 +963,13 @@ export default function App() {
             transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             className="flex items-center justify-center gap-2 select-none lg:col-span-1 lg:flex-col"
           >
-            <div className="-rotate-3 text-center font-journal text-[13.5px] leading-[1.15] font-bold text-[#FAF6EE] lg:-rotate-8 lg:text-[15.5px]">
+            <MiniAirdropParachuteDoodle className="h-8 w-7 lg:h-10 lg:w-8" />
+            <div className="-rotate-3 text-center font-journal text-[13.5px] leading-[1.15] font-bold text-[#FAF6EE] lg:-rotate-8 lg:text-[15px]">
               <span className="inline lg:block">Never </span>
               <span className="inline lg:block">Stop </span>
               <span className="inline lg:block">Exploring</span>
             </div>
-            <svg viewBox="0 0 76 48" fill="none" className="hidden h-11 w-18 lg:mt-1 lg:block" aria-hidden="true">
+            <svg viewBox="0 0 76 48" fill="none" className="hidden h-9 w-16 lg:mt-0.5 lg:block" aria-hidden="true">
               <path d="M4 5C26 2 50 2 72 5" stroke="#FAF6EE" strokeWidth="2.3" strokeLinecap="round" />
               <path
                 d="M42 12C50 14 54 18 44 22C34 26 52 29 43 34C35 38 45 42 54 40"
@@ -911,7 +979,12 @@ export default function App() {
                 strokeLinejoin="round"
               />
             </svg>
-            <CrownDoodle className="h-4 w-5 lg:hidden" color="#F5E1B5" />
+            <div className="flex items-center gap-1 lg:flex-col lg:gap-0.5">
+              <SolanaCoinDoodle className="h-7 w-8 lg:h-8 lg:w-9" />
+              <span className="-rotate-6 font-journal text-[10px] leading-tight font-bold text-[#F5D78E]">
+                Meme &amp; Drop
+              </span>
+            </div>
           </motion.div>
 
           {/* RIGHT: 2x2 Statistic Cards Grid (2x2 on both Mobile and Desktop!) */}
@@ -1074,13 +1147,30 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Top-Right Annotation on Parchment: "Node Run / The Chain" + Crown */}
-                <div className="ml-auto flex items-center gap-1.5 select-none sm:gap-2">
-                  <div className="text-right font-journal text-[11px] leading-[1.15] font-bold text-[#091526] sm:text-[13.5px]">
-                    <span className="block">Node Run</span>
-                    <span className="block">The Chain</span>
+                {/* Top-Right Annotation on Parchment: Crypto Coins + "Node Run / The Chain" + Crown */}
+                <div className="ml-auto flex items-center gap-2 select-none sm:gap-3">
+                  <div className="hidden items-center gap-1.5 md:flex">
+                    <div className="flex items-center -space-x-1.5">
+                      <EthereumCoinDoodle className="h-7 w-8" />
+                      <SolanaCoinDoodle className="h-7 w-8" />
+                    </div>
+                    <div className="-rotate-2 text-left font-journal text-[10.5px] leading-[1.12] font-bold text-[#22426E]">
+                      <span className="block">
+                        {isId ? 'Insentif Node &' : 'Node Incentives &'}
+                      </span>
+                      <span className="block text-[#091526]">
+                        {isId ? 'Alokasi Airdrop' : 'Airdrop Rewards'}
+                      </span>
+                    </div>
                   </div>
-                  <CrownDoodle className="h-4 w-5 sm:h-5 sm:w-6" color="#091526" />
+
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="text-right font-journal text-[11px] leading-[1.15] font-bold text-[#091526] sm:text-[13.5px]">
+                      <span className="block">Node Run</span>
+                      <span className="block">The Chain</span>
+                    </div>
+                    <CrownDoodle className="h-4 w-5 sm:h-5 sm:w-6" color="#091526" />
+                  </div>
                 </div>
               </div>
 
@@ -1209,7 +1299,7 @@ export default function App() {
             </div>
           </motion.div>
 
-          {/* RIGHT: Chibi Running Node / Server Stack + "Good Nodes Good Future" (4 cols) */}
+          {/* RIGHT: Chibi Running Node / Server Stack + "Good Nodes Good Future" + Crypto & Airdrop Callouts (4 cols) */}
           <motion.div
             initial={{ opacity: 0, x: 24, y: 16 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
@@ -1217,6 +1307,34 @@ export default function App() {
             transition={{ duration: 0.65, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
             className="relative flex flex-col items-center justify-end pt-7 sm:pt-8 lg:col-span-4 lg:pt-5"
           >
+            {/* Top-Left Empty Space Fill around Node Chibi: Airdrop Parachute + Node Airdrop Note */}
+            <motion.div
+              animate={{ y: [0, -5, 0], rotate: [-4, 3, -4] }}
+              transition={{ duration: 4.1, repeat: Infinity, ease: 'easeInOut' }}
+              className="top-0 left-2 sm:left-10 lg:left-1 absolute z-20 flex flex-col items-center select-none"
+            >
+              <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-11 sm:w-9" />
+              <div className="-mt-0.5 -rotate-8 text-center font-journal text-[10px] leading-[1.1] font-bold text-[#FAF6EE] sm:text-xs">
+                <span className="block text-[#F5D78E]">Node Drop</span>
+                <span className="block">&amp; Airdrop</span>
+              </div>
+            </motion.div>
+
+            {/* Bottom-Left Empty Space Fill around Node Chibi: Floating Crypto Coins */}
+            <motion.div
+              animate={{ y: [0, 4, 0] }}
+              transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+              className="bottom-3 left-2 sm:left-12 lg:left-1 absolute z-20 flex flex-col items-center select-none"
+            >
+              <div className="flex items-center -space-x-2">
+                <GoldBitcoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+                <EthereumCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
+              </div>
+              <span className="-rotate-6 font-journal text-[9.5px] font-bold text-[#9BB8DF] sm:text-[11px]">
+                $APT · $SEI · $SQT
+              </span>
+            </motion.div>
+
             <div className="-top-1 right-4 sm:right-12 lg:right-2 absolute z-20 -rotate-12 select-none text-center">
               <div className="font-journal text-xs leading-[1.12] font-bold text-[#FAF6EE] sm:text-[14px]">
                 <span className="block">Good</span>
@@ -1234,6 +1352,18 @@ export default function App() {
               </svg>
             </div>
 
+            {/* Bottom-Right Empty Space Fill around Node Chibi: Meme Coin Doodle */}
+            <motion.div
+              animate={{ y: [0, -4, 0], rotate: [4, -3, 4] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
+              className="right-2 bottom-3 sm:right-12 lg:right-1 absolute z-20 flex flex-col items-center select-none"
+            >
+              <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
+              <span className="rotate-6 font-journal text-[9.5px] font-bold text-[#F5D78E] sm:text-[11px]">
+                Meme Alpha
+              </span>
+            </motion.div>
+
             <NodeOperatorChibiScene />
           </motion.div>
         </div>
@@ -1246,7 +1376,7 @@ export default function App() {
         id="activities"
         className="relative z-20 mx-auto max-w-[1400px] scroll-mt-24 px-4 pt-3 pb-5 sm:px-8 lg:pt-4 lg:pb-6"
       >
-        {/* Heading Row: Comic Burst + "My Activities" + Underline + Crown (+ Mobile Rocket Doodle) */}
+        {/* Heading Row: Comic Burst + "My Activities" + Underline + Crown (+ Desktop Crypto/Meme/Airdrop Strip) */}
         <motion.div
           initial={{ opacity: 0, x: -18, y: 12 }}
           whileInView={{ opacity: 1, x: 0, y: 0 }}
@@ -1279,6 +1409,29 @@ export default function App() {
                 />
               </svg>
             </div>
+          </div>
+
+          {/* Desktop Empty Header Space Fill: Crypto Coin Icons + Meme Coin & Airdrop Strategy Note */}
+          <div className="hidden items-center gap-3 select-none lg:flex">
+            <div className="flex items-center -space-x-1.5">
+              <GoldBitcoinDoodle className="h-8 w-9" />
+              <EthereumCoinDoodle className="h-8 w-9" />
+              <SolanaCoinDoodle className="h-8 w-9" />
+              <MemeDogeCoinMiniDoodle className="h-8 w-9" />
+            </div>
+            <div className="-rotate-1 text-right font-journal text-xs leading-tight font-bold text-[#D8E5F7]">
+              <span className="block text-[#F5D78E]">
+                {isId
+                  ? 'Berburu Airdrop Potensial & Quest Testnet'
+                  : 'Hunting High-Potential Airdrops & Testnet Quests'}
+              </span>
+              <span className="block text-[#FAF6EE]">
+                {isId
+                  ? '• Trading Meme Coin Narasi Awal ($DOGE, $PEPE, $SOL)'
+                  : '• Early-Narrative Meme Coin Trading ($DOGE, $PEPE, $SOL)'}
+              </span>
+            </div>
+            <MiniAirdropParachuteDoodle className="h-10 w-8" />
           </div>
 
           {/* Mobile/Tablet Callout: "Web3 Friends = More Opportunities" + Rocket */}
@@ -1389,7 +1542,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Right Floating Handwritten Annotation inside Card 2 */}
+            {/* Right Floating Handwritten Annotation inside Card 2 + Meme Coin Icon */}
             <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch pl-1 text-center">
               <div className="relative -rotate-10 font-journal text-[10.5px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-xs">
                 <span className="-top-2 -left-1.5 absolute text-[10px]" aria-hidden="true">
@@ -1400,7 +1553,9 @@ export default function App() {
                 <span className="block text-[#9BB8DF]">=</span>
                 <span className="block">Profit</span>
               </div>
-              <CrownDoodle className="mt-1 h-5 w-6" color="#FAF6EE" />
+              <div className="-mb-2 mt-1">
+                <MemeDogeCoinMiniDoodle className="h-9 w-10 sm:h-10 sm:w-11" />
+              </div>
             </div>
           </motion.button>
 
@@ -1412,43 +1567,59 @@ export default function App() {
             viewport={{ once: false, amount: 0.18 }}
             transition={{ duration: 0.56, delay: 0.21, ease: [0.22, 1, 0.36, 1] }}
             onClick={() => setSelectedEntryId('testnet')}
-            className="sketch-card group relative flex cursor-pointer items-center justify-between gap-3 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-3"
+            className="sketch-card group relative flex cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-3"
           >
-            <TestnetCubesIllustration />
-            <div className="min-w-0 flex-1">
-              <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-[16.5px]">
-                Testnet Explorer
-              </h3>
-              <div className="mt-2 flex items-end justify-between gap-1">
-                <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                  <li className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
-                    <span>{isId ? 'Gabung proyek baru' : 'Join new projects'}</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
-                    <span>{isId ? 'Uji berbagai fitur' : 'Test features'}</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
-                    <span>
-                      {isId ? 'Akses awal & dapatkan reward' : 'Get early access & rewards'}
-                    </span>
-                  </li>
-                </ul>
-                <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+              <TestnetCubesIllustration />
+              <div className="min-w-0 flex-1">
+                <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-[16.5px]">
+                  Testnet Explorer
+                </h3>
+                <div className="mt-2 flex items-end justify-between gap-1">
+                  <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <span>{isId ? 'Gabung proyek baru' : 'Join new projects'}</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <span>{isId ? 'Uji berbagai fitur' : 'Test features'}</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <span>
+                        {isId ? 'Akses awal & dapatkan reward' : 'Get early access & rewards'}
+                      </span>
+                    </li>
+                  </ul>
+                  <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Floating Handwritten Annotation inside Card 3 + Ethereum Coin Doodle */}
+            <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch pl-1 text-center">
+              <div className="relative -rotate-10 font-journal text-[10px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[11px]">
+                <span className="block">Early</span>
+                <span className="block">Testnet</span>
+                <span className="block text-[#9BB8DF]">=</span>
+                <span className="block text-[#F5D78E]">Airdrop</span>
+              </div>
+              <div className="-mb-2 mt-1">
+                <EthereumCoinDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
               </div>
             </div>
           </motion.button>
 
-          {/* FAR RIGHT DOODLE CLUSTER: "Web3 Friends = More Opportunities" + Rocket (Desktop 1 col) */}
+          {/* FAR RIGHT DOODLE CLUSTER: "Web3 Friends = More Opportunities" + Rocket + Crypto Coin (Desktop 1 col) */}
           <motion.div
             initial={{ opacity: 0, x: 16, y: 12 }}
             whileInView={{ opacity: 1, x: 0, y: 0 }}
             viewport={{ once: false, amount: 0.25 }}
             transition={{ duration: 0.6, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}
-            className="hidden flex-col items-center justify-center select-none lg:col-span-1 lg:flex"
+            className="hidden flex-col items-center justify-center gap-1.5 select-none lg:col-span-1 lg:flex"
           >
+            <SolanaCoinDoodle className="h-8 w-9" />
             <div className="relative flex items-center">
               <div className="-rotate-12 text-center font-journal text-[11px] leading-[1.12] font-bold text-[#FAF6EE]">
                 <span className="block">Web3</span>
@@ -1514,10 +1685,10 @@ export default function App() {
             />
           </svg>
 
-          <div className="relative z-10 mx-auto max-w-[1400px] px-4 pt-5 pb-0 sm:px-8 lg:pt-3">
+          <div className="relative z-10 mx-auto max-w-[1400px] px-4 pt-5 pb-0 sm:px-8 lg:pt-4">
             {/* DESKTOP 4-ZONE HORIZONTAL STRIP (lg+) */}
-            <div className="hidden items-end gap-3 lg:grid lg:grid-cols-12">
-              {/* Col 1-3: Walking Chibi with Backpack + "Let's Build Together" */}
+            <div className="hidden items-end gap-4 lg:grid lg:grid-cols-12">
+              {/* Col 1-3: Left Anime Chibi + "Let's Build Together" + Crypto & Airdrop Icons */}
               <motion.div
                 initial={{ opacity: 0, x: -20, y: 14 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
@@ -1525,18 +1696,26 @@ export default function App() {
                 transition={{ duration: 0.6, delay: 0.04, ease: [0.22, 1, 0.36, 1] }}
                 className="relative flex items-end justify-center lg:col-span-3"
               >
-                <div className="relative flex items-center">
+                <div className="relative flex items-end gap-1">
                   <BackpackWalkerChibi />
-                  <div className="-ml-1 -mt-6 -rotate-12 select-none">
-                    <div className="relative font-journal text-[13px] leading-[1.15] font-bold text-[#FAF6EE]">
-                      <span className="-left-3 top-1 absolute text-xs" aria-hidden="true">
-                        ⑊
-                      </span>
-                      <span className="block">Let&apos;s</span>
-                      <span className="block">Build</span>
-                      <span className="block">Together</span>
+                  <div className="mb-5 -ml-2 flex flex-col items-start select-none">
+                    <div className="mb-1 flex items-center -space-x-1.5">
+                      <GoldBitcoinDoodle className="h-7 w-8" />
+                      <MemeDogeCoinMiniDoodle className="h-7 w-8" />
                     </div>
-                    <CrownDoodle className="mt-1 ml-3 h-4 w-5" color="#FAF6EE" />
+                    <div className="-rotate-10">
+                      <div className="relative font-journal text-[12px] leading-[1.12] font-bold text-[#FAF6EE]">
+                        <span className="-left-3 top-0.5 absolute text-xs" aria-hidden="true">
+                          ⑊
+                        </span>
+                        <span className="block">Let&apos;s</span>
+                        <span className="block">Build</span>
+                        <span className="block text-[#F5D78E]">Together</span>
+                      </div>
+                      <span className="mt-0.5 block font-journal text-[9.5px] font-bold text-[#9BB8DF]">
+                        Airdrop &amp; Meme Alpha
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -1579,18 +1758,18 @@ export default function App() {
                 </div>
               </motion.div>
 
-              {/* Col 7-10: Vertical Hand-Drawn Divider + Social Cards */}
+              {/* Col 7-10: Vertical Hand-Drawn Divider + Crypto Callout + Social Cards */}
               <motion.div
                 initial={{ opacity: 0, y: 18, scale: 0.97 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.6, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                className="flex items-center justify-center gap-4 pb-5 lg:col-span-4"
+                className="flex items-center justify-center gap-4 pb-4 lg:col-span-4"
               >
                 <svg
                   viewBox="0 0 6 96"
                   fill="none"
-                  className="h-20 w-1.5 shrink-0"
+                  className="h-24 w-1.5 shrink-0"
                   aria-hidden="true"
                 >
                   <path
@@ -1601,51 +1780,68 @@ export default function App() {
                   />
                 </svg>
 
-                <div className="grid w-full max-w-[240px] grid-cols-2 gap-3">
-                  <a
-                    href="https://x.com/urayfazli17"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="sketch-card flex flex-col items-center justify-center px-3 py-2.5 text-center"
-                  >
-                    <HandXIcon className="h-5 w-5 text-[#FAF6EE]" />
-                    <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
-                      X
+                <div className="flex w-full max-w-[250px] flex-col gap-2">
+                  <div className="flex items-center justify-center gap-1.5 select-none">
+                    <SolanaCoinDoodle className="h-6 w-7 shrink-0" />
+                    <span className="font-journal text-[10.5px] font-bold text-[#F5D78E]">
+                      {isId ? 'Diskusi Airdrop & Meme Coin' : 'Talk Airdrop & Meme Coin Alpha'}
                     </span>
-                    <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
-                      @urayfazli17
-                    </span>
-                  </a>
+                    <EthereumCoinDoodle className="h-6 w-7 shrink-0" />
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
-                    className="sketch-card flex cursor-pointer flex-col items-center justify-center px-3 py-2.5 text-center"
-                  >
-                    <HandEmailIcon className="h-5 w-5 text-[#FAF6EE]" />
-                    <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
-                      Email
-                    </span>
-                    <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
-                      fazliuray@gmail.com
-                    </span>
-                  </button>
+                  <div className="grid w-full grid-cols-2 gap-3">
+                    <a
+                      href="https://x.com/urayfazli17"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="sketch-card flex flex-col items-center justify-center px-3 py-2.5 text-center"
+                    >
+                      <HandXIcon className="h-5 w-5 text-[#FAF6EE]" />
+                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                        X
+                      </span>
+                      <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                        @urayfazli17
+                      </span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
+                      className="sketch-card flex cursor-pointer flex-col items-center justify-center px-3 py-2.5 text-center"
+                    >
+                      <HandEmailIcon className="h-5 w-5 text-[#FAF6EE]" />
+                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                        Email
+                      </span>
+                      <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
+                        fazliuray@gmail.com
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </motion.div>
 
-              {/* Col 11-12: Chibi Character Peeking Over the Bottom Border Line */}
+              {/* Col 11-12: Chibi Character Peeking Over the Bottom Border Line + Floating Airdrop Note */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.6, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className="relative flex items-end justify-end lg:col-span-2"
+                className="relative flex flex-col items-center justify-end lg:col-span-2"
               >
+                <div className="-mb-2 flex items-center gap-1 -rotate-6 select-none">
+                  <MiniAirdropParachuteDoodle className="h-8 w-7 shrink-0" />
+                  <div className="text-left font-journal text-[10px] leading-[1.1] font-bold text-[#FAF6EE]">
+                    <span className="block text-[#F5D78E]">Next 100x</span>
+                    <span className="block">Meme &amp; Drop</span>
+                  </div>
+                </div>
                 <PeekingBottomChibi />
               </motion.div>
             </div>
 
-            {/* MOBILE & TABLET LAYOUT (< lg): Clean Stacked CTA + Social Cards + Dual Bottom Chibi Strip */}
+            {/* MOBILE & TABLET LAYOUT (< lg): Clean Stacked CTA + Social Cards + Balanced Dual Bottom Chibi Strip */}
             <div className="flex flex-col items-center lg:hidden">
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
@@ -1712,32 +1908,30 @@ export default function App() {
                 </button>
               </motion.div>
 
-              {/* Unified Bottom Chibi Horizon Strip on Mobile & Tablet */}
+              {/* Symmetrical Bottom Chibi Horizon Strip on Mobile & Tablet + Crypto & Meme/Airdrop Icons */}
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.56, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-3 flex w-full max-w-lg items-end justify-between gap-2 px-1"
+                className="mt-3 flex w-full max-w-md items-end justify-between gap-2 px-2 sm:max-w-lg"
               >
-                <div className="flex items-center">
-                  <BackpackWalkerChibi />
-                  <div className="-ml-1 -mt-4 -rotate-12 select-none">
-                    <div className="relative font-journal text-[11px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-xs">
-                      <span className="-left-2.5 top-0.5 absolute text-[10px]" aria-hidden="true">
-                        ⑊
-                      </span>
-                      <span className="block">Let&apos;s</span>
-                      <span className="block">Build</span>
-                      <span className="block">Together</span>
-                    </div>
-                    <CrownDoodle className="mt-0.5 ml-2 h-3.5 w-4.5" color="#FAF6EE" />
+                <BackpackWalkerChibi />
+
+                <div className="mb-4 flex flex-col items-center select-none text-center sm:mb-6">
+                  <div className="mb-1 flex items-center -space-x-1.5">
+                    <GoldBitcoinDoodle className="h-6 w-7 sm:h-7 sm:w-8" />
+                    <MemeDogeCoinMiniDoodle className="h-6 w-7 sm:h-7 sm:w-8" />
+                    <SolanaCoinDoodle className="h-6 w-7 sm:h-7 sm:w-8" />
+                  </div>
+                  <div className="-rotate-6 font-journal text-[11px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-xs">
+                    <span className="block">Let&apos;s Build</span>
+                    <span className="block text-[#F5D78E]">Meme &amp; Airdrop</span>
+                    <span className="block text-[9.5px] text-[#9BB8DF]">Together</span>
                   </div>
                 </div>
 
-                <div className="shrink-0">
-                  <PeekingBottomChibi />
-                </div>
+                <PeekingBottomChibi />
               </motion.div>
             </div>
           </div>

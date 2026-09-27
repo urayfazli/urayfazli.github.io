@@ -1,10 +1,11 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import heroChibiImg from '../assets/images/chibi_hero.png';
-import aboutChibiImg from '../assets/images/chibi_about.png';
-import nodeOperatorImg from '../assets/images/chibi_node.png';
-import backpackWalkerImg from '../assets/images/chibi_walker.png';
-import peekingBottomImg from '../assets/images/chibi_peeking.png';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cozyAsmrAudio } from '../utils/cozyAsmrAudio';
+import heroChibiImg from '../assets/images/anime_chibi_hero.png';
+import aboutChibiImg from '../assets/images/anime_chibi_about.png';
+import nodeOperatorImg from '../assets/images/anime_chibi_node.png';
+import backpackWalkerImg from '../assets/images/anime_chibi_walker.png';
+import peekingBottomImg from '../assets/images/anime_chibi_peeking.png';
 
 export const GENERATED_ASSETS = {
   heroChibiImg,
@@ -178,59 +179,259 @@ export const ChibiMiniAvatar: React.FC<{ className?: string }> = ({ className = 
   >
     <img
       src={heroChibiImg}
-      alt="Uray Fazli Alman Chibi Avatar"
+      alt="Uray Fazli Alman Anime Chibi Avatar"
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="h-full w-full scale-125 object-cover object-[50%_24%]"
+      className="h-full w-full scale-110 object-cover object-[50%_38%]"
     />
   </div>
 );
 
 /**
  * 1. HERO CHIBI CHARACTER
- * Uses the transparent PNG chibi portrait (chibi_hero.png) with bottom-flush bust framing & idle float
+ * Uses the transparent PNG anime chibi close-up portrait (anime_chibi_hero.png) with bottom-flush framing & gentle float.
+ * Double-tap / double-click (2x press) toggles the Cozy & ASMR background soundscape on and off.
  */
-export const HeroChibiCharacter: React.FC = () => (
-  <div className="relative mx-auto h-[255px] w-[245px] overflow-hidden select-none sm:h-[325px] sm:w-[315px] lg:h-[368px] lg:w-[358px]">
-    <motion.div
-      animate={{ y: [5, -3, 5], rotate: [-0.7, 0.8, -0.7] }}
-      transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-      className="relative h-[112%] w-full"
-    >
-      {/* Hand-drawn comic burst ticks framing the chibi head */}
-      <svg
-        viewBox="0 0 540 480"
-        fill="none"
-        className="pointer-events-none absolute inset-0 z-20 h-full w-full"
-        aria-hidden="true"
-      >
-        <g stroke="#FAF6EE" strokeWidth="2.8" strokeLinecap="round">
-          <path d="M72 48C78 56 80 58 88 56M82 44C80 52 78 54 70 58" />
-          <path d="M22 158L36 163M19 170L34 171M23 182L36 178" />
-          <path d="M486 194L501 188M488 206L505 205M486 217L501 222" />
-        </g>
-      </svg>
+export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [singleTapHint, setSingleTapHint] = useState(false);
+  const [tapBounce, setTapBounce] = useState(false);
+  const lastTapRef = useRef<number>(0);
+  const hintTimerRef = useRef<number | null>(null);
+  const bounceTimerRef = useRef<number | null>(null);
 
-      <img
-        src={heroChibiImg}
-        alt="Uray Fazli Alman Chibi Web3 Explorer"
-        decoding="async"
-        draggable={false}
-        referrerPolicy="no-referrer"
-        className="mx-auto block h-full w-full object-cover object-top drop-shadow-[0_14px_26px_rgba(3,9,18,0.78)]"
-      />
-    </motion.div>
-  </div>
-);
+  useEffect(() => {
+    setIsPlaying(cozyAsmrAudio.getPlayingState());
+    return () => {
+      if (hintTimerRef.current !== null) {
+        window.clearTimeout(hintTimerRef.current);
+      }
+      if (bounceTimerRef.current !== null) {
+        window.clearTimeout(bounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleChibiPress = async () => {
+    const now = performance.now();
+    const diff = now - lastTapRef.current;
+
+    // Visual micro-bounce on every tap
+    setTapBounce(true);
+    if (bounceTimerRef.current !== null) {
+      window.clearTimeout(bounceTimerRef.current);
+    }
+    bounceTimerRef.current = window.setTimeout(() => {
+      setTapBounce(false);
+      bounceTimerRef.current = null;
+    }, 180);
+
+    if (diff > 0 && diff < 430) {
+      // 2x press detected: toggle Cozy & ASMR backsound
+      lastTapRef.current = 0;
+      if (hintTimerRef.current !== null) {
+        window.clearTimeout(hintTimerRef.current);
+        hintTimerRef.current = null;
+      }
+      setSingleTapHint(false);
+      const nextState = await cozyAsmrAudio.toggle();
+      setIsPlaying(nextState);
+    } else {
+      // First press: store timestamp and show brief hint to press 1 more time
+      lastTapRef.current = now;
+      setSingleTapHint(true);
+      if (hintTimerRef.current !== null) {
+        window.clearTimeout(hintTimerRef.current);
+      }
+      hintTimerRef.current = window.setTimeout(() => {
+        setSingleTapHint(false);
+      }, 950);
+    }
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleChibiPress}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleChibiPress();
+        }
+      }}
+      aria-label={
+        isId
+          ? 'Ketuk 2x karakter Chibi untuk menyalakan atau mematikan backsound Cozy & ASMR'
+          : 'Double-tap Chibi character to toggle Cozy & ASMR background sound'
+      }
+      title={
+        isId
+          ? 'Ketuk 2x untuk Backsound Cozy & ASMR (On/Off)'
+          : 'Double-tap for Cozy & ASMR Soundscape (On/Off)'
+      }
+      className="group relative mx-auto h-[265px] w-[265px] cursor-pointer overflow-visible touch-manipulation select-none focus:outline-none sm:h-[335px] sm:w-[335px] lg:h-[378px] lg:w-[378px]"
+    >
+      {/* Warm Cozy Glow behind Chibi when Cozy & ASMR soundscape is playing */}
+      <AnimatePresence>
+        {isPlaying && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: [0.45, 0.72, 0.45], scale: [0.96, 1.04, 0.96] }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+            className="pointer-events-none absolute inset-6 z-0 rounded-full bg-[radial-gradient(circle,rgba(245,215,142,0.28)_0%,rgba(92,149,236,0.12)_52%,transparent_74%)] blur-xl"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Floating Hand-Drawn Musical Notes & ASMR Waves from Earphones when playing */}
+      <AnimatePresence>
+        {isPlaying && (
+          <div className="pointer-events-none absolute inset-0 z-30 overflow-visible" aria-hidden="true">
+            {/* Left earphone floating note */}
+            <motion.svg
+              viewBox="0 0 36 36"
+              fill="none"
+              initial={{ opacity: 0, y: 10, x: 0, scale: 0.7 }}
+              animate={{
+                opacity: [0, 1, 1, 0],
+                y: [6, -18, -38, -54],
+                x: [0, -8, -4, -12],
+                rotate: [-8, 10, -6, 8],
+                scale: [0.75, 1, 1.05, 0.85],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 3.1, repeat: Infinity, ease: 'easeInOut' }}
+              className="top-[42%] left-[8%] sm:left-[10%] absolute h-7 w-7 sm:h-8 sm:w-8"
+            >
+              <path
+                d="M14 25V9L27 6V21"
+                stroke="#F5D78E"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <ellipse cx="10.5" cy="25.5" rx="4.2" ry="3.2" fill="#F5D78E" stroke="#091321" strokeWidth="1.8" />
+              <ellipse cx="23.5" cy="21.5" rx="4.2" ry="3.2" fill="#FAF6EE" stroke="#091321" strokeWidth="1.8" />
+            </motion.svg>
+
+            {/* Right earphone floating single note */}
+            <motion.svg
+              viewBox="0 0 32 32"
+              fill="none"
+              initial={{ opacity: 0, y: 10, x: 0, scale: 0.7 }}
+              animate={{
+                opacity: [0, 1, 1, 0],
+                y: [8, -16, -34, -50],
+                x: [0, 9, 5, 14],
+                rotate: [6, -10, 8, -6],
+                scale: [0.75, 1, 1.04, 0.85],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 3.4, delay: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+              className="top-[40%] right-[10%] sm:right-[12%] absolute h-6 w-6 sm:h-7 sm:w-7"
+            >
+              <path
+                d="M15 24V7C19 8 23 11 23 15"
+                stroke="#FAF6EE"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <ellipse cx="11.5" cy="24.5" rx="4.2" ry="3.2" fill="#F5D78E" stroke="#091321" strokeWidth="1.8" />
+            </motion.svg>
+
+            {/* Cozy ASMR acoustic wave arcs near ears */}
+            <motion.svg
+              viewBox="0 0 40 40"
+              fill="none"
+              animate={{ opacity: [0.35, 0.95, 0.35], scale: [0.94, 1.06, 0.94] }}
+              transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+              className="top-[52%] left-[3%] sm:left-[5%] absolute h-6 w-6"
+            >
+              <path d="M26 12C20 16 20 24 26 28" stroke="#F5D78E" strokeWidth="2.3" strokeLinecap="round" />
+              <path d="M19 7C10 14 10 26 19 33" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
+            </motion.svg>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        animate={{
+          y: [4, -3, 4],
+          rotate: isPlaying ? [-1.2, 1.2, -1.2] : [-0.6, 0.7, -0.6],
+          scale: tapBounce ? 0.96 : 1,
+        }}
+        transition={{
+          y: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' },
+          rotate: { duration: isPlaying ? 3.2 : 4.8, repeat: Infinity, ease: 'easeInOut' },
+          scale: { duration: 0.15 },
+        }}
+        className="relative h-full w-full overflow-hidden"
+      >
+        {/* Hand-drawn comic burst ticks framing the chibi head */}
+        <svg
+          viewBox="0 0 540 480"
+          fill="none"
+          className="pointer-events-none absolute inset-0 z-20 h-full w-full"
+          aria-hidden="true"
+        >
+          <g stroke={isPlaying ? '#F5D78E' : '#FAF6EE'} strokeWidth="2.8" strokeLinecap="round">
+            <path d="M72 48C78 56 80 58 88 56M82 44C80 52 78 54 70 58" />
+            <path d="M22 158L36 163M19 170L34 171M23 182L36 178" />
+            <path d="M486 194L501 188M488 206L505 205M486 217L501 222" />
+          </g>
+        </svg>
+
+        <img
+          src={heroChibiImg}
+          alt="Uray Fazli Alman Anime Chibi Web3 Explorer"
+          fetchPriority="high"
+          decoding="async"
+          draggable={false}
+          referrerPolicy="no-referrer"
+          className="mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-transform duration-200 group-hover:scale-[1.015]"
+        />
+      </motion.div>
+
+      {/* Subtle Hand-Drawn Earphone Backsound Status Note at Bottom Center of Chibi */}
+      <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
+        <div
+          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[0_4px_12px_rgba(3,9,18,0.75)] backdrop-blur-xs transition-colors sm:text-[11.5px] ${
+            isPlaying
+              ? 'border-[#F5D78E] bg-[#091526]/92 text-[#F5D78E]'
+              : 'border-[#FAF6EE]/60 bg-[#091526]/80 text-[#FAF6EE]/90 group-hover:border-[#F5D78E]/85 group-hover:text-[#F5D78E]'
+          }`}
+        >
+          <span className={isPlaying ? 'animate-pulse text-[#F5D78E]' : 'text-[#F5D78E]'}>♪</span>
+          <span>
+            {singleTapHint
+              ? isId
+                ? 'Ketuk 1x lagi...'
+                : 'Tap 1x more...'
+              : isPlaying
+                ? isId
+                  ? 'Cozy & ASMR: ON (Ketuk 2x = Off)'
+                  : 'Cozy & ASMR: ON (Tap 2x = Off)'
+                : isId
+                  ? 'Ketuk Chibi 2x • Cozy & ASMR'
+                  : 'Tap Chibi 2x • Cozy & ASMR'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /**
  * 2. ABOUT ME OVERLAPPING CHIBI
- * Uses the transparent PNG About Me chibi illustration (chibi_about.png) with static bottom-flush framing
+ * Uses the transparent PNG About Me anime chibi illustration (anime_chibi_about.png) with bottom-flush framing
  */
 export const AboutMeOverlapChibi: React.FC = () => (
-  <div className="relative mx-auto h-[168px] w-[158px] overflow-hidden select-none sm:h-[202px] sm:w-[192px] lg:h-[224px] lg:w-[212px]">
-    <div className="relative h-[106%] w-full">
+  <div className="relative mx-auto h-[172px] w-[172px] overflow-hidden select-none sm:h-[206px] sm:w-[206px] lg:h-[228px] lg:w-[228px]">
+    <div className="relative h-full w-full">
       {/* Hand-drawn comic burst lines on left & right */}
       <svg
         viewBox="0 0 320 300"
@@ -249,11 +450,12 @@ export const AboutMeOverlapChibi: React.FC = () => (
 
       <img
         src={aboutChibiImg}
-        alt="Uray Fazli Alman About Me Chibi"
+        alt="Uray Fazli Alman About Me Anime Chibi"
+        loading="lazy"
         decoding="async"
         draggable={false}
         referrerPolicy="no-referrer"
-        className="mx-auto block h-full w-full object-cover object-top drop-shadow-[0_10px_18px_rgba(7,17,31,0.32)]"
+        className="mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_10px_18px_rgba(7,17,31,0.34)]"
       />
     </div>
   </div>
@@ -261,53 +463,54 @@ export const AboutMeOverlapChibi: React.FC = () => (
 
 /**
  * 3. EXPERIENCE SECTION NODE OPERATOR CHIBI SCENE
- * Uses the transparent PNG Node Operator chibi illustration (chibi_node.png) (Static)
+ * Uses the transparent PNG Node Operator anime chibi illustration (anime_chibi_node.png)
  */
 export const NodeOperatorChibiScene: React.FC = () => (
-  <div className="relative mx-auto w-full max-w-[290px] select-none sm:max-w-[345px] lg:max-w-[385px]">
+  <div className="relative mx-auto w-full max-w-[285px] select-none sm:max-w-[335px] lg:max-w-[375px]">
     <img
       src={nodeOperatorImg}
-      alt="Chibi Node Operator with Server Racks and Laptop"
+      alt="Anime Chibi Node Operator with Server Racks and Laptop"
+      loading="lazy"
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="mx-auto block h-auto w-full object-contain drop-shadow-[0_14px_26px_rgba(3,9,18,0.78)]"
+      className="mx-auto block h-auto w-full object-contain drop-shadow-[0_14px_26px_rgba(3,9,18,0.8)]"
     />
   </div>
 );
 
 /**
- * 4. CONTACT SECTION LEFT WALKING CHIBI WITH BACKPACK
- * Uses the transparent PNG Backpack Walker chibi illustration (chibi_walker.png) with static bottom-flush framing
+ * 4. CONTACT SECTION LEFT CHIBI PORTRAIT
+ * Uses the transparent PNG anime chibi illustration (anime_chibi_walker.png) with bottom-flush framing
  */
 export const BackpackWalkerChibi: React.FC = () => (
-  <div className="relative mx-auto h-[126px] w-[112px] overflow-hidden select-none sm:h-[148px] sm:w-[130px] lg:h-[162px] lg:w-[144px]">
-    <div className="relative h-[108%] w-full">
-      <img
-        src={backpackWalkerImg}
-        alt="Chibi Explorer wearing backpack looking toward contact section"
-        decoding="async"
-        draggable={false}
-        referrerPolicy="no-referrer"
-        className="mx-auto block h-full w-full object-cover object-top drop-shadow-[0_10px_20px_rgba(3,9,18,0.7)]"
-      />
-    </div>
+  <div className="relative flex h-[126px] w-[120px] shrink-0 items-end justify-center overflow-hidden select-none sm:h-[146px] sm:w-[138px] lg:h-[164px] lg:w-[154px]">
+    <img
+      src={backpackWalkerImg}
+      alt="Anime Chibi Explorer looking toward contact section"
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+      referrerPolicy="no-referrer"
+      className="-mb-0.5 block h-full w-full object-contain object-bottom drop-shadow-[0_10px_20px_rgba(3,9,18,0.74)]"
+    />
   </div>
 );
 
 /**
  * 5. CONTACT SECTION FAR-RIGHT PEEKING CHIBI
- * Uses the transparent PNG Peeking Bottom chibi illustration (chibi_peeking.png) anchored flush to bottom (Static)
+ * Uses the transparent PNG Peeking Bottom anime chibi illustration (anime_chibi_peeking.png) anchored flush to bottom
  */
 export const PeekingBottomChibi: React.FC = () => (
-  <div className="relative mx-auto w-[148px] overflow-hidden select-none sm:w-[175px] lg:w-[195px]">
+  <div className="relative flex h-[126px] w-[124px] shrink-0 items-end justify-center overflow-hidden select-none sm:h-[146px] sm:w-[144px] lg:h-[164px] lg:w-[162px]">
     <img
       src={peekingBottomImg}
-      alt="Chibi explorer peeking over the bottom edge"
+      alt="Anime Chibi explorer peeking over the bottom edge"
+      loading="lazy"
       decoding="async"
       draggable={false}
       referrerPolicy="no-referrer"
-      className="mx-auto block h-auto w-full object-contain drop-shadow-[0_8px_18px_rgba(3,9,18,0.72)]"
+      className="-mb-0.5 block h-full w-full object-contain object-bottom drop-shadow-[0_8px_18px_rgba(3,9,18,0.75)]"
     />
   </div>
 );
@@ -457,6 +660,81 @@ export const GoldBitcoinDoodle: React.FC<{ className?: string }> = ({ className 
     <text x="25.5" y="29.5" fill="#FFF9E6" className="font-brush text-[16px] font-bold">
       B
     </text>
+  </svg>
+);
+
+/** Hand-drawn Ethereum Diamond Crypto Coin Doodle */
+export const EthereumCoinDoodle: React.FC<{ className?: string }> = ({ className = 'h-10 w-11' }) => (
+  <svg viewBox="0 0 52 48" fill="none" className={`select-none ${className}`} aria-hidden="true">
+    <path d="M46 12L40 16M49 21L42 22M45 31L39 28" stroke="#FAF6EE" strokeWidth="2.1" strokeLinecap="round" />
+    <circle cx="24" cy="24" r="15.5" fill="#6892D5" stroke="#091321" strokeWidth="2.8" />
+    <circle cx="24" cy="24" r="12" fill="#8FB4EE" stroke="#1E3D6B" strokeWidth="1.6" />
+    <path
+      d="M24 14L30 23.5L24 27L18 23.5L24 14Z"
+      fill="#FAF6EE"
+      stroke="#091321"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M24 29.5L30 25.5L24 34.5L18 25.5L24 29.5Z"
+      fill="#DCE8FA"
+      stroke="#091321"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Hand-drawn Solana Crypto Coin Doodle */
+export const SolanaCoinDoodle: React.FC<{ className?: string }> = ({ className = 'h-10 w-11' }) => (
+  <svg viewBox="0 0 52 48" fill="none" className={`select-none ${className}`} aria-hidden="true">
+    <path d="M5 14L11 17M3 24L9 24M6 33L12 30" stroke="#F5D78E" strokeWidth="2.1" strokeLinecap="round" />
+    <circle cx="28" cy="24" r="15.5" fill="#1D3557" stroke="#091321" strokeWidth="2.8" />
+    <circle cx="28" cy="24" r="12" fill="#294B7A" stroke="#63B3ED" strokeWidth="1.6" />
+    <path
+      d="M21 19H33L35 16.5H23L21 19ZM23 25.2H35L33 22.7H21L23 25.2ZM21 31.5H33L35 29H23L21 31.5Z"
+      fill="#5EEAD4"
+      stroke="#091321"
+      strokeWidth="1.1"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** Hand-drawn Meme Coin (Doge / Pepe Gold Token) Doodle */
+export const MemeDogeCoinMiniDoodle: React.FC<{ className?: string }> = ({ className = 'h-10 w-11' }) => (
+  <svg viewBox="0 0 54 48" fill="none" className={`select-none ${className}`} aria-hidden="true">
+    <path d="M47 13L41 16M50 23L43 23M46 33L40 29" stroke="#F5D78E" strokeWidth="2.1" strokeLinecap="round" />
+    <circle cx="24" cy="24" r="15.5" fill="#DF9A32" stroke="#091321" strokeWidth="2.8" />
+    <circle cx="24" cy="24" r="12" fill="#F6CA65" stroke="#9C6312" strokeWidth="1.6" />
+    <text x="18.5" y="29.5" fill="#091526" className="font-brush text-[16px] font-bold">
+      Ð
+    </text>
+  </svg>
+);
+
+/** Compact Floating Airdrop Parachute Crate Doodle */
+export const MiniAirdropParachuteDoodle: React.FC<{ className?: string }> = ({
+  className = 'h-12 w-10',
+}) => (
+  <svg viewBox="0 0 48 58" fill="none" className={`select-none ${className}`} aria-hidden="true">
+    <path
+      d="M6 24C6 11 14 4 24 4C34 4 42 11 42 24C36 22 31 23 29 25C26 22 22 22 19 25C17 23 12 22 6 24Z"
+      fill="#FAF6EE"
+      stroke="#091321"
+      strokeWidth="2.4"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M24 4C19 10 17 16 19 25C22 22 26 22 29 25C31 16 29 10 24 4Z"
+      fill="#5C95EC"
+      stroke="#091321"
+      strokeWidth="2"
+    />
+    <path d="M10 24L19 39M38 24L29 39M24 23V39" stroke="#CBD8EA" strokeWidth="1.7" strokeLinecap="round" />
+    <rect x="16" y="38" width="16" height="14" rx="2.5" fill="#E8A838" stroke="#091321" strokeWidth="2.4" />
+    <path d="M16 45H32M24 38V52" stroke="#091321" strokeWidth="1.8" />
   </svg>
 );
 
