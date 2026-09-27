@@ -26,6 +26,161 @@ const CloseIconSvg: React.FC<{ className?: string }> = ({ className = 'h-4 w-4' 
   </svg>
 );
 
+/**
+ * 3D Sketchbook Page-Turn / Page-Opening Shell
+ * Simulates physically opening a bound Web3 explorer journal page from its left spine
+ * with an underlying paper stack, turning cover leaf, spine binder rings, and page-curl shadow sweep.
+ */
+const JournalPageOpenShell: React.FC<{
+  pageKey: string;
+  children: React.ReactNode;
+}> = ({ pageKey, children }) => (
+  <div
+    className="relative flex w-full max-w-2xl items-center justify-center"
+    style={{ perspective: '1600px' }}
+    onClick={(e) => e.stopPropagation()}
+  >
+    {/* Stacked Underlying Journal Pages (gives physical book depth behind the opening page) */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92, rotate: 1.5 }}
+      animate={{ opacity: 1, scale: 1, rotate: 1.1 }}
+      exit={{ opacity: 0, scale: 0.94, rotate: 0.5, transition: { duration: 0.24 } }}
+      transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+      className="pointer-events-none absolute inset-0 translate-x-2 translate-y-2 rounded-[26px_22px_28px_24px] border-2 border-[#091526] bg-[#D9C9B0] shadow-[0_24px_48px_rgba(2,7,15,0.85)]"
+      aria-hidden="true"
+    />
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94, rotate: -0.8 }}
+      animate={{ opacity: 1, scale: 1, rotate: -0.5 }}
+      exit={{ opacity: 0, scale: 0.95, rotate: 0, transition: { duration: 0.22 } }}
+      transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
+      className="pointer-events-none absolute inset-0 translate-x-1 translate-y-1 rounded-[26px_22px_28px_24px] border-2 border-[#091526] bg-[#E5D7C1]"
+      aria-hidden="true"
+    />
+
+    {/* Turning Front Cover Leaf that swings open to the left along the spine */}
+    <motion.div
+      key={`${pageKey}-turning-leaf`}
+      style={{ transformOrigin: '0% 50%', transformStyle: 'preserve-3d' }}
+      initial={{ opacity: 0.95, rotateY: -6, scaleY: 0.98 }}
+      animate={{
+        opacity: [0.95, 0.65, 0],
+        rotateY: [-6, -78, -128],
+        scaleY: [0.98, 1, 0.97],
+      }}
+      exit={{
+        opacity: [0, 0.55, 0],
+        rotateY: [-110, -35, 0],
+        transition: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
+      }}
+      transition={{ duration: 0.62, times: [0, 0.6, 1], ease: [0.22, 1, 0.36, 1] }}
+      className="pointer-events-none absolute inset-0 z-30 rounded-[26px_22px_28px_24px] border-2 border-[#091526] bg-gradient-to-r from-[#091526] via-[#EFE5D4] to-[#DFD1BA] shadow-2xl"
+      aria-hidden="true"
+    />
+
+    {/* Main Active Journal Page Unfolding from Spine */}
+    <motion.div
+      key={pageKey}
+      style={{ transformOrigin: '0% 50%', transformStyle: 'preserve-3d' }}
+      initial={{
+        opacity: 0,
+        rotateY: -68,
+        rotateX: 5,
+        rotateZ: -1.2,
+        scale: 0.91,
+        x: -14,
+      }}
+      animate={{
+        opacity: 1,
+        rotateY: 0,
+        rotateX: 0,
+        rotateZ: 0,
+        scale: 1,
+        x: 0,
+      }}
+      exit={{
+        opacity: 0,
+        rotateY: -54,
+        rotateX: 4,
+        rotateZ: -0.8,
+        scale: 0.93,
+        x: -10,
+        transition: { duration: 0.32, ease: [0.4, 0, 0.2, 1] },
+      }}
+      transition={{
+        duration: 0.62,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className="parchment-box relative flex max-h-[88vh] w-full flex-col overflow-hidden rounded-[26px_22px_28px_24px] border-2 border-[#0B192C] p-5 pl-7 text-[#0B192C] shadow-2xl sm:max-h-[90vh] sm:p-6 sm:pl-9 md:p-8 md:pl-10"
+    >
+      {/* Dynamic Page-Curl Shadow Sweep across the Parchment as it opens */}
+      <motion.div
+        initial={{ opacity: 0.85, x: '0%' }}
+        animate={{ opacity: 0, x: '100%' }}
+        transition={{ duration: 0.64, ease: [0.22, 1, 0.36, 1] }}
+        className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-r from-[#091526]/45 via-[#091526]/15 to-transparent"
+        aria-hidden="true"
+      />
+
+      {/* Permanent Left Journal Spine Crease & Hand-Drawn Binder Rings */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-5 flex-col items-center justify-evenly bg-gradient-to-r from-[#091526]/18 via-[#8C765A]/10 to-transparent py-6 sm:w-6"
+        aria-hidden="true"
+      >
+        {[0, 1, 2, 3, 4, 5].map((ringIdx) => (
+          <div key={ringIdx} className="relative flex items-center">
+            <span className="h-2.5 w-2.5 rounded-full border-[1.8px] border-[#091526] bg-[#FAF6EE] shadow-2xs" />
+            <span className="-ml-3 h-1 w-3.5 rounded-full bg-[#091526]" />
+          </div>
+        ))}
+      </div>
+
+      {/* Subtle Ruled Journal Background Texture Lines */}
+      <svg
+        viewBox="0 0 600 420"
+        fill="none"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-0 z-0 h-full w-full opacity-25"
+        aria-hidden="true"
+      >
+        <path
+          d="M36 96H576M36 160H576M36 224H576M36 288H576M36 352H576"
+          stroke="#8C765A"
+          strokeWidth="1"
+          strokeDasharray="5 7"
+        />
+      </svg>
+
+      {/* Bottom-Right Dog-Ear Curled Page Corner */}
+      <svg
+        viewBox="0 0 36 36"
+        fill="none"
+        className="pointer-events-none right-0 bottom-0 absolute z-20 h-7 w-7 sm:h-8 sm:w-8"
+        aria-hidden="true"
+      >
+        <path d="M36 0L0 36H36V0Z" fill="#D5C4AA" />
+        <path
+          d="M36 0C22 2 14 10 0 36C12 32 24 28 36 36V0Z"
+          fill="#FAF6EE"
+          stroke="#091526"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      </svg>
+
+      {/* Staggered Page Content Reveal */}
+      <motion.div
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.42, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 flex min-h-0 flex-1 flex-col"
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  </div>
+);
+
 export type Language = 'id' | 'en';
 
 export interface JournalEntryData {
@@ -328,15 +483,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
           aria-modal="true"
           aria-labelledby="journal-entry-title"
         >
-          <motion.div
-            key={entry.id}
-            initial={{ opacity: 0, scale: 0.92, y: 20, rotate: -1 }}
-            animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 14, rotate: 0.5 }}
-            transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.85 }}
-            className="parchment-box relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-[26px_22px_28px_24px] border-2 border-[#0B192C] p-5 text-[#0B192C] shadow-2xl sm:max-h-[90vh] sm:p-6 md:p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <JournalPageOpenShell pageKey={entry.id}>
             {/* Pinned Top bar */}
             <div className="flex shrink-0 items-start justify-between gap-3 border-b-2 border-dashed border-[#0B192C]/25 pb-3.5 sm:gap-4 sm:pb-4">
               <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
@@ -437,7 +584,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                 </button>
               </div>
             </div>
-          </motion.div>
+          </JournalPageOpenShell>
         </motion.div>
       )}
     </AnimatePresence>
@@ -521,15 +668,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
           aria-modal="true"
           aria-labelledby="connect-modal-title"
         >
-          <motion.div
-            key="connect-modal-card"
-            initial={{ opacity: 0, scale: 0.92, y: 20, rotate: 0.8 }}
-            animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 14, rotate: -0.5 }}
-            transition={{ type: 'spring', stiffness: 360, damping: 28, mass: 0.85 }}
-            className="parchment-box relative flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px_22px_26px_24px] border-2 border-[#0B192C] p-5 text-[#0B192C] shadow-2xl sm:max-h-[90vh] sm:p-6 md:p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <JournalPageOpenShell pageKey="connect-modal-card">
         {/* Pinned Top bar */}
         <div className="flex shrink-0 items-start justify-between gap-3 border-b-2 border-dashed border-[#0B192C]/25 pb-3.5 sm:items-center sm:gap-4 sm:pb-4">
           <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
@@ -707,7 +846,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
             )}
           </div>
         </div>
-          </motion.div>
+          </JournalPageOpenShell>
         </motion.div>
       )}
     </AnimatePresence>
