@@ -117,10 +117,20 @@ export default function App() {
   const toastTimeoutRef = useRef<number | null>(null);
   const langSwitchTimeoutRef = useRef<number | null>(null);
   const scrollAnimFrameRef = useRef<number | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
 
   const isId = lang === 'id';
   const currentEntries = JOURNAL_ENTRIES_BY_LANG[lang];
   const selectedEntry = selectedEntryId ? currentEntries[selectedEntryId] ?? null : null;
+
+  // Centralized, race-condition-free body scroll lock across Loading Screen & Modals
+  useEffect(() => {
+    const isLocked = isLoading || Boolean(selectedEntryId) || isConnectOpen;
+    document.body.style.overflow = isLocked ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isLoading, selectedEntryId, isConnectOpen]);
 
   // Smooth spring-linked scroll progress & subtle background star parallax
   const rawScrollProgress = useMotionValue(0);
@@ -158,7 +168,10 @@ export default function App() {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const eased = easeInOutCubic(progress);
-        window.scrollTo(0, startY + diff * eased);
+        window.scrollTo({
+          top: startY + diff * eased,
+          behavior: 'instant' as ScrollBehavior,
+        });
         if (progress < 1) {
           scrollAnimFrameRef.current = requestAnimationFrame(step);
         } else {
@@ -184,8 +197,25 @@ export default function App() {
 
   const handleCopyText = useCallback(
     (label: string, value: string) => {
+      const fallbackCopy = () => {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = value;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+        } catch {
+          // Ignore fallback errors
+        }
+      };
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(value).catch(() => {});
+        navigator.clipboard.writeText(value).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
       }
       triggerToast(isId ? `${label} disalin: ${value}` : `${label} copied: ${value}`);
     },
@@ -213,10 +243,21 @@ export default function App() {
   const scrollToSection = useCallback(
     (sectionId: NavSection) => {
       setActiveNav(sectionId);
+      if (sectionId === 'home') {
+        animateScrollTo(0, 740);
+        return;
+      }
       const el = document.getElementById(sectionId);
       if (el) {
-        const headerOffset = 76;
-        const targetY = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset);
+        const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 74;
+        const headerOffset = headerHeight + 8;
+        const docHeight = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight,
+        );
+        const maxScroll = Math.max(0, docHeight - window.innerHeight);
+        const rawTargetY = el.getBoundingClientRect().top + window.scrollY - headerOffset;
+        const targetY = Math.min(maxScroll, Math.max(0, rawTargetY));
         animateScrollTo(targetY, 740);
       }
     },
@@ -230,6 +271,15 @@ export default function App() {
 
   const handleLoadingFinish = useCallback(() => {
     setIsLoading(false);
+  }, []);
+
+  // Cleanup any active timers or animation frames on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
+      if (langSwitchTimeoutRef.current !== null) window.clearTimeout(langSwitchTimeoutRef.current);
+      if (scrollAnimFrameRef.current !== null) cancelAnimationFrame(scrollAnimFrameRef.current);
+    };
   }, []);
 
   // RequestAnimationFrame-throttled scroll-spy & spring scroll progress updater
@@ -256,13 +306,22 @@ export default function App() {
 
       rawScrollProgress.set(progress);
 
-      const scrollPos = scrollTop + 180;
+      // Avoid overwriting activeNav while a user-initiated nav click scroll is in flight
+      if (scrollAnimFrameRef.current !== null) return;
+
       let matchedNav: NavSection = 'home';
-      for (let i = NAV_ITEMS.length - 1; i >= 0; i--) {
-        const section = document.getElementById(NAV_ITEMS[i].id);
-        if (section && section.offsetTop <= scrollPos) {
-          matchedNav = NAV_ITEMS[i].id;
-          break;
+      if (scrollTop <= 18) {
+        matchedNav = 'home';
+      } else if (maxScroll > 10 && scrollTop >= maxScroll - 18) {
+        matchedNav = 'contact';
+      } else {
+        const triggerY = 120 + progress * (winHeight * 0.66);
+        for (let i = NAV_ITEMS.length - 1; i >= 0; i--) {
+          const section = document.getElementById(NAV_ITEMS[i].id);
+          if (section && section.getBoundingClientRect().top <= triggerY) {
+            matchedNav = NAV_ITEMS[i].id;
+            break;
+          }
         }
       }
       setActiveNav((prev) => (prev === matchedNav ? prev : matchedNav));
@@ -320,7 +379,7 @@ export default function App() {
       </div>
 
       {/* Sketchbook Loading Screen Overlay */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isLoading && <SketchbookLoadingScreen lang={lang} onFinish={handleLoadingFinish} />}
       </AnimatePresence>
 
@@ -346,7 +405,7 @@ export default function App() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. STICKY HEADER (3-Zone Top Bar + Mobile Sketchbook Nav Strip)
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <header className="sticky top-0 z-40 w-full bg-[#07111F]/92 backdrop-blur-md">
+      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-[#07111F]/92 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3.5 py-2 sm:px-8 sm:py-2.5">
           {/* Zone 1: Brand Wordmark */}
           <a

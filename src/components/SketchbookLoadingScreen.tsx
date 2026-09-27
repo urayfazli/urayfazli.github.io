@@ -21,13 +21,17 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
 }) => {
   const [progress, setProgress] = useState(0);
   const onFinishRef = useRef(onFinish);
+  const hasFinishedRef = useRef(false);
   onFinishRef.current = onFinish;
   const isId = lang === 'id';
 
-  useEffect(() => {
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+  const triggerFinishOnce = () => {
+    if (hasFinishedRef.current) return;
+    hasFinishedRef.current = true;
+    onFinishRef.current();
+  };
 
+  useEffect(() => {
     // Preload all chibi illustration assets in parallel
     Object.values(GENERATED_ASSETS).forEach((src) => {
       const img = new Image();
@@ -59,14 +63,13 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
         frameId = requestAnimationFrame(tick);
       } else {
         finishTimeoutId = window.setTimeout(() => {
-          onFinishRef.current();
+          triggerFinishOnce();
         }, 550);
       }
     };
 
     frameId = requestAnimationFrame(tick);
     return () => {
-      document.body.style.overflow = prevOverflow;
       cancelAnimationFrame(frameId);
       window.clearTimeout(finishTimeoutId);
     };
@@ -97,14 +100,15 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
       animate="animate"
       exit="exit"
       variants={{
-        initial: { opacity: 1 },
-        animate: { opacity: 1 },
+        initial: { opacity: 1, pointerEvents: 'auto' as const },
+        animate: { opacity: 1, pointerEvents: 'auto' as const },
         exit: {
           opacity: 1,
+          pointerEvents: 'none' as const,
           transition: { duration: 0.95 },
         },
       }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden pointer-events-auto px-4 text-[#FAF6EE]"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-4 text-[#FAF6EE]"
       role="status"
       aria-live="polite"
       aria-label={isId ? 'Memuat Portofolio Web3' : 'Loading Web3 Portfolio'}
@@ -117,7 +121,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
           initial: { y: '0%', rotate: 0 },
           animate: { y: '0%', rotate: 0 },
           exit: {
-            y: ['0%', '-1.5%', '-114%'],
+            y: ['0%', '-1.5%', '-116%'],
             rotate: [0, -0.4, -1.8],
             transition: {
               duration: 0.92,
@@ -126,25 +130,33 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             },
           },
         }}
-        className="pointer-events-none top-0 inset-x-0 absolute z-0 h-[55vh] will-change-transform"
+        className="pointer-events-none top-0 inset-x-0 absolute z-0 h-[50.2vh] will-change-transform"
         aria-hidden="true"
       >
-        {/* Solid Night Sky Upper Surface */}
-        <div className="h-[calc(100%-54px)] w-full bg-[radial-gradient(ellipse_at_50%_75%,#16325B_0%,#091525_65%,#050C17_100%)]">
-          <svg viewBox="0 0 1440 480" fill="none" className="h-full w-full opacity-65">
-            <circle cx="180" cy="140" r="1.6" fill="#FAF6EE" />
-            <circle cx="420" cy="95" r="1.3" fill="#9BB8DF" />
-            <circle cx="1060" cy="125" r="1.7" fill="#FAF6EE" />
-            <circle cx="1260" cy="230" r="1.4" fill="#9BB8DF" />
-          </svg>
+        {/* Upper Half of Unified 100vh Night Sky Backdrop (Zero Seam at 50vh) */}
+        <div className="relative h-full w-full overflow-hidden">
+          <div className="top-0 inset-x-0 absolute h-screen w-full bg-[radial-gradient(ellipse_at_50%_48%,#16325B_0%,#091525_60%,#050C17_100%)]">
+            <svg viewBox="0 0 1440 960" fill="none" className="h-full w-full opacity-65">
+              <circle cx="180" cy="140" r="1.6" fill="#FAF6EE" />
+              <circle cx="420" cy="95" r="1.3" fill="#9BB8DF" />
+              <circle cx="1060" cy="125" r="1.7" fill="#FAF6EE" />
+              <circle cx="1260" cy="230" r="1.4" fill="#9BB8DF" />
+            </svg>
+          </div>
         </div>
 
-        {/* Jagged Torn-Paper Bottom Edge of Top Half */}
-        <svg
+        {/* Jagged Torn-Paper Bottom Edge of Top Half (Reveals at Rip Start / Exit) */}
+        <motion.svg
+          variants={{
+            initial: { opacity: 0 },
+            animate: { opacity: isNearRip ? 1 : 0 },
+            exit: { opacity: 1, transition: { duration: 0.05 } },
+          }}
+          transition={{ duration: 0.18 }}
           viewBox="0 0 1440 90"
           fill="none"
           preserveAspectRatio="none"
-          className="-mt-1 h-[62px] w-full drop-shadow-[0_16px_24px_rgba(2,7,15,0.92)]"
+          className="-mt-[26px] relative z-10 h-[62px] w-full drop-shadow-[0_16px_24px_rgba(2,7,15,0.92)]"
         >
           {/* Exposed Cream Parchment Paper Fiber Strip Along Tear */}
           <path
@@ -167,7 +179,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             strokeWidth="2.5"
             strokeLinejoin="round"
           />
-        </svg>
+        </motion.svg>
       </motion.div>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -178,7 +190,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
           initial: { y: '0%', rotate: 0 },
           animate: { y: '0%', rotate: 0 },
           exit: {
-            y: ['0%', '1.5%', '114%'],
+            y: ['0%', '1.5%', '116%'],
             rotate: [0, 0.4, 1.8],
             transition: {
               duration: 0.92,
@@ -187,15 +199,21 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             },
           },
         }}
-        className="pointer-events-none bottom-0 inset-x-0 absolute z-0 flex h-[55vh] flex-col justify-end will-change-transform"
+        className="pointer-events-none bottom-0 inset-x-0 absolute z-0 flex h-[50.2vh] flex-col justify-end will-change-transform"
         aria-hidden="true"
       >
-        {/* Jagged Torn-Paper Top Edge of Bottom Half */}
-        <svg
+        {/* Jagged Torn-Paper Top Edge of Bottom Half (Reveals at Rip Start / Exit) */}
+        <motion.svg
+          variants={{
+            initial: { opacity: 0 },
+            animate: { opacity: isNearRip ? 1 : 0 },
+            exit: { opacity: 1, transition: { duration: 0.05 } },
+          }}
+          transition={{ duration: 0.18 }}
           viewBox="0 0 1440 90"
           fill="none"
           preserveAspectRatio="none"
-          className="-mb-1 h-[62px] w-full drop-shadow-[0_-14px_22px_rgba(2,7,15,0.88)]"
+          className="-mb-[26px] relative z-10 h-[62px] w-full drop-shadow-[0_-14px_22px_rgba(2,7,15,0.88)]"
         >
           {/* Exposed Cream Parchment Paper Fiber Strip Along Tear */}
           <path
@@ -218,29 +236,19 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             strokeWidth="2.5"
             strokeLinejoin="round"
           />
-        </svg>
+        </motion.svg>
 
-        {/* Solid Night Sky Lower Surface */}
-        <div className="h-[calc(100%-54px)] w-full bg-[radial-gradient(ellipse_at_50%_15%,#132A4E_0%,#081322_60%,#050C17_100%)]">
-          <svg viewBox="0 0 1440 480" fill="none" className="h-full w-full opacity-65">
-            <circle cx="240" cy="240" r="1.5" fill="#9BB8DF" />
-            <circle cx="1190" cy="260" r="1.6" fill="#FAF6EE" />
-            <circle cx="760" cy="340" r="1.4" fill="#9BB8DF" />
-          </svg>
+        {/* Lower Half of Unified 100vh Night Sky Backdrop (Zero Seam at 50vh) */}
+        <div className="relative h-full w-full overflow-hidden">
+          <div className="bottom-0 inset-x-0 absolute h-screen w-full bg-[radial-gradient(ellipse_at_50%_48%,#16325B_0%,#091525_60%,#050C17_100%)]">
+            <svg viewBox="0 0 1440 960" fill="none" className="h-full w-full opacity-65">
+              <circle cx="240" cy="720" r="1.5" fill="#9BB8DF" />
+              <circle cx="1190" cy="740" r="1.6" fill="#FAF6EE" />
+              <circle cx="760" cy="820" r="1.4" fill="#9BB8DF" />
+            </svg>
+          </div>
         </div>
       </motion.div>
-
-      {/* Seamless Dark Cover Mask Over Center Seam Until Rip Starts (96%+ or Exit) */}
-      <motion.div
-        variants={{
-          initial: { opacity: 1 },
-          animate: { opacity: isNearRip ? 0 : 1 },
-          exit: { opacity: 0, transition: { duration: 0.08 } },
-        }}
-        transition={{ duration: 0.25 }}
-        className="pointer-events-none inset-x-0 top-1/2 absolute z-[1] h-24 -translate-y-1/2 bg-[#091525]"
-        aria-hidden="true"
-      />
 
       {/* Floating Cosmic Sketch Doodles & Center Pinned Torn-Paper Card (Rips Upward with Top Sheet on Exit) */}
       <motion.div
@@ -508,7 +516,7 @@ export const SketchbookLoadingScreen: React.FC<SketchbookLoadingScreenProps> = (
             </span>
             <button
               type="button"
-              onClick={onFinish}
+              onClick={triggerFinishOnce}
               className="cursor-pointer font-journal font-bold text-[#091526] underline decoration-dashed underline-offset-4 transition-colors hover:text-[#2A4B78]"
             >
               {isId ? 'Lewati →' : 'Skip →'}

@@ -304,14 +304,11 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
 }) => {
   useEffect(() => {
     if (!entry) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [entry, onClose]);
@@ -468,15 +465,15 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!isOpen) {
+      setSubmitted(false);
+      return;
+    }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

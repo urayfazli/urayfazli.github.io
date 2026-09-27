@@ -2,7 +2,6 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
     background-color: #07111F;
     color: #F5EFE6;
     font-family: 'Shantell Sans', cursive, sans-serif;
@@ -11,8 +10,11 @@
   body {
     background-color: #07111F;
     overflow-x: clip;
-    selection-background-color: #F5D78E;
-    selection-color: #07111F;
+  }
+
+  ::selection {
+    background-color: #F5D78E;
+    color: #07111F;
   }
 }
 
