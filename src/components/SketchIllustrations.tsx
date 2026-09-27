@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cozyAsmrAudio } from '../utils/cozyAsmrAudio';
 import heroChibiImg from '../assets/images/anime_chibi_hero.png';
+import heroChibiCozyImg from '../assets/images/anime_chibi_hero_cozy.png';
 import aboutChibiImg from '../assets/images/anime_chibi_about.png';
 import nodeOperatorImg from '../assets/images/anime_chibi_node.png';
 import backpackWalkerImg from '../assets/images/anime_chibi_walker.png';
@@ -9,6 +10,7 @@ import peekingBottomImg from '../assets/images/anime_chibi_peeking.png';
 
 export const GENERATED_ASSETS = {
   heroChibiImg,
+  heroChibiCozyImg,
   aboutChibiImg,
   nodeOperatorImg,
   backpackWalkerImg,
@@ -355,6 +357,28 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
               <path d="M26 12C20 16 20 24 26 28" stroke="#F5D78E" strokeWidth="2.3" strokeLinecap="round" />
               <path d="M19 7C10 14 10 26 19 33" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
             </motion.svg>
+
+            {/* Cute Hand-Drawn Anime Cozy Expression Bubble near top-right of head */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, y: 8, rotate: -6 }}
+              animate={{
+                opacity: 1,
+                scale: [0.96, 1.04, 0.96],
+                y: [0, -4, 0],
+                rotate: [-6, -2, -6],
+              }}
+              exit={{ opacity: 0, scale: 0.7, y: 6 }}
+              transition={{
+                opacity: { duration: 0.25 },
+                scale: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
+                y: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
+                rotate: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
+              }}
+              className="top-[14%] right-[6%] sm:top-[15%] sm:right-[8%] absolute flex items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[0_4px_12px_rgba(3,9,18,0.55)] sm:text-[11px]"
+            >
+              <span className="text-[#E05A47]">^◡^</span>
+              <span>{isId ? 'Cozy Mode ♪' : 'Cozy Vibe ♪'}</span>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
@@ -362,39 +386,60 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
       <motion.div
         animate={{
           y: [4, -3, 4],
-          rotate: isPlaying ? [-1.2, 1.2, -1.2] : [-0.6, 0.7, -0.6],
-          scale: tapBounce ? 0.96 : 1,
+          rotate: [-0.6, 0.7, -0.6],
         }}
         transition={{
-          y: { duration: 4.8, repeat: Infinity, ease: 'easeInOut' },
-          rotate: { duration: isPlaying ? 3.2 : 4.8, repeat: Infinity, ease: 'easeInOut' },
-          scale: { duration: 0.15 },
+          duration: 4.8,
+          repeat: Infinity,
+          ease: 'easeInOut',
         }}
         className="relative h-full w-full overflow-hidden"
       >
-        {/* Hand-drawn comic burst ticks framing the chibi head */}
-        <svg
-          viewBox="0 0 540 480"
-          fill="none"
-          className="pointer-events-none absolute inset-0 z-20 h-full w-full"
-          aria-hidden="true"
+        <div
+          className={`relative h-full w-full transition-transform duration-150 ${
+            tapBounce ? 'scale-[0.97]' : 'scale-100'
+          }`}
         >
-          <g stroke={isPlaying ? '#F5D78E' : '#FAF6EE'} strokeWidth="2.8" strokeLinecap="round">
-            <path d="M72 48C78 56 80 58 88 56M82 44C80 52 78 54 70 58" />
-            <path d="M22 158L36 163M19 170L34 171M23 182L36 178" />
-            <path d="M486 194L501 188M488 206L505 205M486 217L501 222" />
-          </g>
-        </svg>
+          {/* Hand-drawn comic burst ticks framing the chibi head */}
+          <svg
+            viewBox="0 0 540 480"
+            fill="none"
+            className="pointer-events-none absolute inset-0 z-20 h-full w-full"
+            aria-hidden="true"
+          >
+            <g stroke={isPlaying ? '#F5D78E' : '#FAF6EE'} strokeWidth="2.8" strokeLinecap="round">
+              <path d="M72 48C78 56 80 58 88 56M82 44C80 52 78 54 70 58" />
+              <path d="M22 158L36 163M19 170L34 171M23 182L36 178" />
+              <path d="M486 194L501 188M488 206L505 205M486 217L501 222" />
+            </g>
+          </svg>
 
-        <img
-          src={heroChibiImg}
-          alt="Uray Fazli Alman Anime Chibi Web3 Explorer"
-          fetchPriority="high"
-          decoding="async"
-          draggable={false}
-          referrerPolicy="no-referrer"
-          className="mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-transform duration-200 group-hover:scale-[1.015]"
-        />
+          {/* Default Open-Eyes Expression */}
+          <img
+            src={heroChibiImg}
+            alt="Uray Fazli Alman Anime Chibi Web3 Explorer"
+            fetchPriority="high"
+            decoding="async"
+            draggable={false}
+            referrerPolicy="no-referrer"
+            className={`mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-all duration-300 group-hover:scale-[1.015] ${
+              isPlaying ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+
+          {/* Cozy Music-Listening Expression (Relaxed Closed Curved Eyes ^◡^, Rosy Blush & Happy Smile) */}
+          <img
+            src={heroChibiCozyImg}
+            alt="Uray Fazli Alman Anime Chibi Enjoying Cozy ASMR Music"
+            decoding="async"
+            draggable={false}
+            referrerPolicy="no-referrer"
+            aria-hidden={!isPlaying}
+            className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom drop-shadow-[0_14px_26px_rgba(3,9,18,0.82)] transition-all duration-300 group-hover:scale-[1.015] ${
+              isPlaying ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        </div>
       </motion.div>
 
       {/* Subtle Hand-Drawn Earphone Backsound Status Note at Bottom Center of Chibi */}
