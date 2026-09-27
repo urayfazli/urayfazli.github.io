@@ -310,22 +310,22 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
 
             {/* Cute Hand-Drawn Anime Cozy Expression Bubble near top-right of head */}
             <div
-              className={`cozy-asmr-bubble top-[14%] right-[4%] sm:top-[15%] sm:right-[6%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[3px_3px_0px_#091526] sm:text-[11px] ${
+              className={`cozy-asmr-bubble top-[15%] right-[5%] sm:top-[16%] sm:right-[7%] absolute flex -rotate-4 items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] border-[#091526] px-2 py-0.5 font-journal text-[8.5px] leading-tight font-bold text-[#091526] shadow-[2px_2px_0px_#091526] sm:text-[9.5px] ${
                 isDay
                   ? 'bg-gradient-to-b from-[#FFFDF8] to-[#FCE8B0]'
                   : 'bg-[#FAF6EE]'
               }`}
             >
-              <span className="text-[#1E6B34]">{isDay ? '☀️' : '🌙'}</span>
+              <span className="text-[9px] text-[#1E6B34]">{isDay ? '☀️' : '🌙'}</span>
               <span className="text-[#E05A47]">^◡^</span>
               <span className="!text-[#091526]">
                 {isDay
                   ? isId
-                    ? 'Cozy Game ASMR • Siang ♪'
-                    : 'Cozy Game ASMR • Day ♪'
+                    ? 'Cozy Siang ♪'
+                    : 'Cozy Day ♪'
                   : isId
-                    ? 'Cozy Farm ASMR • Malam ♪'
-                    : 'Cozy Farm ASMR • Night ♪'}
+                    ? 'Cozy Malam ♪'
+                    : 'Cozy Night ♪'}
               </span>
             </div>
           </motion.div>
@@ -392,25 +392,24 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
         </div>
       </div>
 
-      {/* Subtle Hand-Drawn Earphone Backsound Status Card at Bottom Center of Chibi */}
+      {/* Compact Hand-Drawn Earphone Backsound Status Badge at Bottom Center of Chibi */}
       <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
         <div
           className={`cozy-asmr-card ${
             isPlaying ? 'cozy-asmr-card-active' : ''
-          } inline-flex items-center gap-1.5 rounded-[225px_14px_205px_14px/14px_205px_14px_225px] border-2 px-3.5 py-1 font-journal text-[10.5px] font-bold transition-all sm:text-[11.5px] ${
+          } inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-2.5 py-0.5 font-journal text-[9px] leading-tight font-bold transition-all sm:px-3 sm:py-0.5 sm:text-[10px] ${
             isDay
               ? isPlaying
-                ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF4] to-[#FCE5A2] !text-[#091526] shadow-[3.5px_4px_0px_#091526]'
-                : 'border-[#091526] bg-gradient-to-b from-[#FFFFFF] to-[#F6ECDA] !text-[#091526] shadow-[3.5px_4px_0px_#091526] group-hover:border-[#B4690E] group-hover:from-[#FFFDF6] group-hover:to-[#FCEBC0] group-hover:!text-[#8C4F04]'
+                ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF4] to-[#FCE5A2] !text-[#091526] shadow-[2px_2.5px_0px_#091526]'
+                : 'border-[#091526] bg-gradient-to-b from-[#FFFFFF] to-[#F6ECDA] !text-[#091526] shadow-[2px_2.5px_0px_#091526] group-hover:border-[#B4690E] group-hover:from-[#FFFDF6] group-hover:to-[#FCEBC0] group-hover:!text-[#8C4F04]'
               : isPlaying
-                ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E] shadow-[3px_3px_0px_#030913]'
-                : 'border-[#FAF6EE]/85 bg-[#091526]/90 text-[#FAF6EE] shadow-[3px_3px_0px_#030913] group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
+                ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E] shadow-[2px_2.5px_0px_#030913]'
+                : 'border-[#FAF6EE]/85 bg-[#091526]/90 text-[#FAF6EE] shadow-[2px_2.5px_0px_#030913] group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
           }`}
         >
-          <span className={isDay ? '!text-[#B4690E]' : 'text-[#86EFAC]'}>
+          <span className="text-[9.5px] leading-none">
             {isDay ? '☀️' : '🌙'}
           </span>
-          <span className={isDay ? '!text-[#1E6B34]' : 'text-[#86EFAC]'}>🌾</span>
           <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>♪</span>
           <span
             className={
@@ -428,18 +427,18 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
               : isPlaying
                 ? isDay
                   ? isId
-                    ? 'Cozy Game ASMR (Siang): ON (2x = Off)'
-                    : 'Cozy Game ASMR (Day): ON (2x = Off)'
+                    ? 'Cozy ASMR Siang: ON'
+                    : 'Cozy ASMR Day: ON'
                   : isId
-                    ? 'Cozy Farm ASMR (Malam): ON (2x = Off)'
-                    : 'Cozy Farm ASMR (Night): ON (2x = Off)'
+                    ? 'Cozy ASMR Malam: ON'
+                    : 'Cozy ASMR Night: ON'
                 : isDay
                   ? isId
-                    ? 'Ketuk Chibi 2x • Cozy Game ASMR (Siang)'
-                    : 'Tap Chibi 2x • Cozy Game ASMR (Day)'
+                    ? 'Ketuk 2x • Cozy ASMR Siang'
+                    : 'Tap 2x • Cozy ASMR Day'
                   : isId
-                    ? 'Ketuk Chibi 2x • Cozy Farm ASMR (Malam)'
-                    : 'Tap Chibi 2x • Cozy Farm ASMR (Night)'}
+                    ? 'Ketuk 2x • Cozy ASMR Malam'
+                    : 'Tap 2x • Cozy ASMR Night'}
           </span>
         </div>
       </div>
