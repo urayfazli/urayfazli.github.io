@@ -287,8 +287,6 @@ export const JOURNAL_ENTRIES_BY_LANG: Record<Language, Record<string, JournalEnt
   },
 };
 
-export const JOURNAL_ENTRIES = JOURNAL_ENTRIES_BY_LANG.en;
-
 interface DetailModalProps {
   entry: JournalEntryData | null;
   lang?: Language;

@@ -202,8 +202,9 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
   const bounceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    setIsPlaying(cozyAsmrAudio.getPlayingState());
+    const unsubscribe = cozyAsmrAudio.subscribe(setIsPlaying);
     return () => {
+      unsubscribe();
       if (hintTimerRef.current !== null) {
         window.clearTimeout(hintTimerRef.current);
       }
@@ -813,33 +814,6 @@ export const HandGithubIcon: React.FC<{ className?: string }> = ({ className = '
       d="M12 2.5C6.7 2.5 2.5 6.7 2.5 12C2.5 16.2 5.2 19.7 9 21C9.5 21.1 9.7 20.8 9.7 20.5V18.6C7 19.2 6.5 17.4 6.5 17.4C6 16.3 5.4 16 5.4 16C4.5 15.4 5.5 15.4 5.5 15.4C6.5 15.5 7 16.4 7 16.4C7.9 17.9 9.3 17.5 9.8 17.2C9.9 16.6 10.2 16.1 10.5 15.9C8.3 15.6 6 14.8 6 11.1C6 10 6.4 9.1 7 8.4C6.9 8.1 6.5 7.1 7.1 5.7C7.1 5.7 7.9 5.4 9.7 6.7C10.5 6.5 11.3 6.4 12.1 6.4C12.9 6.4 13.7 6.5 14.5 6.7C16.3 5.4 17.1 5.7 17.1 5.7C17.7 7.1 17.3 8.1 17.2 8.4C17.8 9.1 18.2 10 18.2 11.1C18.2 14.8 15.9 15.6 13.7 15.9C14.1 16.2 14.4 16.9 14.4 17.9V20.5C14.4 20.8 14.6 21.1 15.1 21C18.8 19.7 21.5 16.2 21.5 12C21.5 6.7 17.3 2.5 12 2.5Z"
       fill="currentColor"
     />
-  </svg>
-);
-
-export const HandTelegramIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path
-      d="M21.2 4.4L2.9 11.5C1.9 11.9 1.9 12.6 2.7 12.9L7.4 14.4L18.2 7.6C18.7 7.3 19.2 7.5 18.8 7.9L10 15.8L9.7 20.4C10.1 20.4 10.4 20.2 10.7 19.9L13.1 17.6L17.9 21.1C18.8 21.6 19.4 21.3 19.6 20.3L22.6 5.8C22.9 4.7 22.1 4 21.2 4.4Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-export const HandDiscordIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path
-      d="M19.5 5.8C18.1 5.1 16.6 4.7 15 4.4C14.8 4.8 14.6 5.2 14.4 5.6C12.8 5.4 11.2 5.4 9.6 5.6C9.4 5.2 9.2 4.8 9 4.4C7.4 4.7 5.9 5.1 4.5 5.8C1.7 10 0.9 14.1 1.3 18.1C3.2 19.5 5 20.3 6.8 20.9C7.3 20.3 7.7 19.6 8 18.9C7.3 18.6 6.7 18.3 6.1 17.9C6.3 17.8 6.4 17.6 6.6 17.5C10.1 19.1 13.9 19.1 17.4 17.5C17.6 17.6 17.7 17.8 17.9 17.9C17.3 18.3 16.7 18.6 16 18.9C16.3 19.6 16.7 20.3 17.2 20.9C19 20.3 20.8 19.5 22.7 18.1C23.2 13.5 21.9 9.4 19.5 5.8ZM8.5 15.6C7.5 15.6 6.7 14.7 6.7 13.6C6.7 12.5 7.5 11.6 8.5 11.6C9.5 11.6 10.3 12.5 10.3 13.6C10.3 14.7 9.5 15.6 8.5 15.6ZM15.5 15.6C14.5 15.6 13.7 14.7 13.7 13.6C13.7 12.5 14.5 11.6 15.5 11.6C16.5 11.6 17.3 12.5 17.3 13.6C17.3 14.7 16.5 15.6 15.5 15.6Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-export const HandWalletIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <rect x="3" y="6" width="18" height="14" rx="3" fill="currentColor" />
-    <path d="M6 6V5C6 3.9 6.9 3 8 3H17C18.1 3 19 3.9 19 5V6" stroke="currentColor" strokeWidth="2" />
-    <rect x="15" y="11" width="6" height="4" rx="1.5" fill="#091525" />
-    <circle cx="17" cy="13" r="1" fill="currentColor" />
   </svg>
 );
 

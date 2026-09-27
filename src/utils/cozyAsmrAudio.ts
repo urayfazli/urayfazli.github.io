@@ -11,9 +11,22 @@ class CozyAsmrSoundEngine {
   private dropletTimer: number | null = null;
   private stopTimeout: number | null = null;
   private activeNodes: AudioNode[] = [];
+  private listeners = new Set<(playing: boolean) => void>();
 
   public getPlayingState(): boolean {
     return this.isPlaying;
+  }
+
+  public subscribe(listener: (playing: boolean) => void): () => void {
+    this.listeners.add(listener);
+    listener(this.isPlaying);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach((listener) => listener(this.isPlaying));
   }
 
   public async toggle(): Promise<boolean> {
@@ -53,6 +66,7 @@ class CozyAsmrSoundEngine {
 
       this.cleanupNodes();
       this.isPlaying = true;
+      this.notifyListeners();
 
       const ctx = this.ctx;
       const now = ctx.currentTime;
@@ -79,6 +93,9 @@ class CozyAsmrSoundEngine {
 
       // Play an immediate gentle welcome chime so the user hears instant confirmation on 2x tap
       this.playConfirmationChime(ctx, master, true);
+    } catch {
+      this.isPlaying = false;
+      this.notifyListeners();
     } finally {
       this.isTransitioning = false;
     }
@@ -87,6 +104,7 @@ class CozyAsmrSoundEngine {
   public stop(): void {
     if (!this.isPlaying) return;
     this.isPlaying = false;
+    this.notifyListeners();
 
     this.clearTimers();
 
@@ -94,10 +112,13 @@ class CozyAsmrSoundEngine {
       const ctx = this.ctx;
       const now = ctx.currentTime;
       try {
-        this.playConfirmationChime(ctx, this.masterGain, false);
+        // Capture current gain before cancelling scheduled values to avoid Safari/Firefox jump
+        const currentGain = Math.max(this.masterGain.gain.value, 0.001);
         this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.setValueAtTime(Math.max(this.masterGain.gain.value, 0.001), now);
+        this.masterGain.gain.setValueAtTime(currentGain, now);
         this.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        // Route turn-off chime directly to destination at soft gain so it stays clear during fade-out
+        this.playConfirmationChime(ctx, ctx.destination, false, 0.018);
       } catch {
         // Ignore scheduling errors if context is closing
       }
@@ -488,7 +509,12 @@ class CozyAsmrSoundEngine {
     overtone.stop(start + 0.22);
   }
 
-  private playConfirmationChime(ctx: AudioContext, destination: AudioNode, turningOn: boolean): void {
+  private playConfirmationChime(
+    ctx: AudioContext,
+    destination: AudioNode,
+    turningOn: boolean,
+    peakGain = 0.045,
+  ): void {
     const notes = turningOn ? [523.25, 659.25, 783.99] : [659.25, 523.25];
     notes.forEach((freq, i) => {
       const start = ctx.currentTime + i * 0.07;
@@ -497,7 +523,7 @@ class CozyAsmrSoundEngine {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, start);
       gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.linearRampToValueAtTime(0.045, start + 0.015);
+      gain.gain.linearRampToValueAtTime(peakGain, start + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
       osc.connect(gain);
       gain.connect(destination);
