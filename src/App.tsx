@@ -51,6 +51,7 @@ import {
 } from './components/JournalModals';
 import { SketchbookLoadingScreen } from './components/SketchbookLoadingScreen';
 import { AdventureRoadmapSection } from './components/AdventureRoadmap';
+import { cozyAsmrAudio } from './utils/cozyAsmrAudio';
 
 type NavSection = 'home' | 'about' | 'experience' | 'activities' | 'roadmap' | 'contact';
 
@@ -124,6 +125,7 @@ export default function App() {
       root.classList.remove('theme-day');
       body.classList.remove('theme-day');
     }
+    cozyAsmrAudio.setMode(theme);
     try {
       localStorage.setItem('uray_portfolio_theme', theme);
     } catch {
@@ -240,10 +242,27 @@ export default function App() {
   const toggleTheme = useCallback(() => {
     setTheme((prev) => {
       const next = prev === 'night' ? 'day' : 'night';
+      const isMusicOn = cozyAsmrAudio.getPlayingState();
       if (next === 'day') {
-        triggerToast(isId ? 'Mode Siang diaktifkan ☀️' : 'Day Mode activated ☀️');
+        triggerToast(
+          isMusicOn
+            ? isId
+              ? 'Mode Siang ☀️ • Backsound: Cozy Game ASMR (Siang) ♪'
+              : 'Day Mode ☀️ • Backsound: Cozy Game ASMR (Day) ♪'
+            : isId
+              ? 'Mode Siang diaktifkan ☀️'
+              : 'Day Mode activated ☀️',
+        );
       } else {
-        triggerToast(isId ? 'Mode Malam diaktifkan 🌙' : 'Night Mode activated 🌙');
+        triggerToast(
+          isMusicOn
+            ? isId
+              ? 'Mode Malam 🌙 • Backsound: Cozy Farm ASMR (Malam) ♪'
+              : 'Night Mode 🌙 • Backsound: Cozy Farm ASMR (Night) ♪'
+            : isId
+              ? 'Mode Malam diaktifkan 🌙'
+              : 'Night Mode activated 🌙',
+        );
       }
       return next;
     });

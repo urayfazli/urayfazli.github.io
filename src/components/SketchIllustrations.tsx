@@ -155,7 +155,9 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
   const bounceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const unsubscribe = cozyAsmrAudio.subscribe(setIsPlaying);
+    const unsubscribe = cozyAsmrAudio.subscribe((playing) => {
+      setIsPlaying(playing);
+    });
     return () => {
       unsubscribe();
       if (hintTimerRef.current !== null) {
@@ -166,6 +168,10 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       }
     };
   }, []);
+
+  useEffect(() => {
+    cozyAsmrAudio.setMode(isDay ? 'day' : 'night');
+  }, [isDay]);
 
   const handleChibiPress = async () => {
     const now = performance.now();
@@ -182,14 +188,14 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
     }, 180);
 
     if (diff > 0 && diff < 430) {
-      // 2x press detected: toggle Cozy & ASMR backsound
+      // 2x press detected: toggle Cozy & ASMR backsound for current mode (Day / Night)
       lastTapRef.current = 0;
       if (hintTimerRef.current !== null) {
         window.clearTimeout(hintTimerRef.current);
         hintTimerRef.current = null;
       }
       setSingleTapHint(false);
-      const nextState = await cozyAsmrAudio.toggle();
+      const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
       setIsPlaying(nextState);
     } else {
       // First press: store timestamp and show brief hint to press 1 more time
@@ -302,7 +308,7 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
               <path d="M19 7C10 14 10 26 19 33" stroke={isDay ? '#091526' : '#FAF6EE'} strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
             </svg>
 
-            {/* Cute Hand-Drawn Anime Cozy Farm Expression Bubble near top-right of head */}
+            {/* Cute Hand-Drawn Anime Cozy Expression Bubble near top-right of head */}
             <div
               className={`cozy-asmr-bubble top-[14%] right-[4%] sm:top-[15%] sm:right-[6%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[3px_3px_0px_#091526] sm:text-[11px] ${
                 isDay
@@ -310,10 +316,16 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
                   : 'bg-[#FAF6EE]'
               }`}
             >
-              <span className="text-[#1E6B34]">🌱</span>
+              <span className="text-[#1E6B34]">{isDay ? '☀️' : '🌙'}</span>
               <span className="text-[#E05A47]">^◡^</span>
               <span className="!text-[#091526]">
-                {isId ? 'Cozy Farm ASMR ♪' : 'Cozy Farm Vibe ♪'}
+                {isDay
+                  ? isId
+                    ? 'Cozy Game ASMR • Siang ♪'
+                    : 'Cozy Game ASMR • Day ♪'
+                  : isId
+                    ? 'Cozy Farm ASMR • Malam ♪'
+                    : 'Cozy Farm ASMR • Night ♪'}
               </span>
             </div>
           </motion.div>
@@ -395,6 +407,9 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
                 : 'border-[#FAF6EE]/85 bg-[#091526]/90 text-[#FAF6EE] shadow-[3px_3px_0px_#030913] group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
           }`}
         >
+          <span className={isDay ? '!text-[#B4690E]' : 'text-[#86EFAC]'}>
+            {isDay ? '☀️' : '🌙'}
+          </span>
           <span className={isDay ? '!text-[#1E6B34]' : 'text-[#86EFAC]'}>🌾</span>
           <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>♪</span>
           <span
@@ -411,12 +426,20 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
                 ? 'Ketuk 1x lagi...'
                 : 'Tap 1x more...'
               : isPlaying
-                ? isId
-                  ? 'Cozy Farm ASMR: ON (Ketuk 2x = Off)'
-                  : 'Cozy Farm ASMR: ON (Tap 2x = Off)'
-                : isId
-                  ? 'Ketuk Chibi 2x • Cozy Farm ASMR'
-                  : 'Tap Chibi 2x • Cozy Farm ASMR'}
+                ? isDay
+                  ? isId
+                    ? 'Cozy Game ASMR (Siang): ON (2x = Off)'
+                    : 'Cozy Game ASMR (Day): ON (2x = Off)'
+                  : isId
+                    ? 'Cozy Farm ASMR (Malam): ON (2x = Off)'
+                    : 'Cozy Farm ASMR (Night): ON (2x = Off)'
+                : isDay
+                  ? isId
+                    ? 'Ketuk Chibi 2x • Cozy Game ASMR (Siang)'
+                    : 'Tap Chibi 2x • Cozy Game ASMR (Day)'
+                  : isId
+                    ? 'Ketuk Chibi 2x • Cozy Farm ASMR (Malam)'
+                    : 'Tap Chibi 2x • Cozy Farm ASMR (Night)'}
           </span>
         </div>
       </div>
