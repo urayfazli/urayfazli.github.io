@@ -66,18 +66,38 @@ const NAV_ITEMS: { id: NavSection; label: Record<Language, string> }[] = [
 /** GPU-composited Header Scroll Progress Bar with zero React re-renders during scroll */
 const HeaderScrollProgressBar: React.FC<{
   scrollProgress: MotionValue<number>;
-}> = React.memo(({ scrollProgress }) => (
-  <div className="relative h-[5px] w-full overflow-hidden bg-[#0C1D36] sm:h-[6px]">
+  isDay?: boolean;
+}> = React.memo(({ scrollProgress, isDay = false }) => (
+  <div
+    className={`relative h-[5px] w-full overflow-hidden transition-colors duration-200 sm:h-[6px] ${
+      isDay ? 'bg-[#DED0B8]' : 'bg-[#0C1D36]'
+    }`}
+  >
     <motion.div
       style={{ scaleX: scrollProgress, transformOrigin: '0% 50%' }}
-      className="h-full w-full bg-gradient-to-r from-[#D9A44E] via-[#F5D78E] to-[#FFF5D1] will-change-transform"
+      className={`h-full w-full will-change-transform ${
+        isDay
+          ? 'bg-gradient-to-r from-[#9A5806] via-[#D98A1C] to-[#F5C451]'
+          : 'bg-gradient-to-r from-[#D9A44E] via-[#F5D78E] to-[#FFF5D1]'
+      }`}
     />
   </div>
 ));
 
+export type ThemeMode = 'night' | 'day';
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [lang, setLang] = useState<Language>('id');
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    try {
+      const saved = localStorage.getItem('uray_portfolio_theme');
+      if (saved === 'day' || saved === 'night') return saved;
+    } catch {
+      // Ignore storage errors
+    }
+    return 'night';
+  });
   const [isSwitchingLang, setIsSwitchingLang] = useState(false);
   const [activeNav, setActiveNav] = useState<NavSection>('home');
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -90,8 +110,26 @@ export default function App() {
   const headerRef = useRef<HTMLElement | null>(null);
 
   const isId = lang === 'id';
+  const isDay = theme === 'day';
   const currentEntries = JOURNAL_ENTRIES_BY_LANG[lang];
   const selectedEntry = selectedEntryId ? currentEntries[selectedEntryId] ?? null : null;
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    if (isDay) {
+      root.classList.add('theme-day');
+      body.classList.add('theme-day');
+    } else {
+      root.classList.remove('theme-day');
+      body.classList.remove('theme-day');
+    }
+    try {
+      localStorage.setItem('uray_portfolio_theme', theme);
+    } catch {
+      // Ignore storage errors
+    }
+  }, [isDay, theme]);
 
   // Centralized, race-condition-free body scroll lock across Loading Screen & Modals
   useEffect(() => {
@@ -198,6 +236,18 @@ export default function App() {
       langSwitchTimeoutRef.current = null;
     }, 240);
   }, [triggerToast]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === 'night' ? 'day' : 'night';
+      if (next === 'day') {
+        triggerToast(isId ? 'Mode Siang diaktifkan ☀️' : 'Day Mode activated ☀️');
+      } else {
+        triggerToast(isId ? 'Mode Malam diaktifkan 🌙' : 'Night Mode activated 🌙');
+      }
+      return next;
+    });
+  }, [isId, triggerToast]);
 
   const scrollToSection = useCallback(
     (sectionId: NavSection) => {
@@ -313,27 +363,105 @@ export default function App() {
   }, [rawScrollProgress, isLoading, lang, cancelProgrammaticScroll]);
 
   return (
-    <div className="relative min-h-screen w-full overflow-x-clip bg-[#07111F] text-[#F5EFE6] selection:bg-[#F5D78E] selection:text-[#07111F]">
-      {/* Static Night Sky & Hand-Painted Cloud Atmosphere (0% idle CPU) */}
+    <div
+      className={`relative min-h-screen w-full overflow-x-clip transition-colors duration-250 ${
+        isDay
+          ? 'theme-day bg-[#F5ECDC] text-[#091526] selection:bg-[#091526] selection:text-[#F5D78E]'
+          : 'theme-night bg-[#07111F] text-[#F5EFE6] selection:bg-[#F5D78E] selection:text-[#07111F]'
+      }`}
+    >
+      {/* Static Day / Night Sky & Hand-Painted Cloud Atmosphere (0% idle CPU) */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_62%_16%,#122849_0%,#091525_50%,#07111F_100%)]" />
-        <svg
-          viewBox="0 0 1440 960"
-          fill="none"
-          className="h-full w-full opacity-60"
-        >
-          <circle cx="88" cy="112" r="1.3" fill="#F3EBDD" />
-          <circle cx="290" cy="64" r="1.2" fill="#9BB8DF" />
-          <circle cx="520" cy="82" r="1.5" fill="#F3EBDD" />
-          <circle cx="640" cy="180" r="1.2" fill="#9BB8DF" />
-          <circle cx="1160" cy="78" r="1.5" fill="#F3EBDD" />
-          <circle cx="1360" cy="195" r="1.3" fill="#9BB8DF" />
-          <circle cx="110" cy="520" r="1.2" fill="#F3EBDD" />
-          <circle cx="960" cy="440" r="1.4" fill="#9BB8DF" />
-          <circle cx="1310" cy="620" r="1.4" fill="#F3EBDD" />
-          <path d="M625 96V104M621 100H629" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M1045 270V278M1041 274H1049" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
-        </svg>
+        {isDay ? (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_62%_14%,#FFFDF9_0%,#F5ECDC_52%,#E7D8C0_100%)]" />
+            <svg
+              viewBox="0 0 1440 960"
+              fill="none"
+              className="h-full w-full opacity-75"
+            >
+              {/* Hand-Drawn Sketchbook Sun in Upper Right Sky */}
+              <circle
+                cx="1220"
+                cy="118"
+                r="46"
+                fill="#FCE5A2"
+                fillOpacity="0.65"
+                stroke="#B4690E"
+                strokeWidth="2.2"
+                strokeDasharray="6 4"
+              />
+              <circle
+                cx="1220"
+                cy="118"
+                r="34"
+                fill="#F5D78E"
+                stroke="#091526"
+                strokeWidth="2.2"
+              />
+              {/* Hand-drawn Sun Rays */}
+              <g stroke="#B4690E" strokeWidth="2.2" strokeLinecap="round" opacity="0.75">
+                <path d="M1220 52V62M1220 174V184M1154 118H1164M1276 118H1286" />
+                <path d="M1173 71L1180 78M1260 158L1267 165M1267 71L1260 78M1180 158L1173 165" />
+              </g>
+              {/* Soft Daytime Sketch Clouds & Birds */}
+              <path
+                d="M140 128C162 114 194 116 210 132C228 122 254 126 264 144H126C124 136 130 130 140 128Z"
+                fill="#FFFDF8"
+                fillOpacity="0.75"
+                stroke="#8C765A"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <path
+                d="M540 88C564 74 596 76 614 94C634 82 662 88 672 106H524C522 98 530 90 540 88Z"
+                fill="#FFFDF8"
+                fillOpacity="0.7"
+                stroke="#8C765A"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              {/* Distant Sketchbook Birds */}
+              <path
+                d="M390 155C396 149 403 149 408 156C413 149 420 149 426 155"
+                stroke="#2E4F7A"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.55"
+              />
+              <path
+                d="M438 142C443 137 448 137 452 143C456 137 461 137 466 142"
+                stroke="#2E4F7A"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.45"
+              />
+            </svg>
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_62%_16%,#122849_0%,#091525_50%,#07111F_100%)]" />
+            <svg
+              viewBox="0 0 1440 960"
+              fill="none"
+              className="h-full w-full opacity-60"
+            >
+              <circle cx="88" cy="112" r="1.3" fill="#F3EBDD" />
+              <circle cx="290" cy="64" r="1.2" fill="#9BB8DF" />
+              <circle cx="520" cy="82" r="1.5" fill="#F3EBDD" />
+              <circle cx="640" cy="180" r="1.2" fill="#9BB8DF" />
+              <circle cx="1160" cy="78" r="1.5" fill="#F3EBDD" />
+              <circle cx="1360" cy="195" r="1.3" fill="#9BB8DF" />
+              <circle cx="110" cy="520" r="1.2" fill="#F3EBDD" />
+              <circle cx="960" cy="440" r="1.4" fill="#9BB8DF" />
+              <circle cx="1310" cy="620" r="1.4" fill="#F3EBDD" />
+              <path d="M625 96V104M621 100H629" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
+              <path d="M1045 270V278M1041 274H1049" stroke="#6E8EB8" strokeWidth="1.2" strokeLinecap="round" />
+            </svg>
+          </>
+        )}
       </div>
 
       {/* Sketchbook Loading Screen Overlay */}
@@ -363,7 +491,12 @@ export default function App() {
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
           1. STICKY HEADER (3-Zone Top Bar + Mobile Sketchbook Nav Strip)
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <header ref={headerRef} className="sticky top-0 z-40 w-full bg-[#07111F]/96">
+      <header
+        ref={headerRef}
+        className={`sticky top-0 z-40 w-full transition-colors duration-250 ${
+          isDay ? 'bg-[#F5ECDC]/96' : 'bg-[#07111F]/96'
+        }`}
+      >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3.5 py-2 sm:px-8 sm:py-2.5">
           {/* Zone 1: Brand Wordmark */}
           <a
@@ -423,8 +556,76 @@ export default function App() {
             })}
           </nav>
 
-          {/* Zone 3: Language Switcher Toggle (Indonesia - Inggris) */}
-          <div className="flex shrink-0 items-center">
+          {/* Zone 3: Day/Night Mode Switcher & Language Switcher Toggle */}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            {/* Day / Night Mode Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={
+                isDay
+                  ? isId
+                    ? 'Ganti ke Mode Malam (Switch to Night Mode)'
+                    : 'Switch to Night Mode'
+                  : isId
+                    ? 'Ganti ke Mode Siang (Switch to Day Mode)'
+                    : 'Switch to Day Mode'
+              }
+              title={
+                isDay
+                  ? isId
+                    ? 'Mode Siang Aktif — Klik untuk Mode Malam'
+                    : 'Day Mode Active — Click for Night Mode'
+                  : isId
+                    ? 'Mode Malam Aktif — Klik untuk Mode Siang'
+                    : 'Night Mode Active — Click for Day Mode'
+              }
+              className="sketch-pill flex cursor-pointer items-center gap-1.5 whitespace-nowrap px-2.5 py-1 font-journal text-[11.5px] font-bold text-[#FAF6EE] sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-[13px]"
+            >
+              {isDay ? (
+                /* Hand-Drawn Sun Icon */
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="h-4 w-4 shrink-0 text-[#B4690E]"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="10"
+                    cy="10"
+                    r="4.2"
+                    fill="#F5D78E"
+                    stroke="#091526"
+                    strokeWidth="1.7"
+                  />
+                  <path
+                    d="M10 2V4M10 16V18M2 10H4M16 10H18M4.3 4.3L5.7 5.7M14.3 14.3L15.7 15.7M15.7 4.3L14.3 5.7M5.7 14.3L4.3 15.7"
+                    stroke="#091526"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              ) : (
+                /* Hand-Drawn Crescent Moon Icon */
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="h-4 w-4 shrink-0 text-[#F5D78E]"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M14.8 13.2C13.6 13.8 12.2 14.1 10.8 13.9C7.5 13.5 5.1 10.5 5.5 7.2C5.7 5.6 6.5 4.2 7.7 3.3C4.8 4 2.7 6.7 3 9.9C3.4 13.7 6.8 16.5 10.6 16.1C12.9 15.9 14.9 14.7 16 12.8C15.6 13 15.2 13.1 14.8 13.2Z"
+                    fill="#F5D78E"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+              <span>{isDay ? (isId ? 'Siang' : 'Day') : isId ? 'Malam' : 'Night'}</span>
+            </button>
+
+            {/* Language Switcher Toggle (ID / EN) */}
             <button
               type="button"
               onClick={toggleLanguage}
@@ -452,7 +653,9 @@ export default function App() {
               <span
                 className={`rounded-full px-2 py-0.5 transition-colors ${
                   lang === 'id'
-                    ? 'bg-[#F5D78E] text-[#091526]'
+                    ? isDay
+                      ? 'bg-[#091526] text-[#F5D78E]'
+                      : 'bg-[#F5D78E] text-[#091526]'
                     : 'text-[#B4C6DF] hover:text-[#FAF6EE]'
                 }`}
               >
@@ -464,7 +667,9 @@ export default function App() {
               <span
                 className={`rounded-full px-2 py-0.5 transition-colors ${
                   lang === 'en'
-                    ? 'bg-[#F5D78E] text-[#091526]'
+                    ? isDay
+                      ? 'bg-[#091526] text-[#F5D78E]'
+                      : 'bg-[#F5D78E] text-[#091526]'
                     : 'text-[#B4C6DF] hover:text-[#FAF6EE]'
                 }`}
               >
@@ -477,7 +682,11 @@ export default function App() {
         {/* Mobile Quick-Jump Sketchbook Navigation Bar (< 768px) */}
         <nav
           aria-label="Mobile Navigation"
-          className="no-scrollbar flex items-center justify-between gap-1 overflow-x-auto border-t border-[#1D3558]/60 bg-[#06101E]/95 px-3 py-1.5 sm:justify-around md:hidden"
+          className={`no-scrollbar flex items-center justify-between gap-1 overflow-x-auto border-t px-3 py-1.5 transition-colors duration-250 sm:justify-around md:hidden ${
+            isDay
+              ? 'border-[#C4B296]/70 bg-[#ECE0CA]/95'
+              : 'border-[#1D3558]/60 bg-[#06101E]/95'
+          }`}
         >
           {NAV_ITEMS.map((item) => {
             const isActive = activeNav === item.id;
@@ -519,7 +728,7 @@ export default function App() {
         </nav>
 
         {/* GPU-Composited Scroll Progress Indicator Track & Bar */}
-        <HeaderScrollProgressBar scrollProgress={rawScrollProgress} />
+        <HeaderScrollProgressBar scrollProgress={rawScrollProgress} isDay={isDay} />
         <SketchDividerLine />
       </header>
 
@@ -537,7 +746,7 @@ export default function App() {
         id="home"
         className="relative z-10 mx-auto max-w-[1400px] scroll-mt-24 px-4 pt-3 pb-1 sm:px-8 lg:pt-4 lg:pb-0"
       >
-        {/* Layered Hand-Painted Night Clouds Framing Left, Right & Bottom Ridge */}
+        {/* Layered Hand-Painted Clouds Framing Left, Right & Bottom Ridge */}
         <svg
           viewBox="0 0 1440 410"
           fill="none"
@@ -548,35 +757,35 @@ export default function App() {
           {/* Left Layered Cloud Silhouette */}
           <path
             d="M-30 70C20 65 55 95 68 135C102 128 132 152 138 190C172 195 198 225 195 268C225 275 245 305 240 345L-30 370Z"
-            fill="#0E2038"
-            opacity="0.72"
+            fill={isDay ? '#E2D4BD' : '#0E2038'}
+            opacity={isDay ? '0.68' : '0.72'}
           />
           <path
             d="M-30 145C12 142 42 168 52 202C84 198 110 222 114 256C145 262 168 290 165 328L-30 365Z"
-            fill="#142B4B"
-            opacity="0.45"
+            fill={isDay ? '#ECE1CF' : '#142B4B'}
+            opacity={isDay ? '0.6' : '0.45'}
           />
           {/* Right Layered Cloud Silhouette */}
           <path
             d="M1470 50C1405 48 1362 88 1350 138C1305 135 1270 168 1262 212C1218 218 1185 255 1182 302L1470 340Z"
-            fill="#0E2038"
-            opacity="0.78"
+            fill={isDay ? '#E2D4BD' : '#0E2038'}
+            opacity={isDay ? '0.72' : '0.78'}
           />
           <path
             d="M1470 125C1418 122 1382 154 1372 195C1334 194 1304 220 1298 258C1260 264 1232 294 1230 334L1470 355Z"
-            fill="#152D4E"
-            opacity="0.5"
+            fill={isDay ? '#ECE1CF' : '#152D4E'}
+            opacity={isDay ? '0.62' : '0.5'}
           />
-          {/* Dark Navy Sloping Horizon Ridge Under Hero Chibi */}
+          {/* Sloping Horizon Ridge Under Hero Chibi */}
           <path
             d="M-20 382C320 368 710 354 1060 330C1230 318 1360 310 1460 308V410H-20Z"
-            fill="#060E1B"
+            fill={isDay ? '#DFD0B6' : '#060E1B'}
             opacity="0.92"
           />
           <path
             d="M-20 382C320 368 710 354 1060 330C1230 318 1360 310 1460 308"
-            stroke="#243F66"
-            strokeOpacity="0.45"
+            stroke={isDay ? '#8C765A' : '#243F66'}
+            strokeOpacity="0.55"
             strokeWidth="1.8"
           />
         </svg>
@@ -591,7 +800,13 @@ export default function App() {
             className="relative z-20 pt-2 text-center sm:text-left lg:col-span-5 lg:pl-6 lg:pb-6"
           >
             <div className="relative inline-block">
-              <h1 className="font-brush text-[46px] leading-[0.88] tracking-wide text-[#FAF6EE] drop-shadow-[0_4px_0_rgba(5,12,22,0.85)] sm:text-[64px] lg:text-[74px]">
+              <h1
+                className={`font-brush text-[46px] leading-[0.88] tracking-wide text-[#FAF6EE] sm:text-[64px] lg:text-[74px] ${
+                  isDay
+                    ? 'drop-shadow-[0_3px_0_rgba(212,193,161,0.95)]'
+                    : 'drop-shadow-[0_4px_0_rgba(5,12,22,0.85)]'
+                }`}
+              >
                 <span className="block -rotate-1">
                   <span className="relative inline-block">
                     URAY
@@ -712,7 +927,7 @@ export default function App() {
 
               {/* Center-Left Shifted Chibi Bust Sitting Flush on Horizon */}
               <div className="relative z-10 sm:-ml-6 lg:-ml-10">
-                <HeroChibiCharacter isId={isId} />
+                <HeroChibiCharacter isId={isId} isDay={isDay} />
               </div>
 
               {/* Top-Right Annotation: Crown + "Small Steps / Big Bags" + Burst Ticks */}
@@ -800,19 +1015,19 @@ export default function App() {
               >
                 <path
                   d="M22 18L56 13L100 19L152 12L214 18L279 13L346 20L414 14L482 19L550 13L619 20L686 14L746 19L770 32L776 72L769 116L777 162L770 208L774 246L752 262L694 257L628 264L556 258L484 265L409 258L334 264L259 257L186 264L116 258L52 263L18 250L12 206L19 156L11 108L18 58Z"
-                  fill="#040A14"
-                  opacity="0.55"
+                  fill={isDay ? '#9E8869' : '#040A14'}
+                  opacity={isDay ? '0.38' : '0.55'}
                 />
                 <path
                   d="M18 14L52 9L96 15L148 8L210 14L275 9L342 16L410 10L478 15L546 9L615 16L682 10L742 15L766 28L772 68L765 112L773 158L766 204L770 242L748 258L690 253L624 260L552 254L480 261L405 254L330 260L255 253L182 260L112 254L48 259L14 246L8 202L15 152L7 104L14 54Z"
-                  fill="#EFE5D4"
+                  fill={isDay ? '#FFFDF8' : '#EFE5D4'}
                   stroke="#091526"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
                 />
                 <path
                   d="M28 24L740 24L752 240L26 242Z"
-                  fill="#E5D8C3"
+                  fill={isDay ? '#F6ECDA' : '#E5D8C3'}
                   opacity="0.35"
                 />
               </svg>
@@ -1053,23 +1268,23 @@ export default function App() {
               >
                 <path
                   d="M20 18L72 12L138 19L214 13L294 18L379 12L464 19L552 13L639 18L726 12L812 19L886 14L910 28L916 76L909 130L917 186L910 232L888 244L809 239L722 246L632 240L539 246L446 239L354 245L262 239L172 245L88 239L24 244L12 218L18 166L11 112L18 58Z"
-                  fill="#040A14"
-                  opacity="0.55"
+                  fill={isDay ? '#9E8869' : '#040A14'}
+                  opacity={isDay ? '0.38' : '0.55'}
                 />
                 <path
                   d="M16 14L68 8L134 15L210 9L290 14L375 8L460 15L548 9L635 14L722 8L808 15L882 10L906 24L912 72L905 126L913 182L906 228L884 240L805 235L718 242L628 236L535 242L442 235L350 241L258 235L168 241L84 235L20 240L8 214L14 162L7 108L14 54Z"
-                  fill="#EFE5D4"
+                  fill={isDay ? '#FFFDF8' : '#EFE5D4'}
                   stroke="#091526"
                   strokeWidth="3.5"
                   strokeLinejoin="round"
                 />
               </svg>
 
-              {/* Top Row inside Parchment: Chibi Avatar + Jagged Dark Brush Stroke Banner + Right Annotation */}
+              {/* Top Row inside Parchment: Chibi Avatar + Jagged Brush Stroke Banner + Right Annotation */}
               <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <ChibiMiniAvatar className="h-9 w-9 shrink-0 sm:h-11 sm:w-11" />
-                  {/* Jagged Hand-Painted Dark Navy Brush Banner */}
+                  {/* Jagged Hand-Painted Brush Banner */}
                   <div className="relative px-4 py-1 sm:px-5 sm:py-1.5">
                     <svg
                       viewBox="0 0 220 46"
@@ -1080,7 +1295,10 @@ export default function App() {
                     >
                       <path
                         d="M8 8C55 3 155 3 208 7L216 14L210 22L218 30L206 39C150 43 58 43 10 38L3 29L9 21L2 13Z"
-                        fill="#081425"
+                        fill={isDay ? '#F5D78E' : '#081425'}
+                        stroke={isDay ? '#091526' : 'none'}
+                        strokeWidth={isDay ? '2.4' : '0'}
+                        strokeLinejoin="round"
                       />
                     </svg>
                     <h2 className="relative z-10 font-brush text-2xl leading-none tracking-wide text-[#FAF6EE] sm:text-[30px]">
@@ -1588,6 +1806,7 @@ export default function App() {
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <AdventureRoadmapSection
         lang={lang}
+        isDay={isDay}
         onSelectEntry={(entryId) => setSelectedEntryId(entryId)}
         onOpenConnect={() => setIsConnectOpen(true)}
       />
@@ -1601,8 +1820,14 @@ export default function App() {
       >
         <SketchDividerLine />
 
-        {/* Night Cloud Horizon Backdrop for Contact Section */}
-        <div className="relative overflow-hidden bg-gradient-to-b from-[#081527] via-[#0C1E38] to-[#081322]">
+        {/* Cloud Horizon Backdrop for Contact Section */}
+        <div
+          className={`relative overflow-hidden transition-colors duration-250 ${
+            isDay
+              ? 'bg-gradient-to-b from-[#EFE3CE] via-[#E5D4B7] to-[#DBC7A4]'
+              : 'bg-gradient-to-b from-[#081527] via-[#0C1E38] to-[#081322]'
+          }`}
+        >
           {/* Layered Hand-Painted Cloud Silhouettes Along Contact Horizon */}
           <svg
             viewBox="0 0 1440 210"
@@ -1614,23 +1839,23 @@ export default function App() {
             {/* Left Cloud Cluster */}
             <path
               d="M-30 210V95C18 88 58 112 72 145C112 132 156 148 174 180C214 168 258 180 282 210Z"
-              fill="#142C4E"
+              fill={isDay ? '#D2BEA0' : '#142C4E'}
               opacity="0.78"
             />
             <path
               d="M-20 210V140C25 135 62 154 78 182C115 172 152 184 172 210Z"
-              fill="#1D3B66"
+              fill={isDay ? '#C5AD89' : '#1D3B66'}
               opacity="0.55"
             />
             {/* Right Cloud Cluster Behind Socials & Peeking Chibi */}
             <path
               d="M840 210C875 176 928 172 968 194C1005 156 1065 152 1106 182C1152 136 1222 134 1266 172C1310 142 1375 148 1412 182L1460 175V210Z"
-              fill="#142C4E"
+              fill={isDay ? '#D2BEA0' : '#142C4E'}
               opacity="0.82"
             />
             <path
               d="M960 210C995 184 1045 182 1080 200C1120 168 1178 168 1215 194C1260 162 1325 164 1365 196L1450 190V210Z"
-              fill="#1F3F6B"
+              fill={isDay ? '#C5AD89' : '#1F3F6B'}
               opacity="0.55"
             />
           </svg>
@@ -1891,7 +2116,9 @@ export default function App() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-20 bg-[#050C17] py-3.5 text-[#D8E3F2]"
+        className={`relative z-20 py-3.5 transition-colors duration-250 ${
+          isDay ? 'bg-[#D7C3A1] text-[#091526]' : 'bg-[#050C17] text-[#D8E3F2]'
+        }`}
       >
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-2 px-4 sm:px-8 lg:flex-row">
           {/* Left & Center Running Text */}

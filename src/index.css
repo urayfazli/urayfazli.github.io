@@ -5,16 +5,29 @@
     background-color: #07111F;
     color: #F5EFE6;
     font-family: 'Shantell Sans', cursive, sans-serif;
+    transition: background-color 240ms ease, color 240ms ease;
   }
 
   body {
     background-color: #07111F;
     overflow-x: clip;
+    transition: background-color 240ms ease, color 240ms ease;
+  }
+
+  html.theme-day,
+  body.theme-day {
+    background-color: #F5ECDC;
+    color: #091526;
   }
 
   ::selection {
     background-color: #F5D78E;
     color: #07111F;
+  }
+
+  .theme-day ::selection {
+    background-color: #091526;
+    color: #F5D78E;
   }
 }
 
@@ -288,4 +301,228 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DAY MODE (.theme-day) — BACKGROUND, CARD, & TEXT COLOR TRANSFORMATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* 1. Day Mode Hand-Drawn Cards (.sketch-card) */
+.theme-day .sketch-card {
+  background-color: #FFFDF8;
+  background-image:
+    repeating-linear-gradient(
+      -28deg,
+      rgba(9, 21, 38, 0.025) 0px,
+      rgba(9, 21, 38, 0.025) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    linear-gradient(180deg, #FFFFFF 0%, #F7EFE0 100%);
+  border: 2.4px solid #091526;
+  box-shadow:
+    4px 5px 0px #091526,
+    0 10px 20px rgba(9, 21, 38, 0.10),
+    inset 0 0 0 1.5px rgba(180, 105, 14, 0.20);
+  color: #091526;
+}
+
+.theme-day .sketch-card::before {
+  border-color: rgba(9, 21, 38, 0.42);
+}
+
+.theme-day .sketch-card::after {
+  border-color: rgba(34, 66, 110, 0.34);
+}
+
+.theme-day .sketch-card:not(.sketch-card-static):hover {
+  border-color: #B4690E;
+  background-color: #FFF9EB;
+  box-shadow:
+    6px 7px 0px #091526,
+    0 14px 26px rgba(9, 21, 38, 0.16),
+    inset 0 0 0 1.5px rgba(180, 105, 14, 0.42);
+}
+
+.theme-day .sketch-card:not(.sketch-card-static):hover::before {
+  border-color: rgba(180, 105, 14, 0.65);
+}
+
+.theme-day .sketch-card:not(.sketch-card-static):hover::after {
+  border-color: rgba(180, 105, 14, 0.48);
+}
+
+.theme-day .sketch-card:not(.sketch-card-static):active {
+  box-shadow:
+    2px 2px 0px #091526,
+    0 4px 10px rgba(9, 21, 38, 0.12);
+}
+
+/* Active Milestone Card in Adventure Roadmap during Day Mode */
+.theme-day .sketch-card-active-milestone {
+  background-color: #FDF0CC !important;
+  background-image:
+    repeating-linear-gradient(
+      -28deg,
+      rgba(180, 105, 14, 0.04) 0px,
+      rgba(180, 105, 14, 0.04) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    linear-gradient(180deg, #FFFDF5 0%, #FCEBC0 100%) !important;
+  border-color: #B4690E !important;
+  box-shadow:
+    5px 6px 0px #091526,
+    0 12px 24px rgba(180, 105, 14, 0.18),
+    inset 0 0 0 2px rgba(180, 105, 14, 0.45) !important;
+}
+
+/* 2. Day Mode Experience & Field Log Cards (.sketch-card-exp) */
+.theme-day .sketch-card-exp {
+  background-color: #FFFDF9;
+  background-image:
+    repeating-linear-gradient(
+      -24deg,
+      rgba(9, 21, 38, 0.024) 0px,
+      rgba(9, 21, 38, 0.024) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    linear-gradient(180deg, #FFFFFF 0%, #F3E7D1 100%);
+  border: 2.5px solid #091526;
+  box-shadow:
+    4px 4px 0px #091526,
+    inset 0 0 0 1.5px rgba(180, 105, 14, 0.25);
+  color: #091526;
+}
+
+.theme-day .sketch-card-exp::after {
+  border-color: rgba(180, 105, 14, 0.38);
+}
+
+.theme-day .sketch-card-exp:hover {
+  border-color: #B4690E;
+  box-shadow:
+    6px 6px 0px #091526,
+    inset 0 0 0 1.8px rgba(180, 105, 14, 0.55);
+}
+
+/* 3. Day Mode Sketch Pills (.sketch-pill) */
+.theme-day .sketch-pill {
+  background-color: #FFFDF7;
+  color: #091526;
+  border: 2.2px solid #091526;
+  box-shadow: 3px 3.5px 0px #091526;
+}
+
+.theme-day .sketch-pill:hover {
+  background-color: #F5D78E;
+  color: #091526;
+  box-shadow: 4px 5px 0px #091526;
+}
+
+/* 4. Day Mode Text Color & Surface Remapping */
+.theme-day .text-\[\#FAF6EE\],
+.theme-day .text-\[\#F5EFE6\],
+.theme-day .text-\[\#F3EBDD\] {
+  color: #091526;
+}
+
+.theme-day .text-\[\#D2DFEE\],
+.theme-day .text-\[\#CBD8EA\],
+.theme-day .text-\[\#C9D7EA\],
+.theme-day .text-\[\#DCE7F5\],
+.theme-day .text-\[\#D8E5F7\],
+.theme-day .text-\[\#D0DDF0\],
+.theme-day .text-\[\#D8E3F2\],
+.theme-day .text-\[\#C7D8EE\],
+.theme-day .text-\[\#E4ECF7\] {
+  color: #1B3252;
+}
+
+.theme-day .text-\[\#9BB8DF\],
+.theme-day .text-\[\#B2C5DF\],
+.theme-day .text-\[\#B4C6DF\],
+.theme-day .text-\[\#7898C4\],
+.theme-day .text-\[\#6E8EB8\] {
+  color: #2E4F7A;
+}
+
+.theme-day .text-\[\#F5D78E\],
+.theme-day .text-\[\#E5B869\] {
+  color: #9A5806;
+}
+
+.theme-day .group:hover .group-hover\:text-\[\#F5D78E\],
+.theme-day .hover\:text-\[\#F5D78E\]:hover,
+.theme-day .hover\:text-\[\#FAF6EE\]:hover {
+  color: #B4690E;
+}
+
+/* Bullet Dots & Dark Inner Sub-Containers in Day Mode */
+.theme-day .bg-\[\#FAF6EE\] {
+  background-color: #091526;
+}
+
+.theme-day .bg-\[\#0B1B32\],
+.theme-day .bg-\[\#122644\],
+.theme-day .bg-\[\#0D1E36\],
+.theme-day .bg-\[\#0D1E36\]\/90,
+.theme-day .bg-\[\#091525\]\/70,
+.theme-day .bg-\[\#06101E\]\/90 {
+  background-color: #F6ECDA;
+  border-color: #091526;
+  color: #091526;
+}
+
+/* Keep .sketch-pill-dark buttons dark with light text in Modals */
+.theme-day .sketch-pill-dark,
+.theme-day .sketch-pill-dark span {
+  background-color: #091526;
+  color: #FAF6EE !important;
+}
+
+.theme-day .sketch-pill-dark:hover {
+  background-color: #162E52;
+}
+
+/* Hand-Drawn SVG Ink Strokes on Canvas & Cards in Day Mode */
+.theme-day svg [stroke="#FAF6EE"],
+.theme-day svg [stroke="#F3EBDD"],
+.theme-day svg [stroke="#F5E6C8"],
+.theme-day svg [stroke="#F5E1B5"] {
+  stroke: #091526;
+}
+
+.theme-day svg [stroke="#F5D78E"] {
+  stroke: #B4690E;
+}
+
+/* Cozy Farm ASMR Card in Day Mode */
+.theme-day .cozy-asmr-card {
+  background-color: #FFFDF8;
+  background-image: linear-gradient(180deg, #FFFFFF 0%, #F6ECDA 100%);
+  border-color: #091526;
+  color: #091526;
+  box-shadow:
+    3.5px 4px 0px #091526,
+    inset 0 0 0 1px rgba(180, 105, 14, 0.22);
+}
+
+.theme-day .group:hover .cozy-asmr-card:not(.cozy-asmr-card-active) {
+  background-image: linear-gradient(180deg, #FFFDF5 0%, #FCEBC0 100%);
+  border-color: #B4690E;
+  color: #8C4F04;
+}
+
+.theme-day .cozy-asmr-card-active {
+  background-color: #FDF0CC;
+  background-image: linear-gradient(180deg, #FFFDF4 0%, #FCE5A2 100%);
+  border-color: #091526;
+  color: #091526;
+  box-shadow:
+    3.5px 4px 0px #091526,
+    inset 0 0 0 1.5px rgba(180, 105, 14, 0.45);
+}
+
+
 

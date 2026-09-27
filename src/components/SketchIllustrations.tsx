@@ -143,7 +143,10 @@ export const ChibiMiniAvatar: React.FC<{ className?: string }> = ({ className = 
  * Uses the transparent PNG anime chibi close-up portrait (anime_chibi_hero.png) with bottom-flush framing & gentle float.
  * Double-tap / double-click (2x press) toggles the Cozy & ASMR background soundscape on and off.
  */
-export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }) => {
+export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> = ({
+  isId = true,
+  isDay = false,
+}) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [singleTapHint, setSingleTapHint] = useState(false);
   const [tapBounce, setTapBounce] = useState(false);
@@ -256,13 +259,21 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
             >
               <path
                 d="M14 25V9L27 6V21"
-                stroke="#F5D78E"
+                stroke={isDay ? '#091526' : '#F5D78E'}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <ellipse cx="10.5" cy="25.5" rx="4.2" ry="3.2" fill="#F5D78E" stroke="#091321" strokeWidth="1.8" />
-              <ellipse cx="23.5" cy="21.5" rx="4.2" ry="3.2" fill="#FAF6EE" stroke="#091321" strokeWidth="1.8" />
+              <ellipse
+                cx="23.5"
+                cy="21.5"
+                rx="4.2"
+                ry="3.2"
+                fill={isDay ? '#E05A47' : '#FAF6EE'}
+                stroke="#091321"
+                strokeWidth="1.8"
+              />
             </svg>
 
             {/* Right earphone single note */}
@@ -273,7 +284,7 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
             >
               <path
                 d="M15 24V7C19 8 23 11 23 15"
-                stroke="#FAF6EE"
+                stroke={isDay ? '#091526' : '#FAF6EE'}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -287,15 +298,23 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
               fill="none"
               className="top-[52%] left-[3%] sm:left-[5%] absolute h-6 w-6"
             >
-              <path d="M26 12C20 16 20 24 26 28" stroke="#F5D78E" strokeWidth="2.3" strokeLinecap="round" />
-              <path d="M19 7C10 14 10 26 19 33" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
+              <path d="M26 12C20 16 20 24 26 28" stroke={isDay ? '#B4690E' : '#F5D78E'} strokeWidth="2.3" strokeLinecap="round" />
+              <path d="M19 7C10 14 10 26 19 33" stroke={isDay ? '#091526' : '#FAF6EE'} strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
             </svg>
 
             {/* Cute Hand-Drawn Anime Cozy Farm Expression Bubble near top-right of head */}
-            <div className="top-[14%] right-[4%] sm:top-[15%] sm:right-[6%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[3px_3px_0px_#091526] sm:text-[11px]">
-              <span className="text-[#2E7D32]">🌱</span>
+            <div
+              className={`cozy-asmr-bubble top-[14%] right-[4%] sm:top-[15%] sm:right-[6%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[3px_3px_0px_#091526] sm:text-[11px] ${
+                isDay
+                  ? 'bg-gradient-to-b from-[#FFFDF8] to-[#FCE8B0]'
+                  : 'bg-[#FAF6EE]'
+              }`}
+            >
+              <span className="text-[#1E6B34]">🌱</span>
               <span className="text-[#E05A47]">^◡^</span>
-              <span>{isId ? 'Cozy Farm ASMR ♪' : 'Cozy Farm Vibe ♪'}</span>
+              <span className="!text-[#091526]">
+                {isId ? 'Cozy Farm ASMR ♪' : 'Cozy Farm Vibe ♪'}
+              </span>
             </div>
           </motion.div>
         )}
@@ -314,7 +333,19 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
             className="pointer-events-none absolute inset-0 z-20 h-full w-full"
             aria-hidden="true"
           >
-            <g stroke={isPlaying ? '#F5D78E' : '#FAF6EE'} strokeWidth="2.8" strokeLinecap="round">
+            <g
+              stroke={
+                isDay
+                  ? isPlaying
+                    ? '#B4690E'
+                    : '#091526'
+                  : isPlaying
+                    ? '#F5D78E'
+                    : '#FAF6EE'
+              }
+              strokeWidth="2.8"
+              strokeLinecap="round"
+            >
               <path d="M72 48C78 56 80 58 88 56M82 44C80 52 78 54 70 58" />
               <path d="M22 158L36 163M19 170L34 171M23 182L36 178" />
               <path d="M486 194L501 188M488 206L505 205M486 217L501 222" />
@@ -349,18 +380,32 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
         </div>
       </div>
 
-      {/* Subtle Hand-Drawn Earphone Backsound Status Note at Bottom Center of Chibi */}
+      {/* Subtle Hand-Drawn Earphone Backsound Status Card at Bottom Center of Chibi */}
       <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
         <div
-          className={`inline-flex items-center gap-1.5 rounded-[225px_14px_205px_14px/14px_205px_14px_225px] border-2 px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[3px_3px_0px_#030913] transition-colors sm:text-[11.5px] ${
-            isPlaying
-              ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E]'
-              : 'border-[#FAF6EE]/80 bg-[#091526]/90 text-[#FAF6EE]/95 group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
+          className={`cozy-asmr-card ${
+            isPlaying ? 'cozy-asmr-card-active' : ''
+          } inline-flex items-center gap-1.5 rounded-[225px_14px_205px_14px/14px_205px_14px_225px] border-2 px-3.5 py-1 font-journal text-[10.5px] font-bold transition-all sm:text-[11.5px] ${
+            isDay
+              ? isPlaying
+                ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF4] to-[#FCE5A2] !text-[#091526] shadow-[3.5px_4px_0px_#091526]'
+                : 'border-[#091526] bg-gradient-to-b from-[#FFFFFF] to-[#F6ECDA] !text-[#091526] shadow-[3.5px_4px_0px_#091526] group-hover:border-[#B4690E] group-hover:from-[#FFFDF6] group-hover:to-[#FCEBC0] group-hover:!text-[#8C4F04]'
+              : isPlaying
+                ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E] shadow-[3px_3px_0px_#030913]'
+                : 'border-[#FAF6EE]/85 bg-[#091526]/90 text-[#FAF6EE] shadow-[3px_3px_0px_#030913] group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
           }`}
         >
-          <span className="text-[#86EFAC]">🌾</span>
-          <span className="text-[#F5D78E]">♪</span>
-          <span>
+          <span className={isDay ? '!text-[#1E6B34]' : 'text-[#86EFAC]'}>🌾</span>
+          <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>♪</span>
+          <span
+            className={
+              isDay
+                ? '!text-[#091526] group-hover:!text-[#8C4F04]'
+                : isPlaying
+                  ? 'text-[#F5D78E]'
+                  : 'text-[#FAF6EE] group-hover:text-[#F5D78E]'
+            }
+          >
             {singleTapHint
               ? isId
                 ? 'Ketuk 1x lagi...'

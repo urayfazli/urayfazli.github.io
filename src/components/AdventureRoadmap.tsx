@@ -334,12 +334,14 @@ const MilestoneSketchIcon: React.FC<{
 
 interface AdventureRoadmapSectionProps {
   lang: Language;
+  isDay?: boolean;
   onSelectEntry: (entryId: string) => void;
   onOpenConnect: () => void;
 }
 
 export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = ({
   lang,
+  isDay = false,
   onSelectEntry,
   onOpenConnect,
 }) => {
@@ -373,7 +375,14 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
             className="h-9 w-9 shrink-0 text-[#F5D78E] sm:h-10 sm:w-10"
             aria-hidden="true"
           >
-            <circle cx="22" cy="22" r="18" fill="#0B192E" stroke="#FAF6EE" strokeWidth="2.4" />
+            <circle
+              cx="22"
+              cy="22"
+              r="18"
+              fill={isDay ? '#FFFDF8' : '#0B192E'}
+              stroke="#FAF6EE"
+              strokeWidth="2.4"
+            />
             <circle
               cx="22"
               cy="22"
@@ -479,7 +488,7 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
             {/* Outer Faint Sketchbook Trail Shadow */}
             <path
               d="M 40 62 C 190 10, 310 112, 460 58 C 610 6, 730 110, 880 56 C 1000 14, 1095 88, 1160 52"
-              stroke="#030914"
+              stroke={isDay ? '#D6C4A6' : '#030914'}
               strokeWidth="9"
               strokeLinecap="round"
             />
@@ -564,7 +573,7 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
                   aria-pressed={isActive}
                   className={`sketch-card group relative flex h-full w-full cursor-pointer flex-col justify-between px-4 pt-5 pb-4 text-left transition-all ${
                     isActive
-                      ? '!border-[#F5D78E] bg-[#0F2442] ring-2 ring-[#F5D78E]/50'
+                      ? 'sketch-card-active-milestone !border-[#F5D78E] bg-[#0F2442] ring-2 ring-[#F5D78E]/50'
                       : isReached
                         ? 'border-[#E8DEC8]/90 opacity-95 hover:opacity-100'
                         : 'opacity-85 hover:opacity-100'
@@ -654,12 +663,12 @@ export const AdventureRoadmapSection: React.FC<AdventureRoadmapSectionProps> = (
                 >
                   <path
                     d="M20 16L88 11L176 18L278 12L390 18L510 11L630 18L752 12L868 18L982 12L1072 18L1092 32L1086 92L1094 158L1086 226L1068 248L970 242L856 249L734 242L612 248L486 241L362 248L240 241L128 248L32 242L12 222L18 154L10 88Z"
-                    fill="#040A14"
-                    opacity="0.58"
+                    fill={isDay ? '#9E8869' : '#040A14'}
+                    opacity={isDay ? '0.38' : '0.58'}
                   />
                   <path
                     d="M16 12L84 7L172 14L274 8L386 14L506 7L626 14L748 8L864 14L978 8L1068 14L1088 28L1082 88L1090 154L1082 222L1064 244L966 238L852 245L730 238L608 244L482 237L358 244L236 237L124 244L28 238L8 218L14 150L6 84Z"
-                    fill="#EFE5D4"
+                    fill={isDay ? '#FFFDF8' : '#EFE5D4'}
                     stroke="#091526"
                     strokeWidth="3.5"
                     strokeLinejoin="round"
