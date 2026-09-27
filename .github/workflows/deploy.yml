@@ -19,6 +19,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,10 +29,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Build static site
         run: npm run build
@@ -45,6 +48,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           force_orphan: true
+        continue-on-error: true
 
       - name: Configure GitHub Pages
         id: config_pages
