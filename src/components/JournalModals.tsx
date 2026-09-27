@@ -6,6 +6,7 @@ import {
   HandXIcon,
   HandGithubIcon,
   HandEmailIcon,
+  HandDrawnCardCornerDoodles,
   GENERATED_ASSETS,
 } from './SketchIllustrations';
 
@@ -531,9 +532,10 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                   </ul>
                 </div>
 
-                {/* Right Artwork & Metrics */}
-                <div className="flex flex-col justify-between rounded-2xl bg-[#091525] p-4 text-[#F3EBDD] md:col-span-5">
-                  <div className="relative overflow-hidden rounded-xl bg-[#091525]">
+                {/* Right Artwork & Metrics (Hand-Drawn Card Frame) */}
+                <div className="sketch-card-exp group relative flex flex-col justify-between p-4 text-[#F3EBDD] md:col-span-5">
+                  <HandDrawnCardCornerDoodles variant="exp" />
+                  <div className="relative z-10 overflow-hidden rounded-xl bg-[#091525]/70">
                     <img
                       src={GENERATED_ASSETS[entry.illustrationKey]}
                       alt={entry.title}
@@ -544,7 +546,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                       className="mx-auto h-32 w-full object-contain sm:h-36"
                     />
                   </div>
-                  <div className="mt-3 space-y-2 border-t border-[#2A4B78]/60 pt-3">
+                  <div className="relative z-10 mt-3 space-y-2 border-t-2 border-dashed border-[#2A4B78]/70 pt-3">
                     {entry.metrics.map((m, i) => (
                       <div key={i} className="flex items-center justify-between gap-2 text-xs">
                         <span className="truncate text-[#9BB8DF]">{m.label}</span>
@@ -568,7 +570,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="cursor-pointer rounded-full border-2 border-[#091526] bg-[#FFF9EE] px-4 py-1.5 font-journal text-xs font-bold text-[#091526] transition-colors hover:bg-[#E5D8C3] sm:text-sm"
+                  className="sketch-input cursor-pointer px-4 py-1.5 font-journal text-xs font-bold text-[#091526] transition-colors hover:bg-[#E5D8C3] sm:text-sm"
                 >
                   {isId ? 'Tutup' : 'Close'}
                 </button>
@@ -578,7 +580,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                     onClose();
                     onConnectClick();
                   }}
-                  className="cursor-pointer rounded-full bg-[#091526] px-5 py-2 font-journal text-xs font-semibold text-[#F3EBDD] transition-transform hover:-translate-y-0.5 sm:text-sm"
+                  className="sketch-pill-dark cursor-pointer px-5 py-2 font-journal text-xs font-semibold text-[#F3EBDD] sm:text-sm"
                 >
                   {isId ? 'Diskusi Kolaborasi →' : 'Discuss Collaboration →'}
                 </button>
@@ -591,11 +593,45 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
   );
 };
 
+export interface CollaborationNote {
+  id: string;
+  senderName: string;
+  senderHandle: string;
+  topic: string;
+  message: string;
+  createdAt: string;
+  isOwn?: boolean;
+}
+
+const COLLAB_NOTES_STORAGE_KEY = 'uray_web3_collab_notes_v2';
+
+const DEFAULT_COLLAB_NOTES: CollaborationNote[] = [
+  {
+    id: 'seed-1',
+    senderName: 'Raka Pratama',
+    senderHandle: '@rakaw3_node',
+    topic: 'Node Infrastructure',
+    message:
+      'Halo bro Uray! Mantap setup full node Aptos & Sei-nya. Ayo diskusi bareng soal monitoring RPC & validator testnet terbaru.',
+    createdAt: '2025-02-18T09:30:00.000Z',
+  },
+  {
+    id: 'seed-2',
+    senderName: 'Kevin Solana',
+    senderHandle: '@kevinsol_alpha',
+    topic: 'Airdrop & Quest Alpha',
+    message:
+      'Salam kenal! Sering pantau garapan testnet & modular L2 juga. Siap kolaborasi tukar info early alpha.',
+    createdAt: '2025-02-20T14:15:00.000Z',
+  },
+];
+
 interface ConnectModalProps {
   isOpen: boolean;
   lang?: Language;
   onClose: () => void;
   onCopyText: (label: string, value: string) => void;
+  onToast?: (message: string) => void;
 }
 
 export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
@@ -603,33 +639,177 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
   lang = 'id',
   onClose,
   onCopyText,
+  onToast,
 }) => {
   const [senderName, setSenderName] = useState('');
   const [senderHandle, setSenderHandle] = useState('');
   const [topic, setTopic] = useState('Node Infrastructure');
   const [message, setMessage] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSubmittedNote, setLastSubmittedNote] = useState<CollaborationNote | null>(null);
+  const [notes, setNotes] = useState<CollaborationNote[]>(() => {
+    try {
+      const saved = localStorage.getItem(COLLAB_NOTES_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore storage read errors
+    }
+    return DEFAULT_COLLAB_NOTES;
+  });
 
+  const isId = lang === 'id';
+
+  // Sync with serverless /api/notes when modal opens
   useEffect(() => {
     if (!isOpen) {
-      setSubmitted(false);
+      setFormError(null);
       return;
     }
+
+    let active = true;
+    fetch('/api/notes', { headers: { Accept: 'application/json' } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!active || !data || !Array.isArray(data.notes)) return;
+        setNotes((prev) => {
+          const existingIds = new Set(prev.map((n) => n.id));
+          const merged = [...prev];
+          for (const remoteNote of data.notes as CollaborationNote[]) {
+            if (remoteNote && remoteNote.id && !existingIds.has(remoteNote.id)) {
+              merged.push(remoteNote);
+            }
+          }
+          return merged.slice(0, 25);
+        });
+      })
+      .catch(() => {
+        // Offline / local preview fallback already handled via localStorage
+      });
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
+      active = false;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
 
-  const isId = lang === 'id';
+  const persistNotes = (nextNotes: CollaborationNote[]) => {
+    setNotes(nextNotes);
+    try {
+      localStorage.setItem(COLLAB_NOTES_STORAGE_KEY, JSON.stringify(nextNotes));
+    } catch {
+      // Ignore storage quota errors
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const formatTopicLabel = (rawTopic: string) => {
+    if (!isId) return rawTopic;
+    switch (rawTopic) {
+      case 'Node Infrastructure':
+        return 'Infrastruktur Node';
+      case 'Testnet Exploration':
+        return 'Eksplorasi Testnet';
+      case 'Airdrop & Quest Alpha':
+        return 'Airdrop & Quest Alpha';
+      case 'Meme Coin & Community':
+        return 'Meme Coin & Komunitas';
+      default:
+        return rawTopic;
+    }
+  };
+
+  const buildFormattedDispatchText = (note: CollaborationNote) => {
+    return isId
+      ? `Halo Uray Fazli Alman! 👋\n\n[Catatan Kolaborasi Web3 - ${formatTopicLabel(note.topic)}]\nDari: ${note.senderName} (${note.senderHandle})\nPesan: ${note.message}`
+      : `Hello Uray Fazli Alman! 👋\n\n[Web3 Collaboration Note - ${note.topic}]\nFrom: ${note.senderName} (${note.senderHandle})\nMessage: ${note.message}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!senderName.trim() || !message.trim()) return;
-    setSubmitted(true);
+    const cleanName = senderName.trim();
+    const cleanHandle = senderHandle.trim();
+    const cleanMessage = message.trim();
+
+    if (!cleanName) {
+      setFormError(
+        isId
+          ? 'Mohon isi Nama / Alias Anda terlebih dahulu.'
+          : 'Please enter your Name / Alias first.'
+      );
+      return;
+    }
+    if (!cleanMessage) {
+      setFormError(
+        isId
+          ? 'Mohon tulis isi catatan kolaborasi Anda.'
+          : 'Please write your collaboration note message.'
+      );
+      return;
+    }
+
+    setFormError(null);
+    setIsSubmitting(true);
+
+    const newNote: CollaborationNote = {
+      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      senderName: cleanName,
+      senderHandle: cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer'),
+      topic,
+      message: cleanMessage,
+      createdAt: new Date().toISOString(),
+      isOwn: true,
+    };
+
+    const updatedNotes = [newNote, ...notes].slice(0, 25);
+    persistNotes(updatedNotes);
+    setLastSubmittedNote(newNote);
+
+    try {
+      await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderName: newNote.senderName,
+          senderHandle: newNote.senderHandle,
+          topic: newNote.topic,
+          message: newNote.message,
+        }),
+      });
+    } catch {
+      // Local persistence already succeeded
+    } finally {
+      setIsSubmitting(false);
+      setSenderName('');
+      setSenderHandle('');
+      setMessage('');
+      if (onToast) {
+        onToast(
+          isId
+            ? `Catatan kolaborasi dari ${newNote.senderName} berhasil disimpan!`
+            : `Collaboration note from ${newNote.senderName} saved to journal!`
+        );
+      }
+    }
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    const filtered = notes.filter((n) => n.id !== noteId);
+    persistNotes(filtered);
+    if (lastSubmittedNote?.id === noteId) {
+      setLastSubmittedNote(null);
+    }
+    if (onToast) {
+      onToast(isId ? 'Catatan dihapus dari jurnal.' : 'Note removed from journal.');
+    }
   };
 
   const channels = [
@@ -669,183 +849,370 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
           aria-labelledby="connect-modal-title"
         >
           <JournalPageOpenShell pageKey="connect-modal-card">
-        {/* Pinned Top bar */}
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b-2 border-dashed border-[#0B192C]/25 pb-3.5 sm:items-center sm:gap-4 sm:pb-4">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-            <ChibiMiniAvatar className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" />
-            <div className="min-w-0">
-              <h3
-                id="connect-modal-title"
-                className="font-brush text-2xl leading-tight text-[#091526] sm:text-3xl md:text-4xl"
+            {/* Pinned Top bar */}
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b-2 border-dashed border-[#0B192C]/25 pb-3.5 sm:items-center sm:gap-4 sm:pb-4">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                <ChibiMiniAvatar className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" />
+                <div className="min-w-0">
+                  <h3
+                    id="connect-modal-title"
+                    className="font-brush text-2xl leading-tight text-[#091526] sm:text-3xl md:text-4xl"
+                  >
+                    {isId ? 'Mari Terhubung & Berkolaborasi' : "Let's Connect & Build Together"}
+                  </h3>
+                  <p className="font-journal text-[11px] text-[#233F6B] sm:text-xs">
+                    {isId
+                      ? 'Kanal kontak langsung & kolaborasi Web3 bersama Uray Fazli Alman'
+                      : 'Direct channels & Web3 collaboration dispatch for Uray Fazli Alman'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="sketch-pill-dark flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 font-journal text-xs font-bold text-[#FAF6EE] sm:px-4 sm:text-sm"
+                aria-label={isId ? 'Tutup modal' : 'Close modal'}
               >
-                {isId ? 'Mari Terhubung & Berkolaborasi' : "Let's Connect & Build Together"}
-              </h3>
-              <p className="font-journal text-[11px] text-[#233F6B] sm:text-xs">
-                {isId
-                  ? 'Kanal kontak langsung & kolaborasi Web3 bersama Uray Fazli Alman'
-                  : 'Direct channels & Web3 collaboration dispatch for Uray Fazli Alman'}
-              </p>
+                <CloseIconSvg className="h-3.5 w-3.5 text-[#F5D78E] sm:h-4 sm:w-4" />
+                <span>{isId ? 'Tutup' : 'Close'}</span>
+              </button>
             </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="sketch-pill-dark flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap px-3.5 py-1.5 font-journal text-xs font-bold text-[#FAF6EE] sm:px-4 sm:text-sm"
-            aria-label={isId ? 'Tutup modal' : 'Close modal'}
-          >
-            <CloseIconSvg className="h-3.5 w-3.5 text-[#F5D78E] sm:h-4 sm:w-4" />
-            <span>{isId ? 'Tutup' : 'Close'}</span>
-          </button>
-        </div>
 
-        {/* Scrollable Body */}
-        <div className="mt-4 flex-1 overflow-y-auto pr-1 sm:mt-5">
-          {/* Direct Channels Grid */}
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            {channels.map((ch) => (
-              <div
-                key={ch.label}
-                className="flex items-center justify-between rounded-xl bg-[#091526] px-3.5 py-2.5 text-[#F3EBDD]"
-              >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="shrink-0 text-[#F5D78E]">{ch.icon}</span>
-                  <div className="truncate">
-                    <div className="font-journal text-[11px] text-[#9BB8DF]">{ch.label}</div>
-                    <div className="font-mono-num truncate text-xs font-semibold text-[#F5EFE6]">
-                      {ch.handle}
+            {/* Scrollable Body */}
+            <div className="mt-4 flex-1 overflow-y-auto pr-1 sm:mt-5">
+              {/* Direct Channels Grid (Hand-Drawn Cards) */}
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {channels.map((ch) => (
+                  <div
+                    key={ch.label}
+                    className="sketch-card-exp group relative flex items-center justify-between px-3.5 py-2.5 text-[#F3EBDD]"
+                  >
+                    <HandDrawnCardCornerDoodles variant="exp" />
+                    <div className="relative z-10 flex min-w-0 items-center gap-2.5">
+                      <span className="shrink-0 text-[#F5D78E]">{ch.icon}</span>
+                      <div className="truncate">
+                        <div className="font-journal text-[11px] text-[#9BB8DF]">{ch.label}</div>
+                        <div className="font-mono-num truncate text-xs font-semibold text-[#F5EFE6]">
+                          {ch.handle}
+                        </div>
+                      </div>
+                    </div>
+                    {ch.copyValue ? (
+                      <button
+                        type="button"
+                        onClick={() => onCopyText(ch.label, ch.copyValue!)}
+                        className="relative z-10 ml-2 shrink-0 cursor-pointer rounded-lg border-2 border-[#FAF6EE]/80 bg-[#122644] px-2.5 py-1 font-journal text-xs font-bold text-[#F3EBDD] shadow-[2px_2px_0px_#030913] transition-transform hover:-translate-y-0.5 hover:border-[#F5D78E] hover:text-[#F5D78E]"
+                      >
+                        {isId ? 'Salin' : 'Copy'}
+                      </button>
+                    ) : (
+                      <a
+                        href={ch.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative z-10 ml-2 shrink-0 rounded-lg border-2 border-[#FAF6EE]/80 bg-[#122644] px-2.5 py-1 font-journal text-xs font-bold text-[#F3EBDD] shadow-[2px_2px_0px_#030913] transition-transform hover:-translate-y-0.5 hover:border-[#F5D78E] hover:text-[#F5D78E]"
+                      >
+                        {isId ? 'Buka ↗' : 'Open ↗'}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Interactive Journal Note Form ("Tinggalkan Catatan Kolaborasi") */}
+              <div className="mt-5 border-t-2 border-dashed border-[#0B192C]/25 pt-4 sm:mt-6 sm:pt-5">
+                {lastSubmittedNote ? (
+                  <div className="sketch-card-exp relative p-5 text-center text-[#F3EBDD]">
+                    <HandDrawnCardCornerDoodles variant="exp" />
+                    <div className="relative z-10">
+                      <CrownDoodle className="mx-auto mb-1.5 h-7 w-8" color="#F5D78E" />
+                      <h4 className="font-brush text-2xl text-[#F5EFE6] sm:text-3xl">
+                        {isId
+                          ? 'Catatan Tercatat di Jurnal Kolaborasi!'
+                          : 'Note Logged in Collaboration Journal!'}
+                      </h4>
+                      <p className="mt-1 font-journal text-xs text-[#C7D8EE] sm:text-sm">
+                        {isId
+                          ? `Terima kasih, ${lastSubmittedNote.senderName}! Catatan Anda tentang "${formatTopicLabel(
+                              lastSubmittedNote.topic
+                            )}" sudah tersimpan di papan jurnal di bawah.`
+                          : `Thanks, ${lastSubmittedNote.senderName}! Your note regarding "${lastSubmittedNote.topic}" is saved on the journal board below.`}
+                      </p>
+
+                      {/* Preview of the saved note */}
+                      <div className="mx-auto mt-3 max-w-lg rounded-xl border border-dashed border-[#F5D78E]/50 bg-[#06101E]/90 px-3.5 py-2.5 text-left font-journal text-xs text-[#FAF6EE]">
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#F5D78E]">
+                          <span>
+                            ✍️ {lastSubmittedNote.senderName} ({lastSubmittedNote.senderHandle})
+                          </span>
+                          <span>• {formatTopicLabel(lastSubmittedNote.topic)}</span>
+                        </div>
+                        <p className="mt-1 leading-relaxed text-[#E4ECF7]">
+                          &ldquo;{lastSubmittedNote.message}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Real Dispatch Actions: Email Direct, Copy Formatted Message, or Write Another */}
+                      <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+                        <a
+                          href={`mailto:fazliuray@gmail.com?subject=${encodeURIComponent(
+                            `[Web3 Collaboration - ${lastSubmittedNote.topic}] from ${lastSubmittedNote.senderName}`
+                          )}&body=${encodeURIComponent(
+                            buildFormattedDispatchText(lastSubmittedNote)
+                          )}`}
+                          className="sketch-pill inline-flex cursor-pointer items-center gap-1.5 bg-[#F5D78E] px-4 py-1.5 font-journal text-xs font-bold text-[#091526] hover:bg-[#FCE5A8]"
+                        >
+                          <HandEmailIcon className="h-3.5 w-3.5" />
+                          <span>{isId ? 'Kirim via Email ↗' : 'Dispatch via Email ↗'}</span>
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onCopyText(
+                              isId ? 'Catatan Kolaborasi' : 'Collaboration Note',
+                              buildFormattedDispatchText(lastSubmittedNote)
+                            )
+                          }
+                          className="sketch-pill cursor-pointer px-4 py-1.5 font-journal text-xs font-bold text-[#FAF6EE]"
+                        >
+                          {isId ? 'Salin Pesan' : 'Copy Note'}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setLastSubmittedNote(null)}
+                          className="sketch-pill cursor-pointer bg-[#122644] px-4 py-1.5 font-journal text-xs font-semibold text-[#F5D78E]"
+                        >
+                          {isId ? '+ Tulis Catatan Lagi' : '+ Write Another Note'}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {ch.copyValue ? (
-                  <button
-                    type="button"
-                    onClick={() => onCopyText(ch.label, ch.copyValue!)}
-                    className="ml-2 shrink-0 cursor-pointer rounded-lg border border-[#3A629C] bg-[#122644] px-2.5 py-1 font-journal text-xs text-[#F3EBDD] hover:bg-[#1B3761]"
-                  >
-                    {isId ? 'Salin' : 'Copy'}
-                  </button>
                 ) : (
-                  <a
-                    href={ch.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-2 shrink-0 rounded-lg border border-[#3A629C] bg-[#122644] px-2.5 py-1 font-journal text-xs text-[#F3EBDD] hover:bg-[#1B3761]"
-                  >
-                    {isId ? 'Buka ↗' : 'Open ↗'}
-                  </a>
+                  <form onSubmit={handleSubmit} noValidate className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-brush text-2xl text-[#091526] sm:text-[26px]">
+                          {isId
+                            ? 'Tinggalkan Catatan Kolaborasi'
+                            : 'Leave a Quick Collaboration Note'}
+                        </h4>
+                        <CrownDoodle className="h-4 w-5" color="#091526" />
+                      </div>
+                      <span className="font-journal text-xs font-bold text-[#233F6B]">
+                        Node • Testnet • Airdrop Alpha
+                      </span>
+                    </div>
+
+                    {formError && (
+                      <div
+                        role="alert"
+                        className="rounded-xl border-2 border-[#991B1B] bg-[#FEF2F2] px-3.5 py-2 font-journal text-xs font-bold text-[#991B1B] shadow-[2px_2px_0px_#991B1B]"
+                      >
+                        ⚠️ {formError}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      <div>
+                        <label
+                          htmlFor="collab-sender-name"
+                          className="mb-1 block font-journal text-[11px] font-bold text-[#091526]"
+                        >
+                          {isId ? 'Nama / Alias *' : 'Name / Alias *'}
+                        </label>
+                        <input
+                          id="collab-sender-name"
+                          type="text"
+                          required
+                          value={senderName}
+                          onChange={(e) => {
+                            setSenderName(e.target.value);
+                            if (formError) setFormError(null);
+                          }}
+                          placeholder={isId ? 'Misal: Budi Web3' : 'e.g. Alex Web3'}
+                          className="sketch-input w-full px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/45"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="collab-sender-handle"
+                          className="mb-1 block font-journal text-[11px] font-bold text-[#091526]"
+                        >
+                          {isId ? 'Kontak (X / Email / Telegram)' : 'Contact (X / Email / TG)'}
+                        </label>
+                        <input
+                          id="collab-sender-handle"
+                          type="text"
+                          value={senderHandle}
+                          onChange={(e) => setSenderHandle(e.target.value)}
+                          placeholder="@username / email"
+                          className="sketch-input w-full px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/45"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="collab-topic"
+                          className="mb-1 block font-journal text-[11px] font-bold text-[#091526]"
+                        >
+                          {isId ? 'Topik Kolaborasi' : 'Collaboration Topic'}
+                        </label>
+                        <select
+                          id="collab-topic"
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          className="sketch-input w-full cursor-pointer px-3.5 py-2 font-journal text-sm font-semibold text-[#091526]"
+                        >
+                          <option value="Node Infrastructure">
+                            {isId ? 'Infrastruktur Node' : 'Node Infrastructure'}
+                          </option>
+                          <option value="Testnet Exploration">
+                            {isId ? 'Eksplorasi Testnet' : 'Testnet Exploration'}
+                          </option>
+                          <option value="Airdrop & Quest Alpha">Airdrop &amp; Quest Alpha</option>
+                          <option value="Meme Coin & Community">
+                            {isId ? 'Meme Coin & Komunitas' : 'Meme Coin & Community'}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="collab-message"
+                        className="mb-1 block font-journal text-[11px] font-bold text-[#091526]"
+                      >
+                        {isId ? 'Pesan / Ide Kolaborasi *' : 'Collaboration Message / Pitch *'}
+                      </label>
+                      <textarea
+                        id="collab-message"
+                        rows={2}
+                        required
+                        value={message}
+                        onChange={(e) => {
+                          setMessage(e.target.value);
+                          if (formError) setFormError(null);
+                        }}
+                        placeholder={
+                          isId
+                            ? 'Tulis ajakan kolaborasi, setup node, info testnet, atau alpha airdrop...'
+                            : 'Write your collaboration idea, node setup, testnet alpha, or opportunity...'
+                        }
+                        className="sketch-input w-full resize-none px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/45"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                      <span className="font-journal text-[11px] font-semibold text-[#233F6B]">
+                        {isId
+                          ? '✨ Catatan langsung tampil di Papan Jurnal Kolaborasi di bawah'
+                          : '✨ Notes appear immediately on the Collaboration Journal Board below'}
+                      </span>
+                      <div className="flex items-center justify-end gap-2.5 ml-auto">
+                        <button
+                          type="button"
+                          onClick={onClose}
+                          className="sketch-input cursor-pointer px-4 py-2 font-journal text-xs font-bold text-[#091526] hover:bg-[#E5D8C3] sm:text-sm"
+                        >
+                          {isId ? 'Tutup' : 'Close'}
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="sketch-pill-dark shrink-0 cursor-pointer px-5 py-2 font-journal text-xs font-bold text-[#F3EBDD] disabled:opacity-60 sm:px-6 sm:text-sm"
+                        >
+                          {isSubmitting
+                            ? isId
+                              ? 'Menyimpan...'
+                              : 'Saving...'
+                            : isId
+                              ? 'Simpan & Kirim Catatan →'
+                              : 'Save & Post Note →'}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
                 )}
               </div>
-            ))}
-          </div>
 
-          {/* Interactive Journal Note Form */}
-          <div className="mt-5 border-t-2 border-dashed border-[#0B192C]/25 pt-4 sm:mt-6 sm:pt-5">
-            {submitted ? (
-              <div className="rounded-2xl bg-[#091526] p-5 text-center text-[#F3EBDD]">
-                <CrownDoodle className="mx-auto mb-2 h-7 w-8" color="#F5D78E" />
-                <h4 className="font-brush text-2xl text-[#F5EFE6]">
-                  {isId
-                    ? 'Pesan Tercatat di Jurnal Explorer!'
-                    : 'Message Logged in Explorer Journal!'}
-                </h4>
-                <p className="mt-1 font-journal text-sm text-[#B8C9DF]">
-                  {isId
-                    ? `Terima kasih, ${senderName}! Uray Fazli Alman akan menghubungi melalui ${
-                        senderHandle || 'kontak Anda'
-                      } terkait ${topic}.`
-                    : `Thanks, ${senderName}! Uray Fazli Alman will reach out via ${
-                        senderHandle || 'your contact channel'
-                      } regarding ${topic}.`}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSubmitted(false);
-                    setSenderName('');
-                    setSenderHandle('');
-                    setMessage('');
-                  }}
-                  className="sketch-pill mt-4 cursor-pointer px-5 py-1.5 font-journal text-xs font-semibold text-[#F3EBDD]"
-                >
-                  {isId ? 'Kirim Catatan Lain' : 'Send Another Note'}
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <h4 className="font-brush text-2xl text-[#091526]">
-                    {isId ? 'Tinggalkan Catatan Kolaborasi' : 'Leave a Quick Collaboration Note'}
-                  </h4>
-                  <span className="font-journal text-xs text-[#233F6B]">
-                    Node • Testnet • Airdrop Alpha
+              {/* Live Collaboration Notes Wall ("Papan Catatan Kolaborasi") */}
+              <div className="mt-5 border-t-2 border-dashed border-[#0B192C]/25 pt-4">
+                <div className="mb-2.5 flex items-center justify-between gap-2">
+                  <h5 className="font-brush text-xl text-[#091526] sm:text-2xl">
+                    {isId
+                      ? `Papan Catatan Kolaborasi (${notes.length})`
+                      : `Collaboration Notes Board (${notes.length})`}
+                  </h5>
+                  <span className="font-journal text-[11px] font-semibold text-[#233F6B]">
+                    {isId ? 'Jurnal Komunitas Web3' : 'Web3 Community Log'}
                   </span>
                 </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <input
-                    type="text"
-                    required
-                    value={senderName}
-                    onChange={(e) => setSenderName(e.target.value)}
-                    placeholder={isId ? 'Nama / Alias Anda' : 'Your Name / Alias'}
-                    className="rounded-xl border-2 border-[#091526]/30 bg-[#FFF9EE] px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/50 focus:border-[#091526] focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={senderHandle}
-                    onChange={(e) => setSenderHandle(e.target.value)}
-                    placeholder="X / Email / GitHub"
-                    className="rounded-xl border-2 border-[#091526]/30 bg-[#FFF9EE] px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/50 focus:border-[#091526] focus:outline-none"
-                  />
-                  <select
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    className="rounded-xl border-2 border-[#091526]/30 bg-[#FFF9EE] px-3.5 py-2 font-journal text-sm text-[#091526] focus:border-[#091526] focus:outline-none"
-                  >
-                    <option value="Node Infrastructure">
-                      {isId ? 'Infrastruktur Node' : 'Node Infrastructure'}
-                    </option>
-                    <option value="Testnet Exploration">
-                      {isId ? 'Eksplorasi Testnet' : 'Testnet Exploration'}
-                    </option>
-                    <option value="Airdrop & Quest Alpha">Airdrop &amp; Quest Alpha</option>
-                    <option value="Meme Coin & Community">
-                      {isId ? 'Meme Coin & Komunitas' : 'Meme Coin & Community'}
-                    </option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
-                  <input
-                    type="text"
-                    required
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder={
-                      isId
-                        ? 'Ceritakan proyek, jaringan node, atau peluang kolaborasi...'
-                        : 'Tell Uray about your project, node network, or opportunity...'
-                    }
-                    className="flex-1 rounded-xl border-2 border-[#091526]/30 bg-[#FFF9EE] px-3.5 py-2 font-journal text-sm text-[#091526] placeholder-[#091526]/50 focus:border-[#091526] focus:outline-none"
-                  />
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="cursor-pointer rounded-xl border-2 border-[#091526] bg-[#FFF9EE] px-4 py-2.5 font-journal text-xs font-bold text-[#091526] transition-colors hover:bg-[#E5D8C3] sm:text-sm"
+
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {notes.slice(0, 6).map((item) => (
+                    <div
+                      key={item.id}
+                      className="sketch-note-card flex flex-col justify-between p-3 text-[#091526]"
                     >
-                      {isId ? 'Tutup' : 'Close'}
-                    </button>
-                    <button
-                      type="submit"
-                      className="shrink-0 cursor-pointer rounded-xl bg-[#091526] px-5 py-2.5 font-journal text-xs font-semibold text-[#F3EBDD] transition-transform hover:-translate-y-0.5 sm:px-6 sm:text-sm"
-                    >
-                      {isId ? 'Kirim Pesan →' : 'Send Dispatch →'}
-                    </button>
-                  </div>
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="block truncate font-journal text-xs font-bold text-[#091526]">
+                              {item.senderName}
+                            </span>
+                            <span className="block truncate font-mono-num text-[10.5px] text-[#233F6B]">
+                              {item.senderHandle}
+                            </span>
+                          </div>
+                          <span className="shrink-0 font-journal text-[10px] font-bold text-[#1B365C]">
+                            {formatTopicLabel(item.topic)}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 font-journal text-xs leading-snug text-[#102136]">
+                          &ldquo;{item.message}&rdquo;
+                        </p>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between border-t border-dashed border-[#091526]/20 pt-1.5 text-[10px] text-[#233F6B]">
+                        <span>
+                          {new Date(item.createdAt).toLocaleDateString(isId ? 'id-ID' : 'en-US', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onCopyText(
+                                item.senderName,
+                                `${item.senderName} (${item.senderHandle}) - ${item.message}`
+                              )
+                            }
+                            className="cursor-pointer font-journal font-bold text-[#091526] underline hover:text-[#233F6B]"
+                          >
+                            {isId ? 'Salin' : 'Copy'}
+                          </button>
+                          {item.isOwn && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteNote(item.id)}
+                              className="cursor-pointer font-journal font-bold text-[#991B1B] underline hover:text-[#7F1D1D]"
+                            >
+                              {isId ? 'Hapus' : 'Delete'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </form>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
           </JournalPageOpenShell>
         </motion.div>
       )}

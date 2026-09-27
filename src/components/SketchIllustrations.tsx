@@ -214,13 +214,13 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
       }}
       aria-label={
         isId
-          ? 'Ketuk 2x karakter Chibi untuk menyalakan atau mematikan backsound Cozy & ASMR'
-          : 'Double-tap Chibi character to toggle Cozy & ASMR background sound'
+          ? 'Ketuk 2x karakter Chibi untuk menyalakan atau mematikan backsound Cozy Game Farm ASMR'
+          : 'Double-tap Chibi character to toggle Cozy Game Farm ASMR background sound'
       }
       title={
         isId
-          ? 'Ketuk 2x untuk Backsound Cozy & ASMR (On/Off)'
-          : 'Double-tap for Cozy & ASMR Soundscape (On/Off)'
+          ? 'Ketuk 2x untuk Backsound Cozy Game Farm ASMR (On/Off)'
+          : 'Double-tap for Cozy Game Farm ASMR Soundscape (On/Off)'
       }
       className="group relative mx-auto h-[265px] w-[265px] cursor-pointer overflow-visible touch-manipulation select-none focus:outline-none sm:h-[335px] sm:w-[335px] lg:h-[378px] lg:w-[378px]"
     >
@@ -291,10 +291,11 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
               <path d="M19 7C10 14 10 26 19 33" stroke="#FAF6EE" strokeWidth="2" strokeLinecap="round" strokeDasharray="3 3" />
             </svg>
 
-            {/* Cute Hand-Drawn Anime Cozy Expression Bubble near top-right of head */}
-            <div className="top-[14%] right-[6%] sm:top-[15%] sm:right-[8%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[0_4px_12px_rgba(3,9,18,0.55)] sm:text-[11px]">
+            {/* Cute Hand-Drawn Anime Cozy Farm Expression Bubble near top-right of head */}
+            <div className="top-[14%] right-[4%] sm:top-[15%] sm:right-[6%] absolute flex -rotate-4 items-center gap-1 rounded-full border-2 border-[#091526] bg-[#FAF6EE] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] shadow-[3px_3px_0px_#091526] sm:text-[11px]">
+              <span className="text-[#2E7D32]">🌱</span>
               <span className="text-[#E05A47]">^◡^</span>
-              <span>{isId ? 'Cozy Mode ♪' : 'Cozy Vibe ♪'}</span>
+              <span>{isId ? 'Cozy Farm ASMR ♪' : 'Cozy Farm Vibe ♪'}</span>
             </div>
           </motion.div>
         )}
@@ -351,12 +352,13 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
       {/* Subtle Hand-Drawn Earphone Backsound Status Note at Bottom Center of Chibi */}
       <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
         <div
-          className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[0_4px_12px_rgba(3,9,18,0.75)] transition-colors sm:text-[11.5px] ${
+          className={`inline-flex items-center gap-1.5 rounded-[225px_14px_205px_14px/14px_205px_14px_225px] border-2 px-2.5 py-0.5 font-journal text-[10.5px] font-bold shadow-[3px_3px_0px_#030913] transition-colors sm:text-[11.5px] ${
             isPlaying
               ? 'border-[#F5D78E] bg-[#091526]/95 text-[#F5D78E]'
-              : 'border-[#FAF6EE]/60 bg-[#091526]/90 text-[#FAF6EE]/90 group-hover:border-[#F5D78E]/85 group-hover:text-[#F5D78E]'
+              : 'border-[#FAF6EE]/80 bg-[#091526]/90 text-[#FAF6EE]/95 group-hover:border-[#F5D78E] group-hover:text-[#F5D78E]'
           }`}
         >
+          <span className="text-[#86EFAC]">🌾</span>
           <span className="text-[#F5D78E]">♪</span>
           <span>
             {singleTapHint
@@ -365,11 +367,11 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean }> = ({ isId = true }
                 : 'Tap 1x more...'
               : isPlaying
                 ? isId
-                  ? 'Cozy & ASMR: ON (Ketuk 2x = Off)'
-                  : 'Cozy & ASMR: ON (Tap 2x = Off)'
+                  ? 'Cozy Farm ASMR: ON (Ketuk 2x = Off)'
+                  : 'Cozy Farm ASMR: ON (Tap 2x = Off)'
                 : isId
-                  ? 'Ketuk Chibi 2x • Cozy & ASMR'
-                  : 'Tap Chibi 2x • Cozy & ASMR'}
+                  ? 'Ketuk Chibi 2x • Cozy Farm ASMR'
+                  : 'Tap Chibi 2x • Cozy Farm ASMR'}
           </span>
         </div>
       </div>
@@ -787,3 +789,70 @@ export const SketchDividerLine: React.FC<{ className?: string }> = ({ className 
     />
   </svg>
 );
+
+/**
+ * Hand-Drawn Sketchbook Card Corner Marks & Pencil Cross-Hatch Accents
+ * Gives cards an authentic hand-inked illustration look with zero CPU overhead.
+ */
+export const HandDrawnCardCornerDoodles: React.FC<{
+  variant?: 'default' | 'exp' | 'tape';
+}> = ({ variant = 'default' }) => {
+  const strokeColor = variant === 'exp' ? '#F5D78E' : '#FAF6EE';
+  return (
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-visible select-none" aria-hidden="true">
+      {variant === 'tape' && (
+        <svg
+          viewBox="0 0 64 22"
+          fill="none"
+          className="-top-2.5 left-1/2 absolute h-4 w-13 -translate-x-1/2 -rotate-2 opacity-85"
+        >
+          <path
+            d="M4 4L59 2L62 8L58 14L61 19L5 20L2 14L6 9Z"
+            fill="#F5E6C8"
+            fillOpacity="0.88"
+            stroke="#091526"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path d="M12 7L10 16M52 6L50 15" stroke="#8C765A" strokeWidth="1" strokeDasharray="2 2" />
+        </svg>
+      )}
+      {/* Top-Left Hand-Inked Bracket & Hatch Marks */}
+      <svg
+        viewBox="0 0 34 34"
+        fill="none"
+        className="top-1.5 left-1.5 absolute h-5 w-5 opacity-60 transition-opacity group-hover:opacity-95"
+      >
+        <path
+          d="M3 21C2.5 11 4 5 11 3.5C15 2.6 19 3.2 23 3"
+          stroke={strokeColor}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <path d="M5 10L10 5M7 14L14 7" stroke={strokeColor} strokeWidth="1.2" strokeLinecap="round" opacity="0.65" />
+      </svg>
+
+      {/* Bottom-Right Hand-Inked Sketch Hatch Marks */}
+      <svg
+        viewBox="0 0 36 36"
+        fill="none"
+        className="right-1.5 bottom-1.5 absolute h-5 w-5 opacity-55 transition-opacity group-hover:opacity-95"
+      >
+        <path
+          d="M33 14C33.5 24 31.5 30 24 32C19 33 14 32.5 11 33"
+          stroke={strokeColor}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M23 31L31 23M18 31L30 19M27 32L32 27"
+          stroke="#F5D78E"
+          strokeWidth="1.3"
+          strokeLinecap="round"
+          opacity="0.7"
+        />
+      </svg>
+    </div>
+  );
+};
+

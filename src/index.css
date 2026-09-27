@@ -32,15 +32,25 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Organic hand-drawn card borders with asymmetric sketchbook curvature */
+/* Authentic Hand-Drawn Ink & Sketchbook Card Style */
 .sketch-card {
   position: relative;
-  background: linear-gradient(180deg, rgba(10, 22, 40, 0.95) 0%, rgba(7, 16, 30, 0.98) 100%);
-  border: 1.85px solid #2E5487;
-  border-radius: 19px 25px 17px 23px / 23px 17px 24px 18px;
+  background-color: #09182C;
+  background-image:
+    repeating-linear-gradient(
+      -28deg,
+      rgba(245, 239, 230, 0.026) 0px,
+      rgba(245, 239, 230, 0.026) 1px,
+      transparent 1px,
+      transparent 7px
+    ),
+    linear-gradient(180deg, rgba(13, 29, 53, 0.96) 0%, rgba(7, 17, 32, 0.99) 100%);
+  border: 2.4px solid #E8DEC8;
+  border-radius: 255px 16px 225px 16px / 16px 225px 16px 255px;
   box-shadow:
-    0 8px 22px rgba(2, 7, 15, 0.6),
-    inset 0 0 0 1px rgba(135, 180, 240, 0.09);
+    4px 5px 0px #030913,
+    0 10px 20px rgba(2, 7, 15, 0.55),
+    inset 0 0 0 1.5px rgba(245, 215, 142, 0.14);
   transition:
     translate 180ms cubic-bezier(0.16, 1, 0.3, 1),
     rotate 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -48,32 +58,55 @@
     box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Second hand-drawn crooked ink pass around the card */
+.sketch-card::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -4px;
+  border: 1.4px solid rgba(245, 239, 230, 0.38);
+  border-radius: 18px 235px 16px 215px / 225px 16px 205px 18px;
+  rotate: -0.65deg;
+  transition:
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    rotate 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Inner sketchy dashed pencil Stitch Line */
 .sketch-card::after {
   content: '';
   pointer-events: none;
   position: absolute;
-  inset: -2px;
-  border: 1px solid rgba(98, 146, 212, 0.22);
-  border-radius: 22px 18px 24px 19px / 18px 23px 19px 24px;
-  rotate: -0.35deg;
+  inset: 4px;
+  border: 1.2px dashed rgba(155, 184, 223, 0.32);
+  border-radius: 220px 12px 195px 12px / 12px 195px 12px 220px;
   transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sketch-card:hover {
-  translate: 0 -2.5px;
-  rotate: -0.2deg;
-  border-color: #6396D6;
+  translate: -1px -3px;
+  rotate: -0.45deg;
+  border-color: #F5D78E;
   box-shadow:
-    0 12px 26px rgba(2, 7, 15, 0.72),
-    inset 0 0 0 1px rgba(245, 215, 142, 0.18);
+    6px 7px 0px #030913,
+    0 14px 26px rgba(2, 7, 15, 0.7),
+    inset 0 0 0 1.5px rgba(245, 215, 142, 0.28);
+}
+
+.sketch-card:hover::before {
+  border-color: rgba(245, 215, 142, 0.62);
+  rotate: 0.45deg;
 }
 
 .sketch-card:hover::after {
-  border-color: rgba(135, 180, 240, 0.38);
+  border-color: rgba(245, 215, 142, 0.45);
 }
 
 .sketch-card:active {
-  translate: 0 -0.5px;
+  translate: 1px 1px;
+  box-shadow:
+    2px 2px 0px #030913,
+    0 4px 10px rgba(2, 7, 15, 0.5);
 }
 
 .sketch-card:focus-visible,
@@ -81,66 +114,147 @@
 .sketch-pill:focus-visible,
 .sketch-pill-dark:focus-visible {
   outline: 2px dashed #F5D78E;
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 
+/* Hand-Drawn Card for Experience Nodes inside Parchment */
 .sketch-card-exp {
   position: relative;
-  background: linear-gradient(180deg, #081527 0%, #06101E 100%);
-  border: 2px solid #1B365C;
-  border-radius: 17px 22px 16px 20px / 21px 16px 22px 17px;
-  box-shadow: 0 5px 14px rgba(5, 12, 24, 0.32);
+  background-color: #081527;
+  background-image:
+    repeating-linear-gradient(
+      -24deg,
+      rgba(245, 239, 230, 0.028) 0px,
+      rgba(245, 239, 230, 0.028) 1px,
+      transparent 1px,
+      transparent 6px
+    ),
+    linear-gradient(180deg, #0B1B32 0%, #06101E 100%);
+  border: 2.5px solid #091526;
+  border-radius: 235px 15px 210px 15px / 15px 215px 15px 235px;
+  box-shadow:
+    4px 4px 0px #091526,
+    inset 0 0 0 1.5px rgba(245, 239, 230, 0.22);
   transition:
     translate 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    rotate 180ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.sketch-card-exp::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -3.5px;
+  border: 1.5px solid rgba(9, 21, 38, 0.55);
+  border-radius: 16px 225px 14px 205px / 215px 14px 195px 16px;
+  rotate: 0.6deg;
+  transition:
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    rotate 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sketch-card-exp::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 4px;
+  border: 1.2px dashed rgba(245, 215, 142, 0.32);
+  border-radius: 210px 11px 185px 11px / 11px 185px 11px 210px;
+  transition: border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .sketch-card-exp:hover {
-  translate: 0 -2.5px;
-  border-color: #4B7EC0;
+  translate: -1px -3px;
+  rotate: -0.5deg;
+  border-color: #091526;
   box-shadow:
-    0 9px 20px rgba(5, 12, 24, 0.48),
-    inset 0 0 0 1px rgba(245, 215, 142, 0.14);
+    6px 6px 0px #091526,
+    inset 0 0 0 1.8px rgba(245, 215, 142, 0.65);
+}
+
+.sketch-card-exp:hover::after {
+  border-color: rgba(245, 215, 142, 0.62);
 }
 
 .sketch-card-exp:active {
-  translate: 0 -0.5px;
+  translate: 1px 1px;
+  box-shadow: 2px 2px 0px #091526;
+}
+
+/* Hand-Drawn Sketchbook Input / Note Field */
+.sketch-input {
+  background-color: #FFF9EE;
+  border: 2.2px solid #091526;
+  border-radius: 225px 12px 205px 12px / 12px 205px 12px 225px;
+  box-shadow: 2.5px 3px 0px rgba(9, 21, 38, 0.85);
+  transition:
+    translate 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
+}
+
+.sketch-input:focus {
+  outline: none;
+  background-color: #FFFDF7;
+  translate: -1px -1px;
+  box-shadow: 4px 4px 0px #091526;
+}
+
+/* Hand-Drawn Sticky Note / Collaboration Card inside Modal */
+.sketch-note-card {
+  position: relative;
+  background-color: #FFFDF7;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 23px,
+    rgba(140, 118, 90, 0.14) 23px,
+    rgba(140, 118, 90, 0.14) 24px
+  );
+  border: 2.2px solid #091526;
+  border-radius: 215px 14px 195px 14px / 14px 195px 14px 215px;
+  box-shadow: 3.5px 4px 0px #091526;
 }
 
 .sketch-pill {
   position: relative;
-  border: 1.85px solid #F5EFE6;
-  border-radius: 26px 34px 24px 32px / 24px 28px 22px 26px;
-  box-shadow: 0 2px 0 rgba(245, 239, 230, 0.16);
+  border: 2.2px solid #F5EFE6;
+  border-radius: 255px 24px 225px 24px / 24px 225px 24px 255px;
+  box-shadow: 3px 3.5px 0px #030913;
   transition:
     translate 160ms cubic-bezier(0.16, 1, 0.3, 1),
     rotate 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1),
     background-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sketch-pill:hover {
-  translate: 0 -1px;
-  rotate: -0.5deg;
-  background-color: rgba(245, 239, 230, 0.1);
+  translate: -1px -2px;
+  rotate: -0.6deg;
+  box-shadow: 4px 5px 0px #030913;
+  background-color: rgba(245, 239, 230, 0.12);
 }
 
 .sketch-pill-dark {
   background-color: #091526;
   color: #FAF6EE;
-  border: 2px solid #091526;
-  border-radius: 26px 34px 24px 32px / 24px 28px 22px 26px;
-  box-shadow: 0 3px 8px rgba(9, 21, 38, 0.28);
+  border: 2.2px solid #091526;
+  border-radius: 255px 24px 225px 24px / 24px 225px 24px 255px;
+  box-shadow: 3px 3.5px 0px rgba(9, 21, 38, 0.45);
   transition:
     translate 160ms cubic-bezier(0.16, 1, 0.3, 1),
+    rotate 160ms cubic-bezier(0.16, 1, 0.3, 1),
     background-color 160ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sketch-pill-dark:hover {
-  translate: 0 -1px;
+  translate: -1px -2px;
+  rotate: -0.5deg;
   background-color: #142B4B;
-  border-color: #142B4B;
+  border-color: #091526;
 }
 
 /* Warm Cream Parchment Paper Surface */

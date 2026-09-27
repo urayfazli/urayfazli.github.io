@@ -42,6 +42,7 @@ import {
   HandGithubIcon,
   HandEmailIcon,
   SketchDividerLine,
+  HandDrawnCardCornerDoodles,
 } from './components/SketchIllustrations';
 import {
   JOURNAL_ENTRIES_BY_LANG,
@@ -939,8 +940,9 @@ export default function App() {
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
+              <HandDrawnCardCornerDoodles />
               <StatShieldBadge />
-              <div className="min-w-0 flex-1">
+              <div className="relative z-10 min-w-0 flex-1">
                 <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3+
                 </div>
@@ -960,8 +962,9 @@ export default function App() {
               onClick={() => setSelectedEntryId('aptos')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
+              <HandDrawnCardCornerDoodles />
               <StatNodeBadge />
-              <div className="min-w-0 flex-1">
+              <div className="relative z-10 min-w-0 flex-1">
                 <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3
                 </div>
@@ -981,8 +984,9 @@ export default function App() {
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
+              <HandDrawnCardCornerDoodles />
               <StatCubeBadge />
-              <div className="min-w-0 flex-1">
+              <div className="relative z-10 min-w-0 flex-1">
                 <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   100+
                 </div>
@@ -1002,8 +1006,9 @@ export default function App() {
               onClick={() => setSelectedEntryId('airdrop')}
               className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
+              <HandDrawnCardCornerDoodles />
               <StatRocketBadge />
-              <div className="min-w-0 flex-1">
+              <div className="relative z-10 min-w-0 flex-1">
                 <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   1000+
                 </div>
@@ -1130,7 +1135,8 @@ export default function App() {
                   onClick={() => setSelectedEntryId('aptos')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <HandDrawnCardCornerDoodles variant="exp" />
+                  <div className="relative z-10 flex items-center gap-2.5">
                     <AptosNetworkIcon />
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
@@ -1172,7 +1178,8 @@ export default function App() {
                   onClick={() => setSelectedEntryId('sei')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <HandDrawnCardCornerDoodles variant="exp" />
+                  <div className="relative z-10 flex items-center gap-2.5">
                     <SeiNetworkIcon />
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
@@ -1214,7 +1221,8 @@ export default function App() {
                   onClick={() => setSelectedEntryId('subquery')}
                   className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <HandDrawnCardCornerDoodles variant="exp" />
+                  <div className="relative z-10 flex items-center gap-2.5">
                     <SubQueryNetworkIcon />
                     <div className="min-w-0 flex-1">
                       <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
@@ -1395,7 +1403,8 @@ export default function App() {
               onClick={() => setSelectedEntryId('airdrop')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+              <HandDrawnCardCornerDoodles variant="tape" />
+              <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
                 <AirdropParachuteIllustration />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1.5">
@@ -1453,7 +1462,8 @@ export default function App() {
               onClick={() => setSelectedEntryId('memecoin')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+              <HandDrawnCardCornerDoodles variant="tape" />
+              <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
                 <MemeCoinDogeIllustration />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1.5">
@@ -1508,7 +1518,8 @@ export default function App() {
               onClick={() => setSelectedEntryId('testnet')}
               className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-1"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+              <HandDrawnCardCornerDoodles variant="tape" />
+              <div className="relative z-10 flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
                 <TestnetCubesIllustration />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1.5">
@@ -1945,6 +1956,7 @@ export default function App() {
         lang={lang}
         onClose={() => setIsConnectOpen(false)}
         onCopyText={handleCopyText}
+        onToast={triggerToast}
       />
       <Analytics />
     </div>
