@@ -988,7 +988,7 @@ export default function App() {
           </motion.div>
 
           {/* RIGHT: 2x2 Statistic Cards Grid (2x2 on both Mobile and Desktop!) */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:col-span-4">
+          <div className="grid grid-cols-2 items-stretch gap-2.5 sm:gap-3 lg:col-span-4">
             {/* Stat 1: 3+ Years in Web3 */}
             <motion.button
               type="button"
@@ -997,14 +997,14 @@ export default function App() {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.55, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
-              className="sketch-card flex cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-4 sm:py-3.5"
+              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
               <StatShieldBadge />
-              <div className="min-w-0">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[32px]">
+              <div className="min-w-0 flex-1">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3+
                 </div>
-                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12.5px]">
+                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Tahun di Web3' : 'Years in Web3'}
                 </div>
               </div>
@@ -1018,14 +1018,14 @@ export default function App() {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.55, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('aptos')}
-              className="sketch-card flex cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-4 sm:py-3.5"
+              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
               <StatNodeBadge />
-              <div className="min-w-0">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[32px]">
+              <div className="min-w-0 flex-1">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   3
                 </div>
-                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12.5px]">
+                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Jaringan Node' : 'Node Networks'}
                 </div>
               </div>
@@ -1039,14 +1039,14 @@ export default function App() {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.55, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('testnet')}
-              className="sketch-card flex cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-4 sm:py-3.5"
+              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
               <StatCubeBadge />
-              <div className="min-w-0">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[32px]">
+              <div className="min-w-0 flex-1">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   100+
                 </div>
-                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12.5px]">
+                <div className="mt-1 font-journal text-[11px] leading-tight font-medium text-[#C9D7EA] sm:text-[12px]">
                   {isId ? 'Testnet Diikuti' : 'Testnet Joined'}
                 </div>
               </div>
@@ -1060,14 +1060,14 @@ export default function App() {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.55, delay: 0.27, ease: [0.22, 1, 0.36, 1] }}
               onClick={() => setSelectedEntryId('airdrop')}
-              className="sketch-card flex cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-4 sm:py-3.5"
+              className="sketch-card group flex h-full w-full cursor-pointer items-center gap-2.5 px-3 py-3 text-left sm:gap-3 sm:px-3.5 sm:py-3.5"
             >
               <StatRocketBadge />
-              <div className="min-w-0">
-                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums sm:text-[32px]">
+              <div className="min-w-0 flex-1">
+                <div className="font-brush text-2xl leading-none text-[#FAF6EE] tabular-nums transition-colors group-hover:text-[#F5D78E] sm:text-[30px] lg:text-[26px] xl:text-[32px]">
                   1000+
                 </div>
-                <div className="mt-0.5 font-journal text-[10.5px] leading-tight font-medium text-[#C9D7EA] sm:text-xs">
+                <div className="mt-0.5 font-journal text-[10.5px] leading-tight font-medium text-[#C9D7EA] sm:text-[11.5px]">
                   {isId ? (
                     <>
                       Peluang Airdrop
@@ -1175,7 +1175,7 @@ export default function App() {
               </div>
 
               {/* 3 Compact Dark Navy Node Cards Inside Parchment */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3">
                 {/* CARD 1: Aptos Network */}
                 <motion.button
                   type="button"
@@ -1184,29 +1184,31 @@ export default function App() {
                   viewport={{ once: false, amount: 0.2 }}
                   transition={{ duration: 0.52, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('aptos')}
-                  className="sketch-card-exp group relative flex h-full cursor-pointer flex-col justify-between px-4 py-3.5 text-left text-[#F5EFE6]"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <AptosNetworkIcon />
-                    <div>
-                      <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-base">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
                         Aptos Network
                       </h3>
-                      <p className="font-journal text-[11.5px] text-[#B2C5DF]">Node Operator</p>
+                      <p className="mt-0.5 font-journal text-[11px] text-[#B2C5DF]">
+                        {isId ? 'Operator Node' : 'Node Operator'}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-end justify-between gap-2">
-                    <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <ul className="space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Jalankan full node' : 'Run full node'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Pantau & pelihara' : 'Monitor & maintain'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>
                           {isId ? 'Dukung stabilitas jaringan' : 'Support network stability'}
                         </span>
@@ -1224,29 +1226,31 @@ export default function App() {
                   viewport={{ once: false, amount: 0.2 }}
                   transition={{ duration: 0.52, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('sei')}
-                  className="sketch-card-exp group relative flex h-full cursor-pointer flex-col justify-between px-4 py-3.5 text-left text-[#F5EFE6]"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <SeiNetworkIcon />
-                    <div>
-                      <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-base">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
                         Sei Network
                       </h3>
-                      <p className="font-journal text-[11.5px] text-[#B2C5DF]">Node Operator</p>
+                      <p className="mt-0.5 font-journal text-[11px] text-[#B2C5DF]">
+                        {isId ? 'Operator Node' : 'Node Operator'}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-end justify-between gap-2">
-                    <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <ul className="space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Jalankan full node' : 'Run full node'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Sinkronisasi & pantau' : 'Sync & monitoring'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>
                           {isId ? 'Kontribusi ke ekosistem' : 'Contribute to ecosystem'}
                         </span>
@@ -1264,29 +1268,31 @@ export default function App() {
                   viewport={{ once: false, amount: 0.2 }}
                   transition={{ duration: 0.52, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   onClick={() => setSelectedEntryId('subquery')}
-                  className="sketch-card-exp group relative flex h-full cursor-pointer flex-col justify-between px-4 py-3.5 text-left text-[#F5EFE6]"
+                  className="sketch-card-exp group relative flex h-full w-full cursor-pointer flex-col justify-between px-3.5 py-3.5 text-left text-[#F5EFE6] sm:px-4"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <SubQueryNetworkIcon />
-                    <div>
-                      <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-base">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-journal text-[14px] leading-tight font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] xl:text-[15.5px]">
                         SubQuery Network
                       </h3>
-                      <p className="font-journal text-[11.5px] text-[#B2C5DF]">Node Operator</p>
+                      <p className="mt-0.5 font-journal text-[11px] text-[#B2C5DF]">
+                        {isId ? 'Operator Node' : 'Node Operator'}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-end justify-between gap-2">
-                    <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <ul className="space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Jalankan node indexer' : 'Run indexer node'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>{isId ? 'Proses data on-chain' : 'Process on-chain data'}</span>
                       </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                      <li className="flex items-start gap-1.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                         <span>
                           {isId ? 'Dukung infrastruktur data' : 'Support data infrastructure'}
                         </span>
@@ -1444,172 +1450,174 @@ export default function App() {
           </div>
         </motion.div>
 
-        {/* 3 Cards + Far-Right "Web3 Friends = More Opportunities" Column */}
-        <div className="grid grid-cols-1 items-stretch gap-3.5 md:grid-cols-2 lg:grid-cols-12 lg:gap-4">
-          {/* CARD 1: Airdrop Hunter (4 cols on Desktop) */}
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, y: 22, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: false, amount: 0.18 }}
-            transition={{ duration: 0.56, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            onClick={() => setSelectedEntryId('airdrop')}
-            className="sketch-card group relative flex cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 lg:col-span-4"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-              <AirdropParachuteIllustration />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-[16.5px]">
-                  Airdrop Hunter
-                </h3>
-                <div className="mt-2 flex items-end justify-between gap-1">
-                  <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+        {/* 3 Equal-Width Activity Cards + Far-Right "Web3 Friends = More Opportunities" Column */}
+        <div className="grid grid-cols-1 items-stretch gap-3.5 lg:grid-cols-12 lg:gap-4">
+          <div className="grid grid-cols-1 items-stretch gap-3.5 md:grid-cols-2 lg:col-span-11 lg:grid-cols-3 lg:gap-3.5 xl:gap-4">
+            {/* CARD 1: Airdrop Hunter */}
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 22, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.18 }}
+              transition={{ duration: 0.56, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => setSelectedEntryId('airdrop')}
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                <AirdropParachuteIllustration />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <h3 className="truncate font-journal text-[14.5px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] sm:text-[16px]">
+                      Airdrop Hunter
+                    </h3>
+                    <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+                  </div>
+                  <ul className="mt-2 space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Ikuti proyek terbaru' : 'Follow latest project'}</span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>
                         {isId ? 'Selesaikan quest & tugas' : 'Complete quests & tasks'}
                       </span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Garap peluang awal' : 'Farm early opportunities'}</span>
                     </li>
                   </ul>
-                  <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
                 </div>
               </div>
-            </div>
 
-            {/* Right Floating Handwritten Annotation inside Card 1 */}
-            <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch pl-1 text-center">
-              <div className="relative -rotate-10 font-journal text-[10.5px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-xs">
-                <span className="-top-2 -left-1.5 absolute text-[10px]" aria-hidden="true">
-                  ⑊
-                </span>
-                <span className="block">Free</span>
-                <span className="block">Tokens</span>
-                <span className="block text-[#9BB8DF]">=</span>
-                <span className="block">Freedom</span>
-                <svg viewBox="0 0 54 6" fill="none" className="mx-auto h-1.5 w-11 sm:w-12" aria-hidden="true">
-                  <path d="M2 3.5C18 1.5 36 1.5 52 3.5" stroke="#FAF6EE" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
+              {/* Right Floating Handwritten Annotation inside Card 1 */}
+              <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch border-l border-dashed border-[#2E5487]/45 pl-2 text-center">
+                <div className="relative -rotate-8 font-journal text-[10px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[11px]">
+                  <span className="-top-2 -left-1.5 absolute text-[10px]" aria-hidden="true">
+                    ⑊
+                  </span>
+                  <span className="block">Free</span>
+                  <span className="block">Tokens</span>
+                  <span className="block text-[#9BB8DF]">=</span>
+                  <span className="block">Freedom</span>
+                  <svg viewBox="0 0 54 6" fill="none" className="mx-auto h-1.5 w-10 sm:w-11" aria-hidden="true">
+                    <path d="M2 3.5C18 1.5 36 1.5 52 3.5" stroke="#FAF6EE" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <div className="-mb-1 mt-1">
+                  <GoldBitcoinDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
+                </div>
               </div>
-              <div className="-mb-2.5 mt-1">
-                <GoldBitcoinDoodle className="h-9 w-10 sm:h-10 sm:w-11" />
-              </div>
-            </div>
-          </motion.button>
+            </motion.button>
 
-          {/* CARD 2: Meme Coin Trader (4 cols on Desktop) */}
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, y: 22, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: false, amount: 0.18 }}
-            transition={{ duration: 0.56, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
-            onClick={() => setSelectedEntryId('memecoin')}
-            className="sketch-card group relative flex cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 lg:col-span-4"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-              <MemeCoinDogeIllustration />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-[16.5px]">
-                  Meme Coin Trader
-                </h3>
-                <div className="mt-2 flex items-end justify-between gap-1">
-                  <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+            {/* CARD 2: Meme Coin Trader */}
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 22, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.18 }}
+              transition={{ duration: 0.56, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => setSelectedEntryId('memecoin')}
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                <MemeCoinDogeIllustration />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <h3 className="truncate font-journal text-[14.5px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] sm:text-[16px]">
+                      Meme Coin Trader
+                    </h3>
+                    <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+                  </div>
+                  <ul className="mt-2 space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Deteksi tren awal' : 'Spot early trends'}</span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Kelola risiko' : 'Manage risk'}</span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>
                         {isId ? 'Ikuti hype (dengan bijak)' : 'Ride the hype (responsibly)'}
                       </span>
                     </li>
                   </ul>
-                  <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
                 </div>
               </div>
-            </div>
 
-            {/* Right Floating Handwritten Annotation inside Card 2 + Meme Coin Icon */}
-            <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch pl-1 text-center">
-              <div className="relative -rotate-10 font-journal text-[10.5px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-xs">
-                <span className="-top-2 -left-1.5 absolute text-[10px]" aria-hidden="true">
-                  ⑊
-                </span>
-                <span className="block">Meme</span>
-                <span className="block">Culture</span>
-                <span className="block text-[#9BB8DF]">=</span>
-                <span className="block">Profit</span>
+              {/* Right Floating Handwritten Annotation inside Card 2 + Meme Coin Icon */}
+              <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch border-l border-dashed border-[#2E5487]/45 pl-2 text-center">
+                <div className="relative -rotate-8 font-journal text-[10px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[11px]">
+                  <span className="-top-2 -left-1.5 absolute text-[10px]" aria-hidden="true">
+                    ⑊
+                  </span>
+                  <span className="block">Meme</span>
+                  <span className="block">Culture</span>
+                  <span className="block text-[#9BB8DF]">=</span>
+                  <span className="block">Profit</span>
+                </div>
+                <div className="-mb-1 mt-1">
+                  <MemeDogeCoinMiniDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
+                </div>
               </div>
-              <div className="-mb-2 mt-1">
-                <MemeDogeCoinMiniDoodle className="h-9 w-10 sm:h-10 sm:w-11" />
-              </div>
-            </div>
-          </motion.button>
+            </motion.button>
 
-          {/* CARD 3: Testnet Explorer (3 cols on Desktop, full width on 2-col tablet) */}
-          <motion.button
-            type="button"
-            initial={{ opacity: 0, y: 22, scale: 0.97 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: false, amount: 0.18 }}
-            transition={{ duration: 0.56, delay: 0.21, ease: [0.22, 1, 0.36, 1] }}
-            onClick={() => setSelectedEntryId('testnet')}
-            className="sketch-card group relative flex cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-3"
-          >
-            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-              <TestnetCubesIllustration />
-              <div className="min-w-0 flex-1">
-                <h3 className="font-journal text-[15px] font-bold text-[#FAF6EE] sm:text-[16.5px]">
-                  Testnet Explorer
-                </h3>
-                <div className="mt-2 flex items-end justify-between gap-1">
-                  <ul className="space-y-1 font-journal text-[11.5px] text-[#DCE7F5] sm:text-xs">
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+            {/* CARD 3: Testnet Explorer (Equal 1/3 width on Desktop, full width on 2-col tablet) */}
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 22, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, amount: 0.18 }}
+              transition={{ duration: 0.56, delay: 0.21, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => setSelectedEntryId('testnet')}
+              className="sketch-card group relative flex h-full w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-3.5 text-left sm:px-4 md:col-span-2 lg:col-span-1"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+                <TestnetCubesIllustration />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <h3 className="truncate font-journal text-[14.5px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E] sm:text-[16px]">
+                      Testnet Explorer
+                    </h3>
+                    <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
+                  </div>
+                  <ul className="mt-2 space-y-1 font-journal text-[11.5px] leading-snug text-[#DCE7F5] sm:text-xs">
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Gabung proyek baru' : 'Join new projects'}</span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>{isId ? 'Uji berbagai fitur' : 'Test features'}</span>
                     </li>
-                    <li className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
+                    <li className="flex items-start gap-1.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FAF6EE]" />
                       <span>
                         {isId ? 'Akses awal & dapatkan reward' : 'Get early access & rewards'}
                       </span>
                     </li>
                   </ul>
-                  <HandArrowRight className="h-3.5 w-4 shrink-0 transition-transform group-hover:translate-x-1" />
                 </div>
               </div>
-            </div>
 
-            {/* Right Floating Handwritten Annotation inside Card 3 + Ethereum Coin Doodle */}
-            <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch pl-1 text-center">
-              <div className="relative -rotate-10 font-journal text-[10px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[11px]">
-                <span className="block">Early</span>
-                <span className="block">Testnet</span>
-                <span className="block text-[#9BB8DF]">=</span>
-                <span className="block text-[#F5D78E]">Airdrop</span>
+              {/* Right Floating Handwritten Annotation inside Card 3 + Ethereum Coin Doodle */}
+              <div className="relative flex shrink-0 flex-col items-center justify-between self-stretch border-l border-dashed border-[#2E5487]/45 pl-2 text-center">
+                <div className="relative -rotate-8 font-journal text-[10px] leading-[1.12] font-bold text-[#FAF6EE] sm:text-[11px]">
+                  <span className="block">Early</span>
+                  <span className="block">Testnet</span>
+                  <span className="block text-[#9BB8DF]">=</span>
+                  <span className="block text-[#F5D78E]">Airdrop</span>
+                </div>
+                <div className="-mb-1 mt-1">
+                  <EthereumCoinDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
+                </div>
               </div>
-              <div className="-mb-2 mt-1">
-                <EthereumCoinDoodle className="h-8 w-9 sm:h-9 sm:w-10" />
-              </div>
-            </div>
-          </motion.button>
+            </motion.button>
+          </div>
 
           {/* FAR RIGHT DOODLE CLUSTER: "Web3 Friends = More Opportunities" + Rocket + Crypto Coin (Desktop 1 col) */}
           <motion.div
@@ -1780,7 +1788,7 @@ export default function App() {
                   />
                 </svg>
 
-                <div className="flex w-full max-w-[250px] flex-col gap-2">
+                <div className="flex w-full max-w-[285px] flex-col gap-2">
                   <div className="flex items-center justify-center gap-1.5 select-none">
                     <SolanaCoinDoodle className="h-6 w-7 shrink-0" />
                     <span className="font-journal text-[10.5px] font-bold text-[#F5D78E]">
@@ -1789,15 +1797,15 @@ export default function App() {
                     <EthereumCoinDoodle className="h-6 w-7 shrink-0" />
                   </div>
 
-                  <div className="grid w-full grid-cols-2 gap-3">
+                  <div className="grid w-full grid-cols-2 items-stretch gap-3">
                     <a
                       href="https://x.com/urayfazli17"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="sketch-card flex flex-col items-center justify-center px-3 py-2.5 text-center"
+                      className="sketch-card group flex h-full flex-col items-center justify-center px-2.5 py-2.5 text-center"
                     >
-                      <HandXIcon className="h-5 w-5 text-[#FAF6EE]" />
-                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                      <HandXIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                         X
                       </span>
                       <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
@@ -1808,10 +1816,10 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
-                      className="sketch-card flex cursor-pointer flex-col items-center justify-center px-3 py-2.5 text-center"
+                      className="sketch-card group flex h-full cursor-pointer flex-col items-center justify-center px-2.5 py-2.5 text-center"
                     >
-                      <HandEmailIcon className="h-5 w-5 text-[#FAF6EE]" />
-                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                      <HandEmailIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                      <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                         Email
                       </span>
                       <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
@@ -1876,19 +1884,19 @@ export default function App() {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.56, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-4 grid w-full max-w-[240px] grid-cols-2 gap-3"
+                className="mt-4 grid w-full max-w-[285px] grid-cols-2 items-stretch gap-3"
               >
                 <a
                   href="https://x.com/urayfazli17"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="sketch-card flex flex-col items-center justify-center px-3 py-2.5 text-center"
+                  className="sketch-card group flex h-full flex-col items-center justify-center px-2.5 py-2.5 text-center"
                 >
-                  <HandXIcon className="h-5 w-5 text-[#FAF6EE]" />
-                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                  <HandXIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                     X
                   </span>
-                  <span className="font-journal text-[8px] whitespace-nowrap text-[#9BB8DF]">
+                  <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
                     @urayfazli17
                   </span>
                 </a>
@@ -1896,13 +1904,13 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => handleCopyText('Email', 'fazliuray@gmail.com')}
-                  className="sketch-card flex cursor-pointer flex-col items-center justify-center px-3 py-2.5 text-center"
+                  className="sketch-card group flex h-full cursor-pointer flex-col items-center justify-center px-2.5 py-2.5 text-center"
                 >
-                  <HandEmailIcon className="h-5 w-5 text-[#FAF6EE]" />
-                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE]">
+                  <HandEmailIcon className="h-5 w-5 text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]" />
+                  <span className="mt-1.5 font-journal text-[11px] font-bold text-[#FAF6EE] transition-colors group-hover:text-[#F5D78E]">
                     Email
                   </span>
-                  <span className="font-journal text-[8px] whitespace-nowrap text-[#9BB8DF]">
+                  <span className="font-journal text-[8.5px] whitespace-nowrap text-[#9BB8DF]">
                     fazliuray@gmail.com
                   </span>
                 </button>

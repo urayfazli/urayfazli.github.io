@@ -390,6 +390,7 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                     <img
                       src={GENERATED_ASSETS[entry.illustrationKey]}
                       alt={entry.title}
+                      loading="lazy"
                       decoding="async"
                       draggable={false}
                       referrerPolicy="no-referrer"
@@ -398,9 +399,9 @@ export const JournalDetailModal: React.FC<DetailModalProps> = ({
                   </div>
                   <div className="mt-3 space-y-2 border-t border-[#2A4B78]/60 pt-3">
                     {entry.metrics.map((m, i) => (
-                      <div key={i} className="flex items-center justify-between text-xs">
-                        <span className="text-[#9BB8DF]">{m.label}</span>
-                        <span className="font-mono-num font-semibold text-[#F5EFE6]">
+                      <div key={i} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="truncate text-[#9BB8DF]">{m.label}</span>
+                        <span className="font-mono-num shrink-0 text-right font-semibold text-[#F5EFE6]">
                           {m.value}
                         </span>
                       </div>

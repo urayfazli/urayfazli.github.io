@@ -579,7 +579,7 @@ export const StatRocketBadge: React.FC = () => (
 
 /** Experience Section Network Icons */
 export const AptosNetworkIcon: React.FC = () => (
-  <svg viewBox="0 0 54 54" fill="none" className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" aria-hidden="true">
+  <svg viewBox="0 0 54 54" fill="none" className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" aria-hidden="true">
     <circle cx="27" cy="27" r="23" fill="#F5F7FA" stroke="#081322" strokeWidth="2.2" />
     <path
       d="M8 18H22L26 14H44M6 27H18L23 23H36L40 27H48M8 36H26L31 32H45"
@@ -592,7 +592,7 @@ export const AptosNetworkIcon: React.FC = () => (
 );
 
 export const SeiNetworkIcon: React.FC = () => (
-  <svg viewBox="0 0 54 54" fill="none" className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" aria-hidden="true">
+  <svg viewBox="0 0 54 54" fill="none" className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" aria-hidden="true">
     <circle cx="27" cy="27" r="23" fill="#E0534C" stroke="#081322" strokeWidth="2.2" />
     <path
       d="M12 22C17 17 22 17 27 22C32 27 37 27 42 22M12 32C17 27 22 27 27 32C32 37 37 37 42 32"
@@ -604,7 +604,7 @@ export const SeiNetworkIcon: React.FC = () => (
 );
 
 export const SubQueryNetworkIcon: React.FC = () => (
-  <svg viewBox="0 0 54 54" fill="none" className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" aria-hidden="true">
+  <svg viewBox="0 0 54 54" fill="none" className="h-10 w-10 shrink-0 sm:h-11 sm:w-11" aria-hidden="true">
     <defs>
       <linearGradient id="sq-grad" x1="6" y1="6" x2="48" y2="48" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stopColor="#4F86F7" />
@@ -631,7 +631,7 @@ export const SubQueryNetworkIcon: React.FC = () => (
 
 /** Activity Card 1 Illustration: Parachute Airdrop + Gold Coin */
 export const AirdropParachuteIllustration: React.FC = () => (
-  <svg viewBox="0 0 92 114" fill="none" className="h-18 w-14 shrink-0 select-none sm:h-22 sm:w-17" aria-hidden="true">
+  <svg viewBox="0 0 92 114" fill="none" className="h-15 w-12 shrink-0 select-none sm:h-17 sm:w-14 xl:h-20 xl:w-16" aria-hidden="true">
     <path
       d="M10 46C10 20 26 6 46 6C66 6 82 20 82 46C72 42 62 44 58 48C52 43 40 43 34 48C30 44 20 42 10 46Z"
       fill="#F2F6FC"
@@ -741,7 +741,7 @@ export const MiniAirdropParachuteDoodle: React.FC<{ className?: string }> = ({
 
 /** Activity Card 2 Illustration: Cute Shiba Inu Doge Meme Coin */
 export const MemeCoinDogeIllustration: React.FC = () => (
-  <svg viewBox="0 0 92 92" fill="none" className="h-15 w-15 shrink-0 select-none sm:h-18 sm:w-18" aria-hidden="true">
+  <svg viewBox="0 0 92 92" fill="none" className="h-13 w-13 shrink-0 select-none sm:h-15 sm:w-15 xl:h-17 xl:w-17" aria-hidden="true">
     <circle cx="46" cy="46" r="37" fill="#E5A93B" stroke="#091321" strokeWidth="3.5" />
     <circle cx="46" cy="46" r="32" stroke="#F8D87C" strokeWidth="2" />
     <path
@@ -765,7 +765,7 @@ export const MemeCoinDogeIllustration: React.FC = () => (
 
 /** Activity Card 3 Illustration: 3 Isometric Blockchain Cubes */
 export const TestnetCubesIllustration: React.FC = () => (
-  <svg viewBox="0 0 92 92" fill="none" className="h-15 w-15 shrink-0 select-none sm:h-18 sm:w-18" aria-hidden="true">
+  <svg viewBox="0 0 92 92" fill="none" className="h-13 w-13 shrink-0 select-none sm:h-15 sm:w-15 xl:h-17 xl:w-17" aria-hidden="true">
     <circle cx="46" cy="46" r="35" fill="#3B82F6" fillOpacity="0.15" />
     <g transform="translate(28, 10)">
       <path d="M18 2L34 11V29L18 38L2 29V11L18 2Z" fill="#E8F1FF" stroke="#091321" strokeWidth="2.8" strokeLinejoin="round" />
