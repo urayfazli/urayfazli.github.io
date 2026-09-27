@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics, track } from '@vercel/analytics/react';
 import {
   AnimatePresence,
   motion,
@@ -1983,8 +1983,10 @@ export default function App() {
             <span>Repeat —</span>
           </div>
 
-          {/* Right Copyright + Gold Crown + Back to Top */}
+          {/* Right Visitors Badge + Copyright + Gold Crown + Back to Top */}
           <div className="flex flex-wrap items-center justify-center gap-2 font-journal text-[11.5px] text-[#D0DDF0] sm:text-[12.5px]">
+            <FooterVisitorBadge isId={isId} />
+            <span className="text-[#E5B869]" aria-hidden="true">•</span>
             <span>© 2025 Uray Fazli Alman</span>
             <span className="text-[#E5B869]" aria-hidden="true">•</span>
             <span>Web3 Portfolio</span>
@@ -2020,3 +2022,87 @@ export default function App() {
     </div>
   );
 }
+
+const FooterVisitorBadge: React.FC<{ isId: boolean }> = ({ isId }) => {
+  const [visitors, setVisitors] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const sessionKey = 'urayfazli_vercel_visitor_counted';
+    const hasCountedInSession = sessionStorage.getItem(sessionKey) === '1';
+
+    const fetchVisitors = async () => {
+      try {
+        if (!hasCountedInSession) {
+          try {
+            track('portfolio_visitor');
+          } catch {
+            // Ignore if outside Vercel runtime
+          }
+        }
+
+        // 1. Try Vercel Serverless Function (/api/visitors)
+        const mode = hasCountedInSession ? 'get' : 'up';
+        const res = await fetch(`/api/visitors?mode=${mode}`, {
+          headers: { Accept: 'application/json' },
+        });
+        const contentType = res.headers.get('content-type') || '';
+
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (typeof data?.count === 'number' && isMounted) {
+            sessionStorage.setItem(sessionKey, '1');
+            setVisitors(data.count);
+            return;
+          }
+        }
+
+        // 2. Direct fallback for local preview / static environment
+        const directUrl = hasCountedInSession
+          ? 'https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/'
+          : 'https://api.counterapi.dev/v1/urayfazli-web3-portfolio/site-visitors/up';
+        const directRes = await fetch(directUrl);
+        if (directRes.ok) {
+          const directData = await directRes.json();
+          if (typeof directData?.count === 'number' && isMounted) {
+            sessionStorage.setItem(sessionKey, '1');
+            setVisitors(directData.count);
+            return;
+          }
+        }
+      } catch {
+        // Offline / blocked fallback
+      }
+
+      if (isMounted) {
+        const localKey = 'urayfazli_local_visitor_count';
+        const stored = parseInt(localStorage.getItem(localKey) || '128', 10);
+        const nextVal = hasCountedInSession ? stored : stored + 1;
+        localStorage.setItem(localKey, String(nextVal));
+        sessionStorage.setItem(sessionKey, '1');
+        setVisitors(nextVal);
+      }
+    };
+
+    fetchVisitors();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 rounded-md border border-[#E5B869]/45 bg-[#0D1E36]/90 px-2.5 py-0.5 font-journal text-[11px] font-bold text-[#FAF6EE] shadow-[0_2px_8px_rgba(3,9,18,0.6)] sm:text-xs"
+      title={isId ? 'Total Pengunjung (Vercel Analytics & Counter)' : 'Total Visitors (Vercel Analytics & Counter)'}
+    >
+      <span className="relative flex h-2 w-2" aria-hidden="true">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4ADE80] opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4ADE80]" />
+      </span>
+      <span className="text-[#D0DDF0]">{isId ? 'Pengunjung:' : 'Visitors:'}</span>
+      <span className="font-bold tracking-wide text-[#F5D78E]">
+        {visitors !== null ? visitors.toLocaleString() : '...'}
+      </span>
+    </div>
+  );
+};
