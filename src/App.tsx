@@ -51,6 +51,7 @@ import {
 } from './components/JournalModals';
 import { SketchbookLoadingScreen } from './components/SketchbookLoadingScreen';
 import { AdventureRoadmapSection } from './components/AdventureRoadmap';
+import { MaxiCriticalPartner } from './components/MaxiCriticalPartner';
 import { cozyAsmrAudio } from './utils/cozyAsmrAudio';
 
 type NavSection = 'home' | 'about' | 'experience' | 'activities' | 'roadmap' | 'contact';
@@ -2484,6 +2485,7 @@ export default function App() {
         onCopyText={handleCopyText}
         onToast={triggerToast}
       />
+      <MaxiCriticalPartner isId={isId} isDay={isDay} onTriggerToast={triggerToast} />
       <Analytics />
     </div>
   );
