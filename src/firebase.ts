@@ -3,10 +3,10 @@ import { getAuth } from 'firebase/auth';
 import {
   initializeFirestore,
   getFirestore,
-  getDoc,
+  getDocFromServer,
   doc,
   setLogLevel,
-   Firestore,
+  Firestore,
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -100,8 +100,10 @@ export function handleFirestoreError(
 
 export async function testConnection(): Promise<void> {
   try {
-    await getDoc(doc(db, 'collaboration_notes', '_connection_check'));
-  } catch {
-    // Gracefully operate in offline/cached mode without throwing console errors
+    await getDocFromServer(doc(db, 'collaboration_notes', '_connection_check'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.warn('Please check your Firebase configuration.');
+    }
   }
 }

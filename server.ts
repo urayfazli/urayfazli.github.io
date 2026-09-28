@@ -10,8 +10,7 @@ const AGENTROUTER_BASE_URL = (
   process.env.AGENTROUTER_BASE_URL || 'https://agentrouter.org/v1'
 ).replace(/\/+$/, '');
 const AGENTROUTER_MODEL = process.env.AGENTROUTER_MODEL || 'deepseek-v4-flash';
-const DEFAULT_AGENTROUTER_KEY =
-  'sk-poU3klgKsZPl209MAYMaLjMItNm80SWf7cHxs77Frd7GqbE5';
+const MAX_MESSAGE_LENGTH = 4000;
 
 export const MAXI_SYSTEM_INSTRUCTION = `PERSONAL OPERATING SYSTEM — AI PARTNER
 
@@ -380,17 +379,23 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
-  app.use(express.json({ limit: '1mb' }));
+  app.disable('x-powered-by');
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+  });
+  app.use(express.json({ limit: '256kb' }));
 
   app.post('/api/maxi', async (req, res) => {
     try {
-      const apiKey = (
-        process.env.AGENTROUTER_API_KEY || DEFAULT_AGENTROUTER_KEY
-      ).trim();
+      const apiKey = (process.env.AGENTROUTER_API_KEY || '').trim();
 
-      if (!apiKey || !apiKey.startsWith('sk-')) {
+      if (apiKey && !apiKey.startsWith('sk-')) {
         res.status(401).json({
-          error: 'API Key AgentRouter tidak valid atau belum diatur (harus diawali sk-).',
+          error: 'API Key AgentRouter tidak valid (harus diawali sk-).',
           code: 'INVALID_API_KEY',
         });
         return;
@@ -408,6 +413,8 @@ async function startServer() {
         });
         return;
       }
+
+      const cleanMessage = message.trim().slice(0, MAX_MESSAGE_LENGTH);
 
       if (history !== undefined && !Array.isArray(history)) {
         res.status(400).json({
@@ -443,13 +450,14 @@ async function startServer() {
             (item as { text: string }).text.trim()
           ) {
             const typedItem = item as { role: 'user' | 'model'; text: string };
+            const safeHistoryText = typedItem.text.trim().slice(0, MAX_MESSAGE_LENGTH);
             chatMessages.push({
               role: typedItem.role === 'model' ? 'assistant' : 'user',
-              content: typedItem.text,
+              content: safeHistoryText,
             });
             geminiContents.push({
               role: typedItem.role,
-              parts: [{ text: typedItem.text }],
+              parts: [{ text: safeHistoryText }],
             });
           }
         }
@@ -457,11 +465,11 @@ async function startServer() {
 
       chatMessages.push({
         role: 'user',
-        content: message.trim(),
+        content: cleanMessage,
       });
       geminiContents.push({
         role: 'user',
-        parts: [{ text: message.trim() }],
+        parts: [{ text: cleanMessage }],
       });
 
       let upstreamDiagnostic: {
@@ -477,151 +485,150 @@ async function startServer() {
         reason: string;
       } | null = null;
 
-      try {
-        const endpoint = `${AGENTROUTER_BASE_URL}/chat/completions`;
-        const requestBody = {
-          model: AGENTROUTER_MODEL,
-          messages: chatMessages,
-          temperature: 0.35,
-          top_p: 0.9,
-          stream: false,
-        };
-
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://github.com/RooVetGit/Roo-Cline',
-            'X-Title': 'Roo Code',
-            'User-Agent': 'RooCode/3.54.0',
-            'X-Stainless-Arch': 'x64',
-            'X-Stainless-Lang': 'js',
-            'X-Stainless-OS': 'Linux',
-            'X-Stainless-Package-Version': '5.12.2',
-            'X-Stainless-Retry-Count': '0',
-            'X-Stainless-Runtime': 'node',
-            'X-Stainless-Runtime-Version': process.version,
-          },
-          body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(4200),
-        });
-
-        const contentType = response.headers.get('content-type') || '';
-        const rawText = await response.text();
-
-        // Detect Aliyun WAF HTML challenge page disguised as HTTP 200 OK
-        if (
-          contentType.includes('text/html') ||
-          rawText.includes('aliyun_waf') ||
-          rawText.trim().toLowerCase().startsWith('<!doctype html')
-        ) {
-          upstreamDiagnostic = {
-            category: 'UPSTREAM_FIREWALL_INTERCEPT',
-            status: response.status,
-            contentType,
-            reason:
-              'AgentRouter mengembalikan halaman proteksi Aliyun WAF untuk IP cloud server; mengalihkan otomatis ke mesin cadangan.',
+      if (apiKey) {
+        try {
+          const endpoint = `${AGENTROUTER_BASE_URL}/chat/completions`;
+          const requestBody = {
+            model: AGENTROUTER_MODEL,
+            messages: chatMessages,
+            temperature: 0.35,
+            top_p: 0.9,
+            stream: false,
           };
-          console.log(
-            '[MAXI Server] AgentRouter diintersep proteksi WAF pada IP cloud, beralih ke mesin AI cadangan.'
-          );
-        } else {
-          let parsedData: {
-            choices?: {
-              message?: {
-                content?: string | null;
-                reasoning_content?: string | null;
-              };
-              text?: string;
-            }[];
-            error?: { message?: string; type?: string; code?: string | number } | string;
-            msg?: string;
-            code?: number;
-          } | null = null;
 
-          try {
-            parsedData = JSON.parse(rawText);
-          } catch {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+              'HTTP-Referer': 'https://github.com/RooVetGit/Roo-Cline',
+              'X-Title': 'Roo Code',
+              'User-Agent': 'RooCode/3.54.0',
+              'X-Stainless-Arch': 'x64',
+              'X-Stainless-Lang': 'js',
+              'X-Stainless-OS': 'Linux',
+              'X-Stainless-Package-Version': '5.12.2',
+              'X-Stainless-Retry-Count': '0',
+              'X-Stainless-Runtime': 'node',
+              'X-Stainless-Runtime-Version': process.version,
+            },
+            body: JSON.stringify(requestBody),
+            signal: AbortSignal.timeout(4200),
+          });
+
+          const contentType = response.headers.get('content-type') || '';
+          const rawText = await response.text();
+
+          // Detect Aliyun WAF HTML challenge page disguised as HTTP 200 OK
+          if (
+            contentType.includes('text/html') ||
+            rawText.includes('aliyun_waf') ||
+            rawText.trim().toLowerCase().startsWith('<!doctype html')
+          ) {
             upstreamDiagnostic = {
-              category: 'MALFORMED_RESPONSE',
+              category: 'UPSTREAM_FIREWALL_INTERCEPT',
               status: response.status,
               contentType,
-              reason: 'Respons dari AgentRouter bukan JSON yang valid.',
+              reason:
+                'AgentRouter mengembalikan halaman proteksi Aliyun WAF untuk IP cloud server; mengalihkan otomatis ke mesin cadangan.',
             };
-          }
+          } else {
+            let parsedData: {
+              choices?: {
+                message?: {
+                  content?: string | null;
+                  reasoning_content?: string | null;
+                };
+                text?: string;
+              }[];
+              error?: { message?: string; type?: string; code?: string | number } | string;
+              msg?: string;
+              code?: number;
+            } | null = null;
 
-          if (parsedData && !upstreamDiagnostic) {
-            if (!response.ok || parsedData.code === 401 || parsedData.error) {
-              const errDetail =
-                typeof parsedData.error === 'string'
-                  ? parsedData.error
-                  : parsedData.error?.message ||
-                    parsedData.msg ||
-                    `AgentRouter HTTP ${response.status}`;
-
-              const isAuthErr =
-                response.status === 401 ||
-                response.status === 403 ||
-                parsedData.code === 401 ||
-                /invalid api key|unauthorized|token/i.test(errDetail);
-
-              const isBadReq =
-                response.status === 400 ||
-                response.status === 422 ||
-                /invalid_request|malformed|messages/i.test(errDetail);
-
-              upstreamDiagnostic = {
-                category: isAuthErr
-                  ? 'INVALID_API_KEY'
-                  : isBadReq
-                    ? 'MALFORMED_REQUEST'
-                    : 'UPSTREAM_ERROR',
-                status: response.status,
-                contentType,
-                reason: errDetail,
-              };
-            } else {
-              const firstChoice = parsedData.choices?.[0];
-              const extractedReply = (
-                firstChoice?.message?.content ||
-                firstChoice?.message?.reasoning_content ||
-                firstChoice?.text ||
-                ''
-              ).trim();
-
-              if (extractedReply) {
-                res.status(200).json({
-                  reply: extractedReply,
-                  provider: 'agentrouter',
-                  model: AGENTROUTER_MODEL,
-                });
-                return;
-              }
-
+            try {
+              parsedData = JSON.parse(rawText);
+            } catch {
               upstreamDiagnostic = {
                 category: 'MALFORMED_RESPONSE',
                 status: response.status,
                 contentType,
-                reason:
-                  'JSON AgentRouter berhasil dibaca, tetapi field choices[0].message.content kosong.',
+                reason: 'Respons dari AgentRouter bukan JSON yang valid.',
               };
             }
+
+            if (parsedData && !upstreamDiagnostic) {
+              if (!response.ok || parsedData.code === 401 || parsedData.error) {
+                const errDetail =
+                  typeof parsedData.error === 'string'
+                    ? parsedData.error
+                    : parsedData.error?.message ||
+                      parsedData.msg ||
+                      `AgentRouter HTTP ${response.status}`;
+
+                const isAuthErr =
+                  response.status === 401 ||
+                  response.status === 403 ||
+                  parsedData.code === 401 ||
+                  /invalid api key|unauthorized|token/i.test(errDetail);
+
+                const isBadReq =
+                  response.status === 400 ||
+                  response.status === 422 ||
+                  /invalid_request|malformed|messages/i.test(errDetail);
+
+                upstreamDiagnostic = {
+                  category: isAuthErr
+                    ? 'INVALID_API_KEY'
+                    : isBadReq
+                      ? 'MALFORMED_REQUEST'
+                      : 'UPSTREAM_ERROR',
+                  status: response.status,
+                  contentType,
+                  reason: errDetail,
+                };
+              } else {
+                const firstChoice = parsedData.choices?.[0];
+                const extractedReply = (
+                  firstChoice?.message?.content ||
+                  firstChoice?.message?.reasoning_content ||
+                  firstChoice?.text ||
+                  ''
+                ).trim();
+
+                if (extractedReply) {
+                  res.status(200).json({
+                    reply: extractedReply,
+                    provider: 'agentrouter',
+                    model: AGENTROUTER_MODEL,
+                  });
+                  return;
+                }
+
+                upstreamDiagnostic = {
+                  category: 'MALFORMED_RESPONSE',
+                  status: response.status,
+                  contentType,
+                  reason:
+                    'JSON AgentRouter berhasil dibaca, tetapi field choices[0].message.content kosong.',
+                };
+              }
+            }
           }
+        } catch (fetchErr: unknown) {
+          const netMsg =
+            fetchErr instanceof Error
+              ? fetchErr.message
+              : 'Koneksi jaringan ke AgentRouter gagal.';
+          upstreamDiagnostic = {
+            category: 'NETWORK_ERROR',
+            reason: `Gagal menghubungi ${AGENTROUTER_BASE_URL}: ${netMsg}`,
+          };
         }
-      } catch (fetchErr: unknown) {
-        const netMsg =
-          fetchErr instanceof Error
-            ? fetchErr.message
-            : 'Koneksi jaringan ke AgentRouter gagal.';
-        upstreamDiagnostic = {
-          category: 'NETWORK_ERROR',
-          reason: `Gagal menghubungi ${AGENTROUTER_BASE_URL}: ${netMsg}`,
-        };
       }
 
-      // Secondary AI engine fallback when AgentRouter blocks datacenter IP via WAF
+      // Secondary AI engine fallback using @google/genai SDK
       const fallbackGeminiKey = process.env.GEMINI_API_KEY;
       if (fallbackGeminiKey) {
         const ai = new GoogleGenAI({
@@ -634,10 +641,9 @@ async function startServer() {
         });
 
         const fallbackModels = [
-          'gemini-3.1-flash-lite-preview',
-          'gemini-3-flash-preview',
           'gemini-3.8-flash',
           'gemini-flash-latest',
+          'gemini-3.1-flash-lite',
         ];
 
         for (const modelName of fallbackModels) {

@@ -53,6 +53,7 @@ import { SketchbookLoadingScreen } from './components/SketchbookLoadingScreen';
 import { AdventureRoadmapSection } from './components/AdventureRoadmap';
 import { MaxiCriticalPartner } from './components/MaxiCriticalPartner';
 import { cozyAsmrAudio } from './utils/cozyAsmrAudio';
+import { testConnection } from './firebase';
 
 type NavSection = 'home' | 'about' | 'experience' | 'activities' | 'roadmap' | 'contact';
 
@@ -71,8 +72,10 @@ const HeaderScrollProgressBar: React.FC<{
   isDay?: boolean;
 }> = React.memo(({ scrollProgress, isDay = false }) => (
   <div
-    className={`relative h-[5px] w-full overflow-hidden transition-colors duration-200 sm:h-[6px] ${
-      isDay ? 'bg-[#DED0B8]' : 'bg-[#0C1D36]'
+    className={`relative h-[4px] w-full overflow-hidden border-b transition-colors duration-200 sm:h-[5px] ${
+      isDay
+        ? 'border-[#091526]/20 bg-[#DED0B8]'
+        : 'border-[#1D3558]/80 bg-[#0C1D36]'
     }`}
   >
     <motion.div
@@ -110,6 +113,7 @@ export default function App() {
   const langSwitchTimeoutRef = useRef<number | null>(null);
   const scrollAnimFrameRef = useRef<number | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
+  const mobileNavRef = useRef<HTMLElement | null>(null);
 
   const isId = lang === 'id';
   const isDay = theme === 'day';
@@ -301,12 +305,32 @@ export default function App() {
 
   // Cleanup any active timers or animation frames on unmount
   useEffect(() => {
+    testConnection();
     return () => {
       if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
       if (langSwitchTimeoutRef.current !== null) window.clearTimeout(langSwitchTimeoutRef.current);
       if (scrollAnimFrameRef.current !== null) cancelAnimationFrame(scrollAnimFrameRef.current);
     };
   }, []);
+
+  // Keep active mobile navigation item centered in horizontal scroll strip
+  useEffect(() => {
+    const navEl = mobileNavRef.current;
+    if (!navEl) return;
+    const activeItem = navEl.querySelector<HTMLElement>(`[data-nav-id="${activeNav}"]`);
+    if (!activeItem) return;
+    const navRect = navEl.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+    const targetScrollLeft =
+      navEl.scrollLeft +
+      (itemRect.left - navRect.left) -
+      navRect.width / 2 +
+      itemRect.width / 2;
+    navEl.scrollTo({
+      left: Math.max(0, targetScrollLeft),
+      behavior: 'smooth',
+    });
+  }, [activeNav, lang]);
 
   // Lightweight cached scroll-spy & progress updater (zero DOM reflow/layout thrashing on scroll)
   useEffect(() => {
@@ -513,8 +537,8 @@ export default function App() {
       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-40 w-full transition-colors duration-250 ${
-          isDay ? 'bg-[#F5ECDC]/96' : 'bg-[#07111F]/96'
+        className={`sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-250 ${
+          isDay ? 'bg-[#F5ECDC]/95' : 'bg-[#07111F]/95'
         }`}
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3.5 py-2 sm:px-8 sm:py-2.5">
@@ -526,7 +550,7 @@ export default function App() {
               scrollToSection('home');
             }}
             aria-label="Web3 Portfolio"
-            className="group flex min-w-0 items-center gap-2 focus:outline-none sm:gap-2.5"
+            className="group flex shrink-0 items-center gap-2 focus:outline-none sm:gap-2.5"
           >
             {/* Hand-Drawn Web3 Hexagonal Node Logo Tag */}
             <span
@@ -565,7 +589,7 @@ export default function App() {
             </span>
 
             {/* "Web3 Portfolio" Name Tag */}
-            <span className="truncate font-brush text-[19px] tracking-wider text-[#FAF6EE] sm:text-[25px]">
+            <span className="whitespace-nowrap font-brush text-[20px] leading-none tracking-wide text-[#FAF6EE] sm:text-[25px]">
               Web3 Portfolio
             </span>
           </a>
@@ -615,7 +639,7 @@ export default function App() {
           </nav>
 
           {/* Zone 3: Day/Night Mode Switcher & Language Switcher Toggle */}
-          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
             {/* Day / Night Mode Toggle Button */}
             <button
               type="button"
@@ -638,14 +662,14 @@ export default function App() {
                     ? 'Mode Malam Aktif — Klik untuk Mode Siang'
                     : 'Night Mode Active — Click for Day Mode'
               }
-              className="sketch-pill flex cursor-pointer items-center gap-1.5 whitespace-nowrap px-2.5 py-1 font-journal text-[11.5px] font-bold text-[#FAF6EE] sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-[13px]"
+              className="sketch-pill flex h-8 cursor-pointer items-center gap-1.5 whitespace-nowrap px-2.5 font-journal text-[11px] font-bold leading-none text-[#FAF6EE] sm:h-9 sm:gap-2 sm:px-3.5 sm:text-[13px]"
             >
               {isDay ? (
                 /* Hand-Drawn Sun Icon */
                 <svg
                   viewBox="0 0 20 20"
                   fill="none"
-                  className="h-4 w-4 shrink-0 text-[#B4690E]"
+                  className="h-3.5 w-3.5 shrink-0 text-[#B4690E] sm:h-4 sm:w-4"
                   aria-hidden="true"
                 >
                   <circle
@@ -668,7 +692,7 @@ export default function App() {
                 <svg
                   viewBox="0 0 20 20"
                   fill="none"
-                  className="h-4 w-4 shrink-0 text-[#F5D78E]"
+                  className="h-3.5 w-3.5 shrink-0 text-[#F5D78E] sm:h-4 sm:w-4"
                   aria-hidden="true"
                 >
                   <path
@@ -692,12 +716,12 @@ export default function App() {
                   ? 'Ganti bahasa ke Inggris (Switch to English)'
                   : 'Switch language to Indonesian (Ganti ke Bahasa Indonesia)'
               }
-              className="sketch-pill flex cursor-pointer items-center gap-1.5 whitespace-nowrap px-2.5 py-1 font-journal text-[11.5px] font-bold text-[#FAF6EE] sm:gap-2 sm:px-3.5 sm:py-1.5 sm:text-[13px]"
+              className="sketch-pill flex h-8 cursor-pointer items-center gap-1 whitespace-nowrap px-1.5 font-journal text-[11px] font-bold leading-none text-[#FAF6EE] sm:h-9 sm:gap-1.5 sm:px-3 sm:text-[13px]"
             >
               <svg
                 viewBox="0 0 20 20"
                 fill="none"
-                className="h-3.5 w-3.5 shrink-0 text-[#F5D78E] sm:h-4 sm:w-4"
+                className="hidden h-3.5 w-3.5 shrink-0 text-[#F5D78E] sm:block sm:h-4 sm:w-4"
                 aria-hidden="true"
               >
                 <circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.8" />
@@ -709,25 +733,25 @@ export default function App() {
                 />
               </svg>
               <span
-                className={`rounded-full px-2 py-0.5 transition-colors ${
+                className={`rounded-full px-1.5 py-1 transition-colors sm:px-2 ${
                   lang === 'id'
                     ? isDay
-                      ? 'bg-[#091526] text-[#F5D78E]'
-                      : 'bg-[#F5D78E] text-[#091526]'
+                      ? 'bg-[#091526] !text-[#F5D78E]'
+                      : 'bg-[#F5D78E] !text-[#091526]'
                     : 'text-[#B4C6DF] hover:text-[#FAF6EE]'
                 }`}
               >
                 ID
               </span>
-              <span className="text-[#6E8EB8]" aria-hidden="true">
+              <span className="text-[10px] text-[#6E8EB8] sm:text-xs" aria-hidden="true">
                 /
               </span>
               <span
-                className={`rounded-full px-2 py-0.5 transition-colors ${
+                className={`rounded-full px-1.5 py-1 transition-colors sm:px-2 ${
                   lang === 'en'
                     ? isDay
-                      ? 'bg-[#091526] text-[#F5D78E]'
-                      : 'bg-[#F5D78E] text-[#091526]'
+                      ? 'bg-[#091526] !text-[#F5D78E]'
+                      : 'bg-[#F5D78E] !text-[#091526]'
                     : 'text-[#B4C6DF] hover:text-[#FAF6EE]'
                 }`}
               >
@@ -739,11 +763,12 @@ export default function App() {
 
         {/* Mobile Quick-Jump Sketchbook Navigation Bar (< 768px) */}
         <nav
+          ref={mobileNavRef}
           aria-label="Mobile Navigation"
-          className={`no-scrollbar flex items-center justify-between gap-1 overflow-x-auto border-t px-3 py-1.5 transition-colors duration-250 sm:justify-around md:hidden ${
+          className={`no-scrollbar flex items-center justify-between gap-1 overflow-x-auto border-t px-2.5 py-1.5 transition-colors duration-250 sm:justify-around sm:px-4 md:hidden ${
             isDay
-              ? 'border-[#C4B296]/70 bg-[#ECE0CA]/95'
-              : 'border-[#1D3558]/60 bg-[#06101E]/95'
+              ? 'border-[#C4B296]/80 bg-[#ECE0CA]/95'
+              : 'border-[#1D3558]/70 bg-[#06101E]/95'
           }`}
         >
           {NAV_ITEMS.map((item) => {
@@ -751,35 +776,35 @@ export default function App() {
             return (
               <a
                 key={item.id}
+                data-nav-id={item.id}
                 href={`#${item.id}`}
                 onClick={(e) => {
                   e.preventDefault();
                   scrollToSection(item.id);
                 }}
-                className={`relative shrink-0 whitespace-nowrap px-2 py-1 font-journal text-[11.5px] transition-colors sm:text-xs ${
+                className={`relative flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-1 font-journal text-[11px] leading-none transition-colors sm:px-3 sm:py-1.5 sm:text-xs ${
                   isActive
-                    ? 'font-bold text-[#FAF6EE]'
-                    : 'font-medium text-[#B4C6DF] hover:text-[#FAF6EE]'
+                    ? isDay
+                      ? 'font-bold !text-[#091526]'
+                      : 'font-bold !text-[#F5D78E]'
+                    : isDay
+                      ? 'font-semibold !text-[#1B3252] hover:!text-[#091526]'
+                      : 'font-medium text-[#B4C6DF] hover:text-[#FAF6EE]'
                 }`}
               >
-                {item.label[lang]}
                 {isActive && (
-                  <motion.svg
-                    layoutId="mobile-nav-underline"
+                  <motion.span
+                    layoutId="mobile-nav-pill"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    viewBox="0 0 64 8"
-                    fill="none"
-                    className="-bottom-0.5 left-1 right-1 absolute h-1.5 w-[calc(100%-8px)]"
+                    className={`pointer-events-none absolute inset-0 rounded-full border-[1.5px] ${
+                      isDay
+                        ? 'border-[#091526] bg-[#F5D78E] shadow-[1.5px_1.5px_0px_#091526]'
+                        : 'border-[#F5D78E]/85 bg-[#122644] shadow-[1.5px_1.5px_0px_#030913]'
+                    }`}
                     aria-hidden="true"
-                  >
-                    <path
-                      d="M2 5.5C18 2.8 44 2.8 62 5.2"
-                      stroke="#F5D78E"
-                      strokeWidth="2.8"
-                      strokeLinecap="round"
-                    />
-                  </motion.svg>
+                  />
                 )}
+                <span className="relative z-10">{item.label[lang]}</span>
               </a>
             );
           })}
@@ -787,7 +812,6 @@ export default function App() {
 
         {/* GPU-Composited Scroll Progress Indicator Track & Bar */}
         <HeaderScrollProgressBar scrollProgress={rawScrollProgress} isDay={isDay} />
-        <SketchDividerLine />
       </header>
 
       {/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1399,7 +1423,7 @@ export default function App() {
                 </div>
 
                 {/* Mobile Combined Bottom Row (Signature Left + Chibi Right) / Desktop Overlapping Chibi */}
-                <div className="mt-1 -mb-3 flex items-end justify-between gap-2 sm:col-span-5 sm:mt-0 sm:-mt-14 sm:-mr-3 sm:-mb-4 sm:justify-center lg:-mt-16">
+                <div className="mt-1 -mb-3 flex items-end justify-between gap-2 sm:col-span-5 sm:-mt-14 sm:-mr-3 sm:-mb-4 sm:justify-center lg:-mt-16">
                   <div className="pb-3 font-journal text-[11.5px] leading-tight font-bold text-[#091526] sm:hidden">
                     <span className="block">— Same Guy • Web3</span>
                     <span className="mt-0.5 flex items-center gap-1">
@@ -2667,12 +2691,15 @@ const FooterVisitorBadge: React.FC<{ isId: boolean; isDay?: boolean }> = ({
     // Increment real-time visitor counter on initial page load
     requestCounter('up');
 
-    // Continuous 6-second real-time sync while tab is visible
+    // Lightweight 30-second fallback sync while tab is visible if SSE stream is disconnected
     const pollInterval = window.setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (
+        document.visibilityState === 'visible' &&
+        (!eventSource || eventSource.readyState !== EventSource.OPEN)
+      ) {
         requestCounter('get');
       }
-    }, 6000);
+    }, 30000);
 
     // Real-time Server-Sent Events (SSE) stream with automatic reconnect
     const connectSseStream = () => {

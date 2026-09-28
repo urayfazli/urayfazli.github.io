@@ -255,15 +255,30 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = React.memo(({
   useEffect(() => {
     let rafId = 0;
     let lastTime = performance.now();
+    let lastRenderTime = 0;
     // Offset phase slightly per instance so multiple rigs feel organic
     const phaseOffset = Math.random() * 1.5;
 
     const animateRig = (now: number) => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        lastTime = now;
+        rafId = window.requestAnimationFrame(animateRig);
+        return;
+      }
+
+      const { activeMode: mode } = rigPropsRef.current;
+      // Throttle background idle frames to ~30fps when closed & idle, full 60fps when open or active
+      const minFrameInterval = !isOpen && mode === 'idle' ? 32 : 0;
+      if (minFrameInterval > 0 && now - lastRenderTime < minFrameInterval) {
+        rafId = window.requestAnimationFrame(animateRig);
+        return;
+      }
+      lastRenderTime = now;
+
       const dt = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
       const t = now / 1000 + phaseOffset;
 
-      const { activeMode: mode } = rigPropsRef.current;
       const rawLook = lookOffsetRef?.current ?? { x: 0, y: 0 };
       const lookX = Math.max(-3.5, Math.min(3.5, rawLook.x));
       const lookY = Math.max(-2.6, Math.min(2.6, rawLook.y));
@@ -1339,8 +1354,25 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
   };
 
   const handleCopyReply = (text: string) => {
+    const fallbackCopy = () => {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {
+        // Ignore fallback errors
+      }
+    };
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).catch(() => {});
+      navigator.clipboard.writeText(text).catch(fallbackCopy);
+    } else {
+      fallbackCopy();
     }
     if (onTriggerToast) {
       onTriggerToast(
@@ -1437,7 +1469,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
       {/* MAXI Critical Thinking Partner Modal / Drawer */}
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-6">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-6">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -1451,9 +1483,9 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
 
             {/* Main Sketchbook Dialog Window */}
             <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.94 }}
+              initial={{ opacity: 0, y: 18, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.95 }}
+              exit={{ opacity: 0, y: 14, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
               onPointerMove={handleDialogPointerMove}
               onPointerLeave={() => {
@@ -1462,12 +1494,12 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
               role="dialog"
               aria-modal="true"
               aria-labelledby="maxi-dialog-title"
-              className="parchment-box relative z-10 flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-[3px] border-[#091526] text-[#091526] shadow-[6px_8px_0px_#091526]"
+              className="parchment-box relative z-10 flex max-h-[76dvh] w-[92vw] max-w-[368px] flex-col overflow-hidden rounded-2xl border-[2.5px] border-[#091526] text-[#091526] shadow-[4px_5px_0px_#091526] sm:max-h-[86vh] sm:w-full sm:max-w-2xl sm:rounded-3xl sm:border-[3px] sm:shadow-[6px_8px_0px_#091526]"
             >
               {/* Top Header Bar */}
-              <div className="maxi-header-light-text flex items-center justify-between gap-3 border-b-2 border-[#091526] bg-gradient-to-r from-[#E05A47] via-[#D94E3B] to-[#091526] px-4 py-3 text-[#FFFDF7] sm:px-5">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-12 w-12 shrink-0">
+              <div className="maxi-header-light-text flex items-center justify-between gap-2 border-b-2 border-[#091526] bg-gradient-to-r from-[#E05A47] via-[#D94E3B] to-[#091526] px-3 py-2 text-[#FFFDF7] sm:gap-3 sm:px-5 sm:py-3">
+                <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+                  <div className="h-9 w-9 shrink-0 sm:h-12 sm:w-12">
                     <Maxi2DRigCharacter
                       isOpen={true}
                       isLoading={isLoading}
@@ -1477,11 +1509,11 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                       showBones={showRigBones}
                     />
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <h2
                         id="maxi-dialog-title"
-                        className="maxi-header-light-text truncate font-brush text-xl tracking-wide text-[#FFFDF7] sm:text-2xl"
+                        className="maxi-header-light-text font-brush text-[15px] leading-tight tracking-wide text-[#FFFDF7] sm:truncate sm:text-2xl"
                       >
                         MAXI — Personal OS AI Partner
                       </h2>
@@ -1489,7 +1521,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                         2D Rig • Personal OS
                       </span>
                     </div>
-                    <p className="maxi-header-light-text truncate font-journal text-[10.5px] font-semibold text-[#FFFDF7]/95 sm:text-xs">
+                    <p className="maxi-header-light-text line-clamp-1 font-journal text-[9.5px] leading-snug font-semibold text-[#FFFDF7]/95 sm:truncate sm:text-xs">
                       {isId
                         ? 'Teman berpikir yang kritis, jujur, dan membantumu mengambil keputusan yang lebih baik.'
                         : 'Critical, honest thinking partner to help you see reality and make better decisions.'}
@@ -1497,12 +1529,12 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
                   {messages.length > 0 && (
                     <button
                       type="button"
                       onClick={handleClearSession}
-                      className="maxi-header-light-text cursor-pointer rounded-lg border-[1.5px] border-[#FFFDF7]/70 bg-[#091526]/75 px-2.5 py-1 font-journal text-[10.5px] font-bold text-[#FFFDF7] transition-colors hover:bg-[#091526]"
+                      className="maxi-header-light-text cursor-pointer rounded-lg border-[1.5px] border-[#FFFDF7]/70 bg-[#091526]/75 px-2 py-0.5 font-journal text-[9.5px] font-bold text-[#FFFDF7] transition-colors hover:bg-[#091526] sm:px-2.5 sm:py-1 sm:text-[10.5px]"
                     >
                       {isId ? 'Reset' : 'Clear'}
                     </button>
@@ -1511,7 +1543,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                     type="button"
                     onClick={() => setIsOpen(false)}
                     aria-label={isId ? 'Tutup Maxi' : 'Close Maxi'}
-                    className="maxi-close-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-[#091526] bg-[#FFFDF7] font-sans text-base font-extrabold text-[#091526] shadow-[2px_2px_0px_#091526] transition-transform hover:scale-105 hover:bg-[#F5D78E]"
+                    className="maxi-close-btn flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-[#091526] bg-[#FFFDF7] font-sans text-sm font-extrabold text-[#091526] shadow-[1.5px_1.5px_0px_#091526] transition-transform hover:scale-105 hover:bg-[#F5D78E] sm:h-8 sm:w-8 sm:text-base sm:shadow-[2px_2px_0px_#091526]"
                   >
                     ✕
                   </button>
@@ -1519,13 +1551,14 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
               </div>
 
               {/* Interactive 2D Skeletal Rig Animation Stage & Pose Controller Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-[#091526] bg-[#FFF9EC] px-4 py-2 text-[#091526] sm:px-5">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-md border border-[#091526] bg-[#F5D78E] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#091526]">
+              <div className="flex flex-wrap items-center justify-between gap-1.5 border-b-2 border-[#091526] bg-[#FFF9EC] px-2.5 py-1.5 text-[#091526] sm:gap-2 sm:px-5 sm:py-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-[#091526] bg-[#F5D78E] px-1.5 py-0.5 font-mono-num text-[8.5px] font-extrabold text-[#091526] sm:px-2 sm:text-[10px]">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#E05A47]" />
-                    2D RIG SYSTEM
+                    <span className="sm:hidden">2D RIG</span>
+                    <span className="hidden sm:inline">2D RIG SYSTEM</span>
                   </span>
-                  <span className="font-journal text-[11px] font-bold text-[#1E2F47]">
+                  <span className="hidden font-journal text-[11px] font-bold text-[#1E2F47] sm:inline">
                     {isLoading
                       ? isId
                         ? 'Pose Aktif: Red-Team Deep Scan'
@@ -1555,7 +1588,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                         key={p.id}
                         type="button"
                         onClick={() => setRigPose(p.id)}
-                        className={`cursor-pointer rounded-lg border-[1.5px] border-[#091526] px-2 py-0.5 font-journal text-[10px] font-extrabold transition-all ${
+                        className={`cursor-pointer rounded-md border-[1.5px] border-[#091526] px-1.5 py-0.5 font-journal text-[9px] font-extrabold transition-all sm:rounded-lg sm:px-2 sm:text-[10px] ${
                           active
                             ? 'bg-[#E05A47] text-[#FFFDF7] shadow-[1.5px_1.5px_0px_#091526]'
                             : 'bg-[#FFFDF7] text-[#091526] hover:bg-[#F5D78E]/60'
@@ -1573,13 +1606,13 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                         ? 'Tampilkan/Sembunyikan Struktur Tulang & Sendi 2D Rig'
                         : 'Toggle 2D Skeletal Bones & Joints Overlay'
                     }
-                    className={`cursor-pointer rounded-lg border-[1.5px] border-[#091526] px-2 py-0.5 font-mono-num text-[10px] font-extrabold transition-all ${
+                    className={`cursor-pointer rounded-md border-[1.5px] border-[#091526] px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold transition-all sm:rounded-lg sm:px-2 sm:text-[10px] ${
                       showRigBones
                         ? 'bg-[#091526] text-[#38BDF8] shadow-[1.5px_1.5px_0px_#E05A47]'
                         : 'bg-[#F5ECDC] text-[#091526] hover:bg-[#F5D78E]'
                     }`}
                   >
-                    {showRigBones ? '🦴 Rig: ON' : '🦴 Rig'}
+                    {showRigBones ? '🦴 ON' : '🦴 Rig'}
                   </button>
                 </div>
               </div>
@@ -1587,14 +1620,14 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
               {/* Conversation Body */}
               <div
                 ref={chatScrollRef}
-                className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-[#F7EFE0] px-4 py-4 sm:px-6"
+                className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-[#F7EFE0] px-3 py-2.5 sm:space-y-4 sm:px-6 sm:py-4"
               >
                 {messages.length === 0 ? (
-                  <div className="space-y-3.5">
-                    <div className="sketch-note-card flex flex-col items-center gap-3.5 p-3.5 sm:flex-row sm:items-start sm:p-4">
+                  <div className="space-y-2.5 sm:space-y-3.5">
+                    <div className="sketch-note-card flex flex-row items-start gap-2.5 p-2.5 sm:gap-3.5 sm:p-4">
                       {/* Featured 2D Rig Character Showcase inside Empty State */}
                       <div className="flex shrink-0 flex-col items-center">
-                        <div className="h-24 w-24">
+                        <div className="h-14 w-14 sm:h-24 sm:w-24">
                           <Maxi2DRigCharacter
                             isOpen={true}
                             isLoading={isLoading}
@@ -1604,33 +1637,40 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                             showBones={showRigBones}
                           />
                         </div>
-                        <span className="mt-1.5 rounded-full border border-[#091526] bg-[#F5D78E] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-[#091526]">
-                          IK 2D SKELETAL RIG
+                        <span className="mt-1 rounded-full border border-[#091526] bg-[#F5D78E] px-1.5 py-0.5 font-mono-num text-[7.5px] font-extrabold text-[#091526] sm:mt-1.5 sm:px-2 sm:text-[9px]">
+                          IK 2D RIG
                         </span>
                       </div>
 
-                      <div className="flex-1 text-left">
-                        <p className="font-brush text-lg text-[#091526] sm:text-xl">
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="font-brush text-[15px] leading-snug text-[#091526] sm:text-xl">
                           {isId
                             ? '⚡ Ceritakan masalah, rencana, karier, atau keputusan uang/Web3 yang sedang kamu hadapi.'
                             : '⚡ Share the problem, plan, career move, or financial/Web3 decision you are facing.'}
                         </p>
-                        <p className="mt-1 font-journal text-xs leading-relaxed text-[#1E2F47] sm:text-[13px]">
-                          {isId
-                            ? 'Maxi menggunakan bahasa Indonesia yang sederhana, jelas, dan jujur untuk membantumu: (1) Pahami Masalahnya, (2) Periksa Fakta, (3) Temukan Kesalahan Berpikir, (4) Pilihan Masuk Akal, (5) Dampak Jangka Panjang, (6) Hitung Risiko & Keuntungan, (7) Cari Kelemahan Ide, (8) Pengembangan Hidup, (9) Analisis Karier, (10) Analisis Uang & Crypto/Web3, (11) Ubah Menjadi Tindakan, hingga (12) Evaluasi Keputusan.'
-                            : 'Maxi uses clear, honest, and grounded analysis to help you understand the root problem, verify facts, spot thinking errors, weigh realistic options, calculate long-term impact & risks, and turn analysis into concrete action.'}
+                        <p className="mt-1 font-journal text-[10.5px] leading-relaxed text-[#1E2F47] sm:text-[13px]">
+                          <span className="sm:hidden">
+                            {isId
+                              ? 'Maxi membantumu membedah akar masalah, menguji fakta & bias berpikir, menghitung risiko, serta menyusun langkah tindakan nyata.'
+                              : 'Maxi helps dissect the root problem, verify facts, spot cognitive biases, weigh risks, and build concrete action steps.'}
+                          </span>
+                          <span className="hidden sm:inline">
+                            {isId
+                              ? 'Maxi menggunakan bahasa Indonesia yang sederhana, jelas, dan jujur untuk membantumu: (1) Pahami Masalahnya, (2) Periksa Fakta, (3) Temukan Kesalahan Berpikir, (4) Pilihan Masuk Akal, (5) Dampak Jangka Panjang, (6) Hitung Risiko & Keuntungan, (7) Cari Kelemahan Ide, (8) Pengembangan Hidup, (9) Analisis Karier, (10) Analisis Uang & Crypto/Web3, (11) Ubah Menjadi Tindakan, hingga (12) Evaluasi Keputusan.'
+                              : 'Maxi uses clear, honest, and grounded analysis to help you understand the root problem, verify facts, spot thinking errors, weigh realistic options, calculate long-term impact & risks, and turn analysis into concrete action.'}
+                          </span>
                         </p>
                       </div>
                     </div>
 
                     {/* Quick Test Prompts */}
                     <div>
-                      <p className="mb-2 font-journal text-[11px] font-extrabold tracking-wide text-[#7C4A08] uppercase">
+                      <p className="mb-1.5 font-journal text-[10px] font-extrabold tracking-wide text-[#7C4A08] uppercase sm:mb-2 sm:text-[11px]">
                         {isId
                           ? 'Uji Studi Kasus Cepat (Klik untuk Bedah Kritis):'
                           : 'Quick Case Studies (Click to Red-Team):'}
                       </p>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3 sm:gap-2">
                         {QUICK_PROMPTS.map((item, idx) => (
                           <button
                             key={idx}
@@ -1638,9 +1678,9 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                             onClick={() =>
                               submitPrompt(isId ? item.promptId : item.promptEn)
                             }
-                            className="cursor-pointer rounded-xl border-2 border-[#091526] bg-[#FFFDF7] p-2.5 text-left font-journal text-xs font-bold text-[#091526] shadow-[2px_3px_0px_#091526] transition-all hover:-translate-y-0.5 hover:bg-[#F5D78E]/45"
+                            className="cursor-pointer rounded-xl border-2 border-[#091526] bg-[#FFFDF7] px-2.5 py-1.5 text-left font-journal text-[11px] font-bold text-[#091526] shadow-[2px_2px_0px_#091526] transition-all hover:-translate-y-0.5 hover:bg-[#F5D78E]/45 sm:p-2.5 sm:text-xs sm:shadow-[2px_3px_0px_#091526]"
                           >
-                            <span className="block font-extrabold text-[#E05A47]">
+                            <span className="mr-1 inline font-extrabold text-[#E05A47] sm:mr-0 sm:block">
                               0{idx + 1}.
                             </span>
                             <span className="text-[#091526]">
@@ -1660,7 +1700,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                       }`}
                     >
                       <div
-                        className={`max-w-[94%] rounded-2xl border-2 border-[#091526] px-3.5 py-2.5 shadow-[3px_3px_0px_#091526] sm:max-w-[90%] sm:px-4 sm:py-3 ${
+                        className={`max-w-[95%] rounded-2xl border-2 border-[#091526] px-3 py-2 shadow-[2.5px_2.5px_0px_#091526] sm:max-w-[90%] sm:px-4 sm:py-3 sm:shadow-[3px_3px_0px_#091526] ${
                           msg.role === 'user'
                             ? isDay
                               ? 'maxi-user-textbox bg-[#FDE6A8] text-[#091526]'
@@ -1669,7 +1709,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                         }`}
                       >
                         <div
-                          className={`mb-1 flex items-center justify-between gap-3 border-b pb-1 text-[10px] font-extrabold ${
+                          className={`mb-1 flex items-center justify-between gap-2 border-b pb-1 text-[9.5px] font-extrabold sm:gap-3 sm:text-[10px] ${
                             msg.role === 'user'
                               ? isDay
                                 ? 'border-[#091526]/25 text-[#091526]'
@@ -1689,7 +1729,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
 
                         {msg.role === 'user' ? (
                           <p
-                            className={`whitespace-pre-wrap text-left font-journal text-xs leading-relaxed font-semibold sm:text-[13px] ${
+                            className={`whitespace-pre-wrap text-left font-journal text-[11.5px] leading-relaxed font-semibold sm:text-[13px] ${
                               isDay ? 'text-[#091526]' : 'text-[#FFFDF7]'
                             }`}
                           >
@@ -1698,11 +1738,11 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                         ) : (
                           <>
                             <FormattedMaxiResponse text={msg.text} />
-                            <div className="mt-2.5 flex justify-end border-t border-[#091526]/15 pt-1.5">
+                            <div className="mt-2 flex justify-end border-t border-[#091526]/15 pt-1.5 sm:mt-2.5">
                               <button
                                 type="button"
                                 onClick={() => handleCopyReply(msg.text)}
-                                className="cursor-pointer rounded-lg border border-[#091526] bg-[#F5ECDC] px-2.5 py-0.5 font-journal text-[10px] font-bold text-[#091526] hover:bg-[#F5D78E]"
+                                className="cursor-pointer rounded-lg border border-[#091526] bg-[#F5ECDC] px-2 py-0.5 font-journal text-[9.5px] font-bold text-[#091526] hover:bg-[#F5D78E] sm:px-2.5 sm:text-[10px]"
                               >
                                 {isId ? 'Salin Analisis' : 'Copy Analysis'}
                               </button>
@@ -1716,13 +1756,13 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
 
                 {isLoading && (
                   <div className="flex items-start">
-                    <div className="maxi-model-textbox rounded-2xl border-2 border-[#091526] bg-[#FFFDF9] px-4 py-3 shadow-[3px_3px_0px_#091526]">
-                      <div className="flex items-center gap-2.5 font-journal text-xs font-bold text-[#091526]">
-                        <span className="inline-block h-2.5 w-2.5 animate-ping rounded-full bg-[#E05A47]" />
+                    <div className="maxi-model-textbox rounded-2xl border-2 border-[#091526] bg-[#FFFDF9] px-3 py-2.5 shadow-[2.5px_2.5px_0px_#091526] sm:px-4 sm:py-3 sm:shadow-[3px_3px_0px_#091526]">
+                      <div className="flex items-center gap-2 font-journal text-[11px] font-bold text-[#091526] sm:gap-2.5 sm:text-xs">
+                        <span className="inline-block h-2 w-2 shrink-0 animate-ping rounded-full bg-[#E05A47] sm:h-2.5 sm:w-2.5" />
                         <span>
                           {isId
-                            ? 'Maxi sedang membedah asumsi, bias, & skenario terburuk (12 struktur)...'
-                            : 'Maxi is dissecting assumptions, biases & worst-case scenarios (12 steps)...'}
+                            ? 'Maxi sedang membedah asumsi, bias, & skenario terburuk...'
+                            : 'Maxi is dissecting assumptions, biases & worst-case scenarios...'}
                         </span>
                       </div>
                     </div>
@@ -1730,7 +1770,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                 )}
 
                 {errorMsg && (
-                  <div className="rounded-xl border-2 border-[#E05A47] bg-[#FFF5F5] px-3.5 py-2.5 font-journal text-xs font-bold text-[#991B1B]">
+                  <div className="rounded-xl border-2 border-[#E05A47] bg-[#FFF5F5] px-3 py-2 font-journal text-[11px] font-bold text-[#991B1B] sm:px-3.5 sm:py-2.5 sm:text-xs">
                     {errorMsg}
                   </div>
                 )}
@@ -1742,9 +1782,9 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                   e.preventDefault();
                   submitPrompt(input);
                 }}
-                className="maxi-input-footer border-t-2 border-[#091526] bg-[#EFE3CE] px-4 py-3 sm:px-5"
+                className="maxi-input-footer border-t-2 border-[#091526] bg-[#EFE3CE] px-3 py-2 sm:px-5 sm:py-3"
               >
-                <div className="flex items-end gap-2.5">
+                <div className="flex items-end gap-2 sm:gap-2.5">
                   <textarea
                     ref={textareaRef}
                     rows={2}
@@ -1764,23 +1804,23 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
                     }}
                     placeholder={
                       isId
-                        ? 'Tulis keputusan, rencana trading/investasi Web3, karier, atau masalahmu di sini...'
-                        : 'Describe your decision, Web3 thesis, financial move, or career dilemma...'
+                        ? 'Tulis keputusan, rencana Web3, karier, atau masalahmu...'
+                        : 'Describe your decision, Web3 thesis, or dilemma...'
                     }
-                    className="sketch-input maxi-input-textarea max-h-32 min-h-[48px] flex-1 resize-none bg-[#FFFFFF] px-3.5 py-2.5 font-journal text-xs font-semibold text-[#091526] placeholder:text-[#52657C] focus:bg-[#FFFDF9] sm:text-[13px]"
+                    className="sketch-input maxi-input-textarea max-h-24 min-h-[40px] flex-1 resize-none bg-[#FFFFFF] px-2.5 py-1.5 font-journal text-[11.5px] font-semibold text-[#091526] placeholder:text-[#52657C] focus:bg-[#FFFDF9] sm:max-h-32 sm:min-h-[48px] sm:px-3.5 sm:py-2.5 sm:text-[13px]"
                   />
                   <button
                     type="submit"
                     disabled={isLoading || !input.trim()}
-                    className="sketch-pill-dark shrink-0 cursor-pointer px-4 py-2.5 font-journal text-xs font-bold text-[#FAF6EE] disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:text-sm"
+                    className="sketch-pill-dark shrink-0 cursor-pointer px-3 py-2 font-journal text-[11px] font-bold text-[#FAF6EE] disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-sm"
                   >
                     {isLoading
                       ? isId
                         ? 'Membedah...'
                         : 'Analyzing...'
                       : isId
-                        ? 'Bedah Kritis →'
-                        : 'Red-Team It →'}
+                        ? 'Bedah →'
+                        : 'Analyze →'}
                   </button>
                 </div>
               </form>

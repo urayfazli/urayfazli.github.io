@@ -1,24 +1,23 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: collaboration_notes
-    // Document ID: {noteId}
-    // Fields:
-    //   - senderName: string (required, 1..60 chars)
-    //   - senderHandle: string (required, 1..80 chars)
-    //   - topic: string (required, 1..60 chars)
-    //   - message: string (required, 1..500 chars)
-    //   - createdAt: string (required, ISO date string, 10..40 chars)
-    //   - createdAtMs: number (required, > 0)
-    //   - expiresAtMs: number (required, > createdAtMs, max 32 days ahead)
-    //   - expiresAt: timestamp (optional, Firestore TTL timestamp 1 month ahead)
-    //   - authorToken: string (optional, 0..80 chars)
-    //
-    // ===============================================================
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string &&
+        id.size() >= 1 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSafeText(text) {
+      return !text.matches('(?i).*<\\s*script.*') &&
+        !text.matches('(?i).*javascript\\s*:.*') &&
+        !text.matches('(?i).*on(error|load|click|mouseover)\\s*=.*');
+    }
 
     function isValidCollaborationNote(data) {
       return data.keys().hasAll([
@@ -44,24 +43,29 @@ service cloud.firestore {
         data.senderName is string &&
         data.senderName.size() >= 1 &&
         data.senderName.size() <= 60 &&
+        isSafeText(data.senderName) &&
         data.senderHandle is string &&
         data.senderHandle.size() >= 1 &&
         data.senderHandle.size() <= 80 &&
+        isSafeText(data.senderHandle) &&
         data.topic is string &&
         data.topic.size() >= 1 &&
         data.topic.size() <= 60 &&
+        isSafeText(data.topic) &&
         data.message is string &&
         data.message.size() >= 1 &&
         data.message.size() <= 500 &&
+        isSafeText(data.message) &&
         data.createdAt is string &&
         data.createdAt.size() >= 10 &&
         data.createdAt.size() <= 40 &&
         data.createdAtMs is number &&
         data.createdAtMs > 0 &&
+        data.createdAtMs <= request.time.toMillis() + 900000 &&
         data.expiresAtMs is number &&
-        data.expiresAtMs > data.createdAtMs &&
+        data.expiresAtMs >= data.createdAtMs + 86400000 &&
         data.expiresAtMs <= data.createdAtMs + 2764800000 &&
-        (!('authorToken' in data) || (data.authorToken is string && data.authorToken.size() <= 80));
+        (!('authorToken' in data) || (data.authorToken is string && data.authorToken.size() >= 1 && data.authorToken.size() <= 80));
     }
 
     match /collaboration_notes/{noteId} {
@@ -69,13 +73,21 @@ service cloud.firestore {
       allow read: if true;
 
       // Visitors can create valid collaboration notes with a 1-month expiration timestamp
-      allow create: if isValidCollaborationNote(request.resource.data);
+      allow create: if isValidId(noteId) &&
+        isValidCollaborationNote(request.resource.data);
 
-      // Notes are immutable once posted
-      allow update: if false;
+      // Allow updating only the initial seed notes when initializing or refreshing an empty board
+      allow update: if isValidId(noteId) &&
+        noteId in ['seed-note-1', 'seed-note-2'] &&
+        isValidCollaborationNote(request.resource.data);
 
-      // Allow deletion for expired notes (1 month auto-cleanup) or by the note author
-      allow delete: if true;
+      // Allow deletion only when the note has genuinely expired (1-month TTL)
+      allow delete: if isValidId(noteId) && (
+        (resource.data.expiresAtMs is number &&
+          request.time.toMillis() >= resource.data.expiresAtMs) ||
+        (resource.data.createdAtMs is number &&
+          request.time.toMillis() - resource.data.createdAtMs >= 2592000000)
+      );
     }
   }
 }

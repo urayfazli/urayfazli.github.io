@@ -1024,7 +1024,18 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
         // Seed initial community notes once if Firestore collection is brand new
         if (snapshot.empty && !hasSeededFirestoreRef.current) {
           hasSeededFirestoreRef.current = true;
-          DEFAULT_COLLAB_NOTES.forEach((seed) => {
+          const seedBaseMs = Date.now();
+          const freshSeeds: CollaborationNote[] = DEFAULT_COLLAB_NOTES.map((seed, idx) => {
+            const createdAtMs = seedBaseMs - (2 - idx) * 60 * 1000;
+            const expiresAtMs = createdAtMs + ONE_MONTH_MS;
+            return {
+              ...seed,
+              createdAt: new Date(createdAtMs).toISOString(),
+              createdAtMs,
+              expiresAtMs,
+            };
+          });
+          freshSeeds.forEach((seed) => {
             setDoc(doc(db, COLLAB_NOTES_COLLECTION, seed.id), {
               senderName: seed.senderName,
               senderHandle: seed.senderHandle,
@@ -1039,7 +1050,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
               handleFirestoreError(err, OperationType.CREATE, `${COLLAB_NOTES_COLLECTION}/${seed.id}`);
             });
           });
-          setNotes(DEFAULT_COLLAB_NOTES);
+          setNotes(freshSeeds);
           return;
         }
 
@@ -1047,6 +1058,38 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
       },
       (error) => {
         handleFirestoreError(error, OperationType.LIST, COLLAB_NOTES_COLLECTION);
+        // Fallback to /api/notes if Firestore is unreachable or blocked by network proxy
+        fetch('/api/notes')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (Array.isArray(data?.notes) && data.notes.length > 0) {
+              const now = Date.now();
+              setNotes(
+                data.notes.map((n: Partial<CollaborationNote>, idx: number) => {
+                  const createdMs =
+                    typeof n.createdAtMs === 'number'
+                      ? n.createdAtMs
+                      : Date.parse(String(n.createdAt || '')) || now - idx * 60000;
+                  return {
+                    id: String(n.id || `api-note-${idx}`),
+                    senderName: String(n.senderName || 'Web3 Explorer'),
+                    senderHandle: String(n.senderHandle || 'Explorer'),
+                    topic: String(n.topic || 'Node Infrastructure'),
+                    message: String(n.message || ''),
+                    createdAt: String(n.createdAt || new Date(createdMs).toISOString()),
+                    createdAtMs: createdMs,
+                    expiresAtMs:
+                      typeof n.expiresAtMs === 'number'
+                        ? n.expiresAtMs
+                        : createdMs + ONE_MONTH_MS,
+                    authorToken: n.authorToken,
+                    isOwn: Boolean(n.authorToken && n.authorToken === myAuthorToken),
+                  };
+                })
+              );
+            }
+          })
+          .catch(() => {});
       }
     );
 
@@ -1127,26 +1170,60 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     const expiresAtMs = nowMs + ONE_MONTH_MS;
     const createdAtIso = new Date(nowMs).toISOString();
     const authorToken = getOrCreateAuthorToken();
-    const safeName = cleanName.slice(0, 60);
-    const safeHandle = (cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer')).slice(0, 80);
-    const safeTopic = topic.slice(0, 60);
-    const safeMessage = cleanMessage.slice(0, 500);
+    const sanitizeInput = (val: string, maxLen: number) =>
+      val
+        .replace(/<\s*\/?\s*script[^>]*>/gi, '')
+        .replace(/javascript\s*:/gi, '')
+        .trim()
+        .slice(0, maxLen);
+
+    const safeName = sanitizeInput(cleanName, 60);
+    const safeHandle = sanitizeInput(
+      cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer'),
+      80
+    );
+    const safeTopic = sanitizeInput(topic, 60);
+    const safeMessage = sanitizeInput(cleanMessage, 500);
 
     try {
-      const docRef = await addDoc(collection(db, COLLAB_NOTES_COLLECTION), {
-        senderName: safeName,
-        senderHandle: safeHandle,
-        topic: safeTopic,
-        message: safeMessage,
-        createdAt: createdAtIso,
-        createdAtMs: nowMs,
-        expiresAtMs,
-        expiresAt: Timestamp.fromMillis(expiresAtMs),
-        authorToken,
-      });
+      let noteId = `local-${nowMs}`;
+      try {
+        const docRef = await addDoc(collection(db, COLLAB_NOTES_COLLECTION), {
+          senderName: safeName,
+          senderHandle: safeHandle,
+          topic: safeTopic,
+          message: safeMessage,
+          createdAt: createdAtIso,
+          createdAtMs: nowMs,
+          expiresAtMs,
+          expiresAt: Timestamp.fromMillis(expiresAtMs),
+          authorToken,
+        });
+        noteId = docRef.id;
+      } catch (firestoreErr) {
+        handleFirestoreError(firestoreErr, OperationType.CREATE, COLLAB_NOTES_COLLECTION);
+        // Fallback to serverless /api/notes so submission succeeds even if Firestore is offline
+        const apiRes = await fetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            senderName: safeName,
+            senderHandle: safeHandle,
+            topic: safeTopic,
+            message: safeMessage,
+            authorToken,
+          }),
+        });
+        if (apiRes.ok) {
+          const apiData = await apiRes.json();
+          if (apiData?.note?.id) {
+            noteId = String(apiData.note.id);
+          }
+        }
+      }
 
       const savedNote: CollaborationNote = {
-        id: docRef.id,
+        id: noteId,
         senderName: safeName,
         senderHandle: safeHandle,
         topic: safeTopic,
@@ -1158,6 +1235,9 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
         isOwn: true,
       };
 
+      setNotes((prev) =>
+        prev.some((n) => n.id === savedNote.id) ? prev : [savedNote, ...prev]
+      );
       setLastSubmittedNote(savedNote);
       setSenderName('');
       setSenderHandle('');
@@ -1165,8 +1245,8 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
       if (onToast) {
         onToast(
           isId
-            ? `Catatan dari ${savedNote.senderName} tersimpan di Firebase (otomatis terhapus 1 bulan)!`
-            : `Note from ${savedNote.senderName} saved to Firebase (auto-deletes in 1 month)!`
+            ? `Catatan dari ${savedNote.senderName} tersimpan (otomatis terhapus 1 bulan)!`
+            : `Note from ${savedNote.senderName} saved (auto-deletes in 1 month)!`
         );
       }
     } catch (err) {

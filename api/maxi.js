@@ -1,9 +1,10 @@
+import { GoogleGenAI } from '@google/genai';
+
 const AGENTROUTER_BASE_URL = (
   process.env.AGENTROUTER_BASE_URL || 'https://agentrouter.org/v1'
 ).replace(/\/+$/, '');
 const AGENTROUTER_MODEL = process.env.AGENTROUTER_MODEL || 'deepseek-v4-flash';
-const DEFAULT_AGENTROUTER_KEY =
-  'sk-poU3klgKsZPl209MAYMaLjMItNm80SWf7cHxs77Frd7GqbE5';
+const MAX_MESSAGE_LENGTH = 4000;
 
 const MAXI_SYSTEM_INSTRUCTION = `PERSONAL OPERATING SYSTEM — AI PARTNER
 
@@ -304,6 +305,9 @@ async function parseRequestBody(req) {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
@@ -330,13 +334,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const apiKey = (
-      process.env.AGENTROUTER_API_KEY || DEFAULT_AGENTROUTER_KEY
-    ).trim();
+    const apiKey = (process.env.AGENTROUTER_API_KEY || '').trim();
 
-    if (!apiKey || !apiKey.startsWith('sk-')) {
+    if (apiKey && !apiKey.startsWith('sk-')) {
       res.status(401).json({
-        error: 'API Key AgentRouter tidak valid atau belum diatur (harus diawali sk-).',
+        error: 'API Key AgentRouter tidak valid (harus diawali sk-).',
         code: 'INVALID_API_KEY',
       });
       return;
@@ -350,6 +352,8 @@ export default async function handler(req, res) {
       });
       return;
     }
+
+    const cleanMessage = message.trim().slice(0, MAX_MESSAGE_LENGTH);
 
     if (history !== undefined && !Array.isArray(history)) {
       res.status(400).json({
@@ -375,13 +379,14 @@ export default async function handler(req, res) {
           typeof item.text === 'string' &&
           item.text.trim()
         ) {
+          const safeHistoryText = item.text.trim().slice(0, MAX_MESSAGE_LENGTH);
           chatMessages.push({
             role: item.role === 'model' ? 'assistant' : 'user',
-            content: item.text,
+            content: safeHistoryText,
           });
           geminiContents.push({
             role: item.role,
-            parts: [{ text: item.text }],
+            parts: [{ text: safeHistoryText }],
           });
         }
       }
@@ -389,184 +394,181 @@ export default async function handler(req, res) {
 
     chatMessages.push({
       role: 'user',
-      content: message.trim(),
+      content: cleanMessage,
     });
     geminiContents.push({
       role: 'user',
-      parts: [{ text: message.trim() }],
+      parts: [{ text: cleanMessage }],
     });
 
     let upstreamDiagnostic = null;
 
-    // 1. Primary AI Brain: AgentRouter (deepseek-v4-flash)
-    try {
-      const response = await fetch(`${AGENTROUTER_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://github.com/RooVetGit/Roo-Cline',
-          'X-Title': 'Roo Code',
-          'User-Agent': 'RooCode/3.54.0',
-          'X-Stainless-Arch': 'x64',
-          'X-Stainless-Lang': 'js',
-          'X-Stainless-OS': 'Linux',
-          'X-Stainless-Package-Version': '5.12.2',
-          'X-Stainless-Retry-Count': '0',
-          'X-Stainless-Runtime': 'node',
-          'X-Stainless-Runtime-Version': process.version,
-        },
-        body: JSON.stringify({
-          model: AGENTROUTER_MODEL,
-          messages: chatMessages,
-          temperature: 0.35,
-          top_p: 0.9,
-          stream: false,
-        }),
-        signal: AbortSignal.timeout(2800),
-      });
+    // 1. Primary AI Brain: AgentRouter (deepseek-v4-flash) if AGENTROUTER_API_KEY is configured
+    if (apiKey) {
+      try {
+        const response = await fetch(`${AGENTROUTER_BASE_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://github.com/RooVetGit/Roo-Cline',
+            'X-Title': 'Roo Code',
+            'User-Agent': 'RooCode/3.54.0',
+            'X-Stainless-Arch': 'x64',
+            'X-Stainless-Lang': 'js',
+            'X-Stainless-OS': 'Linux',
+            'X-Stainless-Package-Version': '5.12.2',
+            'X-Stainless-Retry-Count': '0',
+            'X-Stainless-Runtime': 'node',
+            'X-Stainless-Runtime-Version': process.version,
+          },
+          body: JSON.stringify({
+            model: AGENTROUTER_MODEL,
+            messages: chatMessages,
+            temperature: 0.35,
+            top_p: 0.9,
+            stream: false,
+          }),
+          signal: AbortSignal.timeout(2800),
+        });
 
-      const contentType = response.headers.get('content-type') || '';
-      const rawText = await response.text();
+        const contentType = response.headers.get('content-type') || '';
+        const rawText = await response.text();
 
-      if (
-        contentType.includes('text/html') ||
-        rawText.includes('aliyun_waf') ||
-        rawText.trim().toLowerCase().startsWith('<!doctype html')
-      ) {
-        upstreamDiagnostic = {
-          category: 'UPSTREAM_FIREWALL_INTERCEPT',
-          status: response.status,
-          contentType,
-          reason:
-            'AgentRouter mengembalikan halaman proteksi Aliyun WAF untuk IP cloud server; mengalihkan otomatis ke mesin AI cadangan.',
-        };
-      } else {
-        let parsedData = null;
-        try {
-          parsedData = JSON.parse(rawText);
-        } catch {
+        if (
+          contentType.includes('text/html') ||
+          rawText.includes('aliyun_waf') ||
+          rawText.trim().toLowerCase().startsWith('<!doctype html')
+        ) {
           upstreamDiagnostic = {
-            category: 'MALFORMED_RESPONSE',
+            category: 'UPSTREAM_FIREWALL_INTERCEPT',
             status: response.status,
             contentType,
-            reason: 'Respons dari AgentRouter bukan JSON yang valid.',
+            reason:
+              'AgentRouter mengembalikan halaman proteksi Aliyun WAF untuk IP cloud server; mengalihkan otomatis ke mesin AI cadangan.',
           };
-        }
-
-        if (parsedData && !upstreamDiagnostic) {
-          if (!response.ok || parsedData.code === 401 || parsedData.error) {
-            const errDetail =
-              typeof parsedData.error === 'string'
-                ? parsedData.error
-                : parsedData.error?.message ||
-                  parsedData.msg ||
-                  `AgentRouter HTTP ${response.status}`;
-
-            const isAuthErr =
-              response.status === 401 ||
-              response.status === 403 ||
-              parsedData.code === 401 ||
-              /invalid api key|unauthorized|token/i.test(errDetail);
-
-            const isBadReq =
-              response.status === 400 ||
-              response.status === 422 ||
-              /invalid_request|malformed|messages/i.test(errDetail);
-
-            upstreamDiagnostic = {
-              category: isAuthErr
-                ? 'INVALID_API_KEY'
-                : isBadReq
-                  ? 'MALFORMED_REQUEST'
-                  : 'UPSTREAM_ERROR',
-              status: response.status,
-              contentType,
-              reason: errDetail,
-            };
-          } else {
-            const firstChoice = parsedData.choices?.[0];
-            const extractedReply = (
-              firstChoice?.message?.content ||
-              firstChoice?.message?.reasoning_content ||
-              firstChoice?.text ||
-              ''
-            ).trim();
-
-            if (extractedReply) {
-              res.status(200).json({
-                reply: extractedReply,
-                provider: 'agentrouter',
-                model: AGENTROUTER_MODEL,
-              });
-              return;
-            }
-
+        } else {
+          let parsedData = null;
+          try {
+            parsedData = JSON.parse(rawText);
+          } catch {
             upstreamDiagnostic = {
               category: 'MALFORMED_RESPONSE',
               status: response.status,
               contentType,
-              reason:
-                'JSON AgentRouter berhasil dibaca, tetapi field choices[0].message.content kosong.',
+              reason: 'Respons dari AgentRouter bukan JSON yang valid.',
             };
           }
+
+          if (parsedData && !upstreamDiagnostic) {
+            if (!response.ok || parsedData.code === 401 || parsedData.error) {
+              const errDetail =
+                typeof parsedData.error === 'string'
+                  ? parsedData.error
+                  : parsedData.error?.message ||
+                    parsedData.msg ||
+                    `AgentRouter HTTP ${response.status}`;
+
+              const isAuthErr =
+                response.status === 401 ||
+                response.status === 403 ||
+                parsedData.code === 401 ||
+                /invalid api key|unauthorized|token/i.test(errDetail);
+
+              const isBadReq =
+                response.status === 400 ||
+                response.status === 422 ||
+                /invalid_request|malformed|messages/i.test(errDetail);
+
+              upstreamDiagnostic = {
+                category: isAuthErr
+                  ? 'INVALID_API_KEY'
+                  : isBadReq
+                    ? 'MALFORMED_REQUEST'
+                    : 'UPSTREAM_ERROR',
+                status: response.status,
+                contentType,
+                reason: errDetail,
+              };
+            } else {
+              const firstChoice = parsedData.choices?.[0];
+              const extractedReply = (
+                firstChoice?.message?.content ||
+                firstChoice?.message?.reasoning_content ||
+                firstChoice?.text ||
+                ''
+              ).trim();
+
+              if (extractedReply) {
+                res.status(200).json({
+                  reply: extractedReply,
+                  provider: 'agentrouter',
+                  model: AGENTROUTER_MODEL,
+                });
+                return;
+              }
+
+              upstreamDiagnostic = {
+                category: 'MALFORMED_RESPONSE',
+                status: response.status,
+                contentType,
+                reason:
+                  'JSON AgentRouter berhasil dibaca, tetapi field choices[0].message.content kosong.',
+              };
+            }
+          }
         }
+      } catch (fetchErr) {
+        const netMsg =
+          fetchErr instanceof Error
+            ? fetchErr.message
+            : 'Koneksi jaringan ke AgentRouter gagal.';
+        upstreamDiagnostic = {
+          category: 'NETWORK_ERROR',
+          reason: `Gagal menghubungi ${AGENTROUTER_BASE_URL}: ${netMsg}`,
+        };
       }
-    } catch (fetchErr) {
-      const netMsg =
-        fetchErr instanceof Error
-          ? fetchErr.message
-          : 'Koneksi jaringan ke AgentRouter gagal.';
-      upstreamDiagnostic = {
-        category: 'NETWORK_ERROR',
-        reason: `Gagal menghubungi ${AGENTROUTER_BASE_URL}: ${netMsg}`,
-      };
     }
 
-    // 2. Secondary AI Brain: Gemini REST API (if GEMINI_API_KEY is configured in environment)
-    const fallbackGeminiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.VITE_GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY;
+    // 2. Secondary AI Brain: @google/genai SDK (if GEMINI_API_KEY is configured in environment)
+    const fallbackGeminiKey = process.env.GEMINI_API_KEY;
 
     if (fallbackGeminiKey) {
-      const fallbackModels = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+      const ai = new GoogleGenAI({
+        apiKey: fallbackGeminiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+      const fallbackModels = [
+        'gemini-3.8-flash',
+        'gemini-flash-latest',
+        'gemini-3.1-flash-lite',
+      ];
       for (const modelName of fallbackModels) {
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(fallbackGeminiKey)}`;
-          const geminiResp = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              systemInstruction: {
-                parts: [{ text: MAXI_SYSTEM_INSTRUCTION }],
-              },
-              contents: geminiContents,
-              generationConfig: {
-                temperature: 0.35,
-                topP: 0.9,
-              },
-            }),
-            signal: AbortSignal.timeout(4500),
+          const geminiRes = await ai.models.generateContent({
+            model: modelName,
+            contents: geminiContents,
+            config: {
+              systemInstruction: MAXI_SYSTEM_INSTRUCTION,
+              temperature: 0.35,
+              topP: 0.9,
+            },
           });
 
-          if (geminiResp.ok) {
-            const geminiData = await geminiResp.json();
-            const parts = geminiData?.candidates?.[0]?.content?.parts || [];
-            const fallbackText = parts
-              .map((p) => (typeof p?.text === 'string' ? p.text : ''))
-              .join('')
-              .trim();
-            if (fallbackText) {
-              res.status(200).json({
-                reply: fallbackText,
-                provider: 'fallback-gemini',
-                model: modelName,
-                diagnostics: upstreamDiagnostic,
-              });
-              return;
-            }
+          const fallbackText = geminiRes.text?.trim();
+          if (fallbackText) {
+            res.status(200).json({
+              reply: fallbackText,
+              provider: 'fallback-gemini',
+              model: modelName,
+              diagnostics: upstreamDiagnostic,
+            });
+            return;
           }
         } catch {
           // Proceed to next fallback tier
