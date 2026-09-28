@@ -485,15 +485,80 @@
   background-color: #162E52;
 }
 
-/* Hand-Drawn SVG Ink Strokes on Canvas & Cards in Day Mode */
-.theme-day svg [stroke="#FAF6EE"],
-.theme-day svg [stroke="#F3EBDD"],
-.theme-day svg [stroke="#F5E6C8"],
-.theme-day svg [stroke="#F5E1B5"] {
+/* Preserve high-contrast colors inside Maxi AI Modal & Text Boxes in Day Mode */
+.theme-day .maxi-header-light-text,
+.theme-day .maxi-header-light-text * {
+  color: #FFFDF7 !important;
+}
+
+.theme-day .maxi-header-badge {
+  background-color: #091526 !important;
+  color: #F5D78E !important;
+  border-color: rgba(255, 253, 247, 0.45) !important;
+}
+
+.theme-day .maxi-close-btn {
+  background-color: #FFFDF7 !important;
+  color: #091526 !important;
+}
+
+.theme-day .maxi-close-btn:hover {
+  background-color: #F5D78E !important;
+}
+
+.theme-day .maxi-user-textbox {
+  background-color: #FDE6A8 !important;
+  color: #091526 !important;
+  border-color: #091526 !important;
+  box-shadow: 3px 3px 0px #091526 !important;
+}
+
+.theme-day .maxi-user-textbox p,
+.theme-day .maxi-user-textbox span,
+.theme-day .maxi-user-textbox div {
+  color: #091526 !important;
+}
+
+.theme-day .maxi-model-textbox {
+  background-color: #FFFDF9 !important;
+  color: #091526 !important;
+  border-color: #091526 !important;
+  box-shadow: 3px 3px 0px #091526 !important;
+}
+
+.theme-day .maxi-input-footer {
+  background-color: #EFE3CE !important;
+  border-top-color: #091526 !important;
+}
+
+.theme-day .maxi-input-textarea {
+  background-color: #FFFFFF !important;
+  color: #091526 !important;
+  caret-color: #E05A47 !important;
+  border: 2.4px solid #091526 !important;
+  box-shadow: 3px 3.5px 0px #091526 !important;
+}
+
+.theme-day .maxi-input-textarea::placeholder {
+  color: #52657C !important;
+  opacity: 1 !important;
+}
+
+.theme-day .maxi-input-textarea:focus {
+  background-color: #FFFDF9 !important;
+  border-color: #B4690E !important;
+  box-shadow: 4px 4.5px 0px #091526 !important;
+}
+
+/* Hand-Drawn SVG Ink Strokes on Canvas & Cards in Day Mode (exclude 2D Rig internal visor strokes) */
+.theme-day svg:not(.maxi-2d-rig-svg) [stroke="#FAF6EE"],
+.theme-day svg:not(.maxi-2d-rig-svg) [stroke="#F3EBDD"],
+.theme-day svg:not(.maxi-2d-rig-svg) [stroke="#F5E6C8"],
+.theme-day svg:not(.maxi-2d-rig-svg) [stroke="#F5E1B5"] {
   stroke: #091526;
 }
 
-.theme-day svg [stroke="#F5D78E"] {
+.theme-day svg:not(.maxi-2d-rig-svg) [stroke="#F5D78E"] {
   stroke: #B4690E;
 }
 

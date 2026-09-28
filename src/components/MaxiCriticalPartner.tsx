@@ -165,83 +165,505 @@ async function requestClientSideAiFallback(
   return buildClientFallbackAnalysis(message);
 }
 
-/**
- * Hand-Drawn Sketchbook Pokéball SVG for MAXI AI Widget
- */
-const MaxiPokeballSvg: React.FC<{
+export type MaxiRigPose = 'idle' | 'inspect' | 'scribe' | 'wave' | 'analyzing';
+
+interface Maxi2DRigProps {
   isOpen: boolean;
   isLoading: boolean;
-}> = ({ isOpen, isLoading }) => (
-  <svg
-    viewBox="0 0 80 80"
-    fill="none"
-    className="h-full w-full drop-shadow-[2px_3px_0px_#091526]"
-    aria-hidden="true"
-  >
-    {/* Outer Circle Base */}
-    <circle cx="40" cy="40" r="35" fill="#FAF6EE" stroke="#091526" strokeWidth="4" />
+  isTyping?: boolean;
+  pose?: MaxiRigPose;
+  lookOffset?: { x: number; y: number };
+  showBones?: boolean;
+}
 
-    {/* Top Red Pokéball Hemisphere */}
-    <path
-      d="M5 40A35 35 0 0 1 75 40Z"
-      fill="#E05A47"
-      stroke="#091526"
-      strokeWidth="3.8"
-      strokeLinejoin="round"
-    />
+/**
+ * Hierarchical 2D Skeletal Rig System for MAXI AI Companion
+ * Articulated Bone Hierarchy:
+ *   Root/Pelvis (60,82)
+ *   ├── Leg.L (48,84 -> 46,104)
+ *   ├── Leg.R (72,84 -> 74,104)
+ *   └── Spine/Torso (60,76)
+ *       ├── Arm.L Shoulder (34,58) -> Forearm.L Elbow (22,66) -> Red-Team Magnifier Prop
+ *       ├── Arm.R Shoulder (86,58) -> Forearm.R Elbow (98,66) -> Sketchbook Quill Pen Prop
+ *       └── Neck/Head (60,46)
+ *           ├── Eyes & Brow Rig (2D gaze tracking + blink + brow tilt)
+ *           └── Antenna Joint (60,16 -> 60,5)
+ */
+const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
+  isOpen,
+  isLoading,
+  isTyping = false,
+  pose = 'idle',
+  lookOffset = { x: 0, y: 0 },
+  showBones = false,
+}) => {
+  const activeMode: MaxiRigPose = isLoading
+    ? 'analyzing'
+    : isTyping
+      ? 'scribe'
+      : pose;
 
-    {/* Hand-Drawn Highlight Arc on Red Top */}
-    <path
-      d="M17 24C23 15 34 11 45 12.5"
-      stroke="#FFFDF9"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-      opacity="0.82"
-    />
+  const torsoRotate =
+    activeMode === 'analyzing'
+      ? [-3, 3.5, -3]
+      : activeMode === 'scribe'
+        ? [1.5, 4, 1.5]
+        : activeMode === 'inspect'
+          ? [-4, -1.5, -4]
+          : activeMode === 'wave'
+            ? [-2.5, 2.5, -2.5]
+            : [-1.2, 1.2, -1.2];
 
-    {/* Subtle Bottom Cream Shading Arc */}
-    <path
-      d="M18 59C26 67 52 68 62 58"
-      stroke="#D5C4A8"
-      strokeWidth="3"
-      strokeLinecap="round"
-    />
+  const headRotate =
+    activeMode === 'analyzing'
+      ? [-5, 5, -5]
+      : activeMode === 'scribe'
+        ? [3, 6.5, 3]
+        : activeMode === 'inspect'
+          ? [-7, -3, -7]
+          : activeMode === 'wave'
+            ? [4, -4, 4]
+            : [-2, 2, -2];
 
-    {/* Center Equatorial Belt Band */}
-    <path
-      d="M5.5 39.5C26 41.5 54 41.5 74.5 39.5"
-      stroke="#091526"
-      strokeWidth="6.2"
-      strokeLinecap="round"
-    />
+  const leftArmRotate =
+    activeMode === 'analyzing' || activeMode === 'inspect'
+      ? [-38, -26, -38]
+      : activeMode === 'wave'
+        ? [-58, -22, -58]
+        : [-8, 4, -8];
 
-    {/* Outer Center Latch Ring */}
-    <circle
-      cx="40"
-      cy="40"
-      r="12.5"
-      fill="#FAF6EE"
-      stroke="#091526"
-      strokeWidth="3.8"
-    />
+  const leftForearmRotate =
+    activeMode === 'analyzing' || activeMode === 'inspect'
+      ? [-28, -12, -28]
+      : activeMode === 'wave'
+        ? [-35, 18, -35]
+        : [-6, 6, -6];
 
-    {/* Inner Gemini Core Button */}
-    <circle
-      cx="40"
-      cy="40"
-      r="7"
-      fill={isLoading ? '#F5D78E' : isOpen ? '#38BDF8' : '#091526'}
-      stroke="#091526"
-      strokeWidth="2"
-    />
+  const rightArmRotate =
+    activeMode === 'scribe'
+      ? [-32, -18, -32]
+      : activeMode === 'analyzing'
+        ? [-24, -10, -24]
+        : [8, -4, 8];
 
-    {/* 4-Point Gemini Sparkle inside Center Button */}
-    <path
-      d="M40 34.2L41.4 38.6L45.8 40L41.4 41.4L40 45.8L38.6 41.4L34.2 40L38.6 38.6L40 34.2Z"
-      fill={isLoading ? '#091526' : '#F5D78E'}
-    />
-  </svg>
-);
+  const rightForearmRotate =
+    activeMode === 'scribe'
+      ? [-25, 15, -25]
+      : activeMode === 'analyzing'
+        ? [-18, 12, -18]
+        : [6, -6, 6];
+
+  const antennaRotate =
+    activeMode === 'analyzing'
+      ? [-18, 18, -18]
+      : activeMode === 'wave'
+        ? [-14, 14, -14]
+        : [-6, 6, -6];
+
+  const cycleDuration =
+    activeMode === 'analyzing'
+      ? 1.1
+      : activeMode === 'scribe' || activeMode === 'wave'
+        ? 1.35
+        : 2.6;
+
+  const pupilX = Math.max(-3.2, Math.min(3.2, lookOffset.x));
+  const pupilY = Math.max(-2.4, Math.min(2.4, lookOffset.y));
+
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      fill="none"
+      className="maxi-2d-rig-svg h-full w-full overflow-visible drop-shadow-[2.5px_3.5px_0px_#091526]"
+      aria-hidden="true"
+    >
+      {/* Ground Shadow */}
+      <motion.ellipse
+        cx="60"
+        cy="111"
+        rx="26"
+        ry="5"
+        fill="#091526"
+        opacity="0.32"
+        animate={{ scaleX: [1, 0.88, 1], opacity: [0.32, 0.22, 0.32] }}
+        transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* ROOT / PELVIS BONE (60, 82) */}
+      <motion.g
+        style={{ transformOrigin: '60px 82px' }}
+        animate={{
+          y: activeMode === 'analyzing' ? [0, -4.5, 0] : [0, -2.5, 0],
+        }}
+        transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {/* BONE: LEFT LEG (Hip Joint 48, 86) */}
+        <motion.g
+          style={{ transformOrigin: '48px 86px' }}
+          animate={{
+            rotate: activeMode === 'analyzing' ? [-10, 10, -10] : [-4, 4, -4],
+          }}
+          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <path
+            d="M48 85L45 101"
+            stroke="#091526"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+          />
+          <rect
+            x="38"
+            y="99"
+            width="14"
+            height="7.5"
+            rx="3.8"
+            fill="#E05A47"
+            stroke="#091526"
+            strokeWidth="2.8"
+          />
+        </motion.g>
+
+        {/* BONE: RIGHT LEG (Hip Joint 72, 86) */}
+        <motion.g
+          style={{ transformOrigin: '72px 86px' }}
+          animate={{
+            rotate: activeMode === 'analyzing' ? [10, -10, 10] : [4, -4, 4],
+          }}
+          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <path
+            d="M72 85L75 101"
+            stroke="#091526"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+          />
+          <rect
+            x="68"
+            y="99"
+            width="14"
+            height="7.5"
+            rx="3.8"
+            fill="#E05A47"
+            stroke="#091526"
+            strokeWidth="2.8"
+          />
+        </motion.g>
+
+        {/* BONE: SPINE / TORSO CHASSIS (Pivot 60, 76) */}
+        <motion.g
+          style={{ transformOrigin: '60px 76px' }}
+          animate={{ rotate: torsoRotate }}
+          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {/* BONE: LEFT ARM 2-JOINT IK CHAIN (Shoulder 34, 58) */}
+          <motion.g
+            style={{ transformOrigin: '34px 58px' }}
+            animate={{ rotate: leftArmRotate }}
+            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {/* Upper Left Arm */}
+            <path
+              d="M34 58L22 66"
+              stroke="#091526"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <circle cx="34" cy="58" r="4" fill="#F5D78E" stroke="#091526" strokeWidth="2.2" />
+
+            {/* Left Forearm + Hand (Elbow 22, 66) */}
+            <motion.g
+              style={{ transformOrigin: '22px 66px' }}
+              animate={{ rotate: leftForearmRotate }}
+              transition={{ duration: cycleDuration * 0.85, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path
+                d="M22 66L13 58"
+                stroke="#091526"
+                strokeWidth="5.2"
+                strokeLinecap="round"
+              />
+              <circle cx="13" cy="58" r="4.5" fill="#FAF6EE" stroke="#091526" strokeWidth="2.4" />
+
+              {/* Red-Team Magnifying Glass Prop */}
+              <g transform="translate(3, 42)">
+                <line x1="9" y1="15" x2="5" y2="9" stroke="#7C4A08" strokeWidth="3" strokeLinecap="round" />
+                <circle
+                  cx="3"
+                  cy="5"
+                  r="6.5"
+                  fill="#38BDF8"
+                  fillOpacity="0.38"
+                  stroke="#091526"
+                  strokeWidth="2.4"
+                />
+                <circle cx="1.5" cy="3.5" r="2" fill="#FFFDF7" opacity="0.85" />
+              </g>
+            </motion.g>
+          </motion.g>
+
+          {/* BONE: RIGHT ARM 2-JOINT IK CHAIN (Shoulder 86, 58) */}
+          <motion.g
+            style={{ transformOrigin: '86px 58px' }}
+            animate={{ rotate: rightArmRotate }}
+            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {/* Upper Right Arm */}
+            <path
+              d="M86 58L98 66"
+              stroke="#091526"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <circle cx="86" cy="58" r="4" fill="#F5D78E" stroke="#091526" strokeWidth="2.2" />
+
+            {/* Right Forearm + Hand (Elbow 98, 66) */}
+            <motion.g
+              style={{ transformOrigin: '98px 66px' }}
+              animate={{ rotate: rightForearmRotate }}
+              transition={{ duration: cycleDuration * 0.75, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <path
+                d="M98 66L107 57"
+                stroke="#091526"
+                strokeWidth="5.2"
+                strokeLinecap="round"
+              />
+              <circle cx="107" cy="57" r="4.5" fill="#FAF6EE" stroke="#091526" strokeWidth="2.4" />
+
+              {/* Sketchbook Nib Fountain Pen Prop */}
+              <g transform="translate(107, 56) rotate(-36)">
+                <rect
+                  x="-2"
+                  y="-14"
+                  width="4.2"
+                  height="13"
+                  rx="1.5"
+                  fill="#F5D78E"
+                  stroke="#091526"
+                  strokeWidth="2"
+                />
+                <path d="M-2 -14L0 -20L2.2 -14Z" fill="#E05A47" stroke="#091526" strokeWidth="1.8" />
+              </g>
+            </motion.g>
+          </motion.g>
+
+          {/* TORSO ARMOR SHELL (Poké-Core Body) */}
+          <g>
+            <rect
+              x="35"
+              y="50"
+              width="50"
+              height="38"
+              rx="16"
+              fill="#FAF6EE"
+              stroke="#091526"
+              strokeWidth="3.4"
+            />
+            {/* Red Top Chest Plate */}
+            <path
+              d="M35 66C35 56.5 42 50 51 50H69C78 50 85 56.5 85 66V68H35V66Z"
+              fill="#E05A47"
+              stroke="#091526"
+              strokeWidth="3.2"
+            />
+            {/* Equatorial Belt Line */}
+            <line x1="35" y1="68" x2="85" y2="68" stroke="#091526" strokeWidth="4.5" />
+            {/* Center Core Reactor Latch */}
+            <circle cx="60" cy="68" r="9.5" fill="#FAF6EE" stroke="#091526" strokeWidth="3" />
+            <circle
+              cx="60"
+              cy="68"
+              r="5.2"
+              fill={
+                activeMode === 'analyzing'
+                  ? '#F5D78E'
+                  : activeMode === 'scribe'
+                    ? '#38BDF8'
+                    : isOpen
+                      ? '#38BDF8'
+                      : '#091526'
+              }
+              stroke="#091526"
+              strokeWidth="1.8"
+            />
+            <path
+              d="M60 63.8L61.1 66.9L64.2 68L61.1 69.1L60 72.2L58.9 69.1L55.8 68L58.9 66.9L60 63.8Z"
+              fill={activeMode === 'analyzing' ? '#091526' : '#F5D78E'}
+            />
+          </g>
+
+          {/* BONE: NECK & HEAD UNIT (Pivot 60, 48) */}
+          <motion.g
+            style={{ transformOrigin: '60px 48px' }}
+            animate={{ rotate: headRotate }}
+            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            {/* BONE: ANTENNA CREST (Pivot 60, 18) */}
+            <motion.g
+              style={{ transformOrigin: '60px 18px' }}
+              animate={{ rotate: antennaRotate }}
+              transition={{ duration: cycleDuration * 0.8, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <line x1="60" y1="18" x2="60" y2="7" stroke="#091526" strokeWidth="3.4" strokeLinecap="round" />
+              <circle
+                cx="60"
+                cy="6"
+                r="4.2"
+                fill={activeMode === 'analyzing' ? '#E05A47' : '#F5D78E'}
+                stroke="#091526"
+                strokeWidth="2.2"
+              />
+            </motion.g>
+
+            {/* Side Ear Comms */}
+            <rect x="27" y="28" width="6" height="13" rx="3" fill="#F5D78E" stroke="#091526" strokeWidth="2.4" />
+            <rect x="87" y="28" width="6" height="13" rx="3" fill="#F5D78E" stroke="#091526" strokeWidth="2.4" />
+
+            {/* Main Head Helmet */}
+            <rect
+              x="32"
+              y="16"
+              width="56"
+              height="34"
+              rx="15"
+              fill="#FAF6EE"
+              stroke="#091526"
+              strokeWidth="3.4"
+            />
+            {/* Red Crown Visor Cap */}
+            <path
+              d="M33 27C35 19.5 42 16 50 16H70C78 16 85 19.5 87 27H33Z"
+              fill="#E05A47"
+              stroke="#091526"
+              strokeWidth="2.8"
+            />
+
+            {/* Dark Face Visor Screen */}
+            <rect
+              x="38"
+              y="24"
+              width="44"
+              height="21"
+              rx="8"
+              fill="#091526"
+              stroke="#091526"
+              strokeWidth="2"
+            />
+
+            {/* 2D EYE GAZE + BLINK RIG */}
+            <motion.g
+              animate={{
+                x: pupilX,
+                y: pupilY,
+                scaleY: [1, 1, 0.12, 1, 1],
+              }}
+              transition={{
+                scaleY: { duration: 3.8, repeat: Infinity, times: [0, 0.46, 0.5, 0.54, 1] },
+                x: { type: 'spring', stiffness: 260, damping: 22 },
+                y: { type: 'spring', stiffness: 260, damping: 22 },
+              }}
+              style={{ transformOrigin: '60px 33px' }}
+            >
+              {/* Left Eye */}
+              <circle
+                cx="49.5"
+                cy="33"
+                r="4"
+                fill={activeMode === 'analyzing' ? '#F5D78E' : '#38BDF8'}
+              />
+              <circle cx="51" cy="31.5" r="1.3" fill="#FFFDF7" />
+
+              {/* Right Eye */}
+              <circle
+                cx="70.5"
+                cy="33"
+                r="4"
+                fill={activeMode === 'analyzing' ? '#F5D78E' : '#38BDF8'}
+              />
+              <circle cx="72" cy="31.5" r="1.3" fill="#FFFDF7" />
+
+              {/* Articulated Left & Right Eyebrow Bones */}
+              <line
+                x1="44.5"
+                y1={activeMode === 'analyzing' ? '27.5' : '28.5'}
+                x2="54"
+                y2={activeMode === 'analyzing' ? '29.8' : '28'}
+                stroke="#FAF6EE"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <line
+                x1="75.5"
+                y1={activeMode === 'analyzing' ? '27.5' : '28.5'}
+                x2="66"
+                y2={activeMode === 'analyzing' ? '29.8' : '28'}
+                stroke="#FAF6EE"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </motion.g>
+
+            {/* Mouth / Phoneme Visor Wave */}
+            {activeMode === 'analyzing' ? (
+              <motion.path
+                d="M53 40.5Q56.5 37.5 60 40.5T67 40.5"
+                stroke="#F5D78E"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                animate={{ scaleX: [0.85, 1.15, 0.85] }}
+                transition={{ duration: 0.55, repeat: Infinity }}
+                style={{ transformOrigin: '60px 40.5px' }}
+              />
+            ) : activeMode === 'scribe' ? (
+              <circle cx="60" cy="40.5" r="2.3" fill="#38BDF8" />
+            ) : (
+              <path
+                d="M54.5 39.5C56.5 42 63.5 42 65.5 39.5"
+                stroke="#F5D78E"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+            )}
+          </motion.g>
+
+          {/* OPTIONAL 2D SKELETAL RIG BONE & JOINT GIZMO OVERLAY */}
+          {showBones && (
+            <g className="pointer-events-none" opacity="0.95">
+              {/* Spine & Limb Bone Vectors */}
+              <line x1="60" y1="82" x2="60" y2="48" stroke="#38BDF8" strokeWidth="1.8" strokeDasharray="2 2" />
+              <line x1="60" y1="48" x2="60" y2="18" stroke="#38BDF8" strokeWidth="1.8" strokeDasharray="2 2" />
+              <line x1="60" y1="58" x2="34" y2="58" stroke="#38BDF8" strokeWidth="1.6" />
+              <line x1="60" y1="58" x2="86" y2="58" stroke="#38BDF8" strokeWidth="1.6" />
+              <line x1="60" y1="82" x2="48" y2="86" stroke="#38BDF8" strokeWidth="1.6" />
+              <line x1="60" y1="82" x2="72" y2="86" stroke="#38BDF8" strokeWidth="1.6" />
+              {/* Joint Pivot Nodes */}
+              {[
+                { x: 60, y: 82 }, // Root Pelvis
+                { x: 60, y: 68 }, // Spine Core
+                { x: 60, y: 48 }, // Neck
+                { x: 60, y: 18 }, // Antenna Base
+                { x: 34, y: 58 }, // Shoulder.L
+                { x: 86, y: 58 }, // Shoulder.R
+                { x: 48, y: 86 }, // Hip.L
+                { x: 72, y: 86 }, // Hip.R
+              ].map((pt, i) => (
+                <circle
+                  key={i}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="3"
+                  fill="#F5D78E"
+                  stroke="#091526"
+                  strokeWidth="1.5"
+                />
+              ))}
+            </g>
+          )}
+        </motion.g>
+      </motion.g>
+    </svg>
+  );
+};
 
 /**
  * Renders Maxi's 12-point structured markdown/text cleanly
@@ -302,12 +724,29 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [messages, setMessages] = useState<MaxiMessage[]>([]);
+  const [rigPose, setRigPose] = useState<MaxiRigPose>('idle');
+  const [showRigBones, setShowRigBones] = useState(false);
+  const [lookOffset, setLookOffset] = useState<{ x: number; y: number }>({
+    x: 0,
+    y: 0,
+  });
 
   const constraintsRef = useRef<HTMLDivElement | null>(null);
   const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
   const wasDraggedRef = useRef(false);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isTyping = input.trim().length > 0;
+
+  const handleDialogPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const normX = ((e.clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 6;
+    const normY = ((e.clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 4.5;
+    setLookOffset({
+      x: Math.max(-3.2, Math.min(3.2, normX)),
+      y: Math.max(-2.4, Math.min(2.4, normY)),
+    });
+  };
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -630,32 +1069,39 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
           }
           className="pointer-events-auto absolute right-1 bottom-20 flex cursor-grab flex-col items-center select-none active:cursor-grabbing sm:right-3 sm:bottom-24"
         >
-          {/* Floating Status Callout Pill above Pokéball */}
+          {/* Floating Status Callout Pill above 2D Rig Companion */}
           <div
-            className={`mb-1 rounded-full border-[1.5px] border-[#091526] px-2 py-0.5 font-journal text-[8.5px] leading-none font-extrabold whitespace-nowrap shadow-[1.5px_2px_0px_#091526] transition-colors sm:text-[9.5px] ${
+            className={`mb-1 rounded-full border-[1.5px] border-[#091526] px-2.5 py-0.5 font-journal text-[8.5px] leading-none font-extrabold whitespace-nowrap shadow-[1.5px_2px_0px_#091526] transition-colors sm:text-[9.5px] ${
               isOpen
-                ? 'bg-[#E05A47] text-[#FAF6EE]'
+                ? 'maxi-header-light-text bg-[#E05A47] text-[#FFFDF7]'
                 : isDay
-                  ? 'bg-[#FFFDF7] text-[#091526]'
+                  ? 'bg-[#F5D78E] text-[#091526]'
                   : 'bg-[#F5D78E] text-[#091526]'
             }`}
           >
             {isLoading
               ? isId
-                ? '⚡ Maxi Berpikir...'
-                : '⚡ Maxi Thinking...'
-              : 'MAXI • AI'}
+                ? '⚡ Maxi Menganalisis...'
+                : '⚡ Maxi Analyzing...'
+              : 'MAXI • 2D AI'}
           </div>
 
-          {/* Round Pokéball Container */}
-          <div className="relative h-14 w-14 rounded-full sm:h-16 sm:w-16">
+          {/* 2D Skeletal Rig Companion Container (No Card) */}
+          <div className="relative h-16 w-16 sm:h-20 sm:w-20">
             {isLoading && (
               <span
                 className="pointer-events-none absolute -inset-1 animate-ping rounded-full bg-[#F5D78E]/50"
                 aria-hidden="true"
               />
             )}
-            <MaxiPokeballSvg isOpen={isOpen} isLoading={isLoading} />
+            <Maxi2DRigCharacter
+              isOpen={isOpen}
+              isLoading={isLoading}
+              isTyping={isTyping}
+              pose={rigPose}
+              lookOffset={lookOffset}
+              showBones={showRigBones}
+            />
           </div>
         </motion.div>
       </div>
@@ -681,30 +1127,39 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 18, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+              onPointerMove={handleDialogPointerMove}
+              onPointerLeave={() => setLookOffset({ x: 0, y: 0 })}
               role="dialog"
               aria-modal="true"
               aria-labelledby="maxi-dialog-title"
-              className="parchment-box relative z-10 flex max-h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-[3px] border-[#091526] text-[#091526] shadow-[6px_8px_0px_#091526]"
+              className="parchment-box relative z-10 flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border-[3px] border-[#091526] text-[#091526] shadow-[6px_8px_0px_#091526]"
             >
               {/* Top Header Bar */}
-              <div className="flex items-center justify-between gap-3 border-b-2 border-[#091526] bg-gradient-to-r from-[#E05A47] via-[#D94E3B] to-[#091526] px-4 py-3 text-[#FAF6EE] sm:px-5">
+              <div className="maxi-header-light-text flex items-center justify-between gap-3 border-b-2 border-[#091526] bg-gradient-to-r from-[#E05A47] via-[#D94E3B] to-[#091526] px-4 py-3 text-[#FFFDF7] sm:px-5">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-[#FAF6EE]/15 p-0.5">
-                    <MaxiPokeballSvg isOpen={true} isLoading={isLoading} />
+                  <div className="h-12 w-12 shrink-0">
+                    <Maxi2DRigCharacter
+                      isOpen={true}
+                      isLoading={isLoading}
+                      isTyping={isTyping}
+                      pose={rigPose}
+                      lookOffset={lookOffset}
+                      showBones={showRigBones}
+                    />
                   </div>
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h2
                         id="maxi-dialog-title"
-                        className="truncate font-brush text-xl tracking-wide text-[#FAF6EE] sm:text-2xl"
+                        className="maxi-header-light-text truncate font-brush text-xl tracking-wide text-[#FFFDF7] sm:text-2xl"
                       >
                         MAXI — Personal OS AI Partner
                       </h2>
-                      <span className="hidden rounded-md border border-[#FAF6EE]/40 bg-[#091526]/70 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#F5D78E] sm:inline-block">
-                        Personal Operating System
+                      <span className="maxi-header-badge hidden rounded-md border border-[#FFFDF7]/40 bg-[#091526] px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#F5D78E] sm:inline-block">
+                        2D Rig • Personal OS
                       </span>
                     </div>
-                    <p className="truncate font-journal text-[10.5px] font-semibold text-[#FAF6EE]/90 sm:text-xs">
+                    <p className="maxi-header-light-text truncate font-journal text-[10.5px] font-semibold text-[#FFFDF7]/95 sm:text-xs">
                       {isId
                         ? 'Teman berpikir yang kritis, jujur, dan membantumu mengambil keputusan yang lebih baik.'
                         : 'Critical, honest thinking partner to help you see reality and make better decisions.'}
@@ -717,7 +1172,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                     <button
                       type="button"
                       onClick={handleClearSession}
-                      className="cursor-pointer rounded-lg border-[1.5px] border-[#FAF6EE]/70 bg-[#091526]/60 px-2.5 py-1 font-journal text-[10.5px] font-bold text-[#FAF6EE] transition-colors hover:bg-[#091526]"
+                      className="maxi-header-light-text cursor-pointer rounded-lg border-[1.5px] border-[#FFFDF7]/70 bg-[#091526]/75 px-2.5 py-1 font-journal text-[10.5px] font-bold text-[#FFFDF7] transition-colors hover:bg-[#091526]"
                     >
                       {isId ? 'Reset' : 'Clear'}
                     </button>
@@ -726,9 +1181,75 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                     type="button"
                     onClick={() => setIsOpen(false)}
                     aria-label={isId ? 'Tutup Maxi' : 'Close Maxi'}
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-[#091526] bg-[#FAF6EE] font-sans text-base font-extrabold text-[#091526] shadow-[2px_2px_0px_#091526] transition-transform hover:scale-105 hover:bg-[#F5D78E]"
+                    className="maxi-close-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-[#091526] bg-[#FFFDF7] font-sans text-base font-extrabold text-[#091526] shadow-[2px_2px_0px_#091526] transition-transform hover:scale-105 hover:bg-[#F5D78E]"
                   >
                     ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Interactive 2D Skeletal Rig Animation Stage & Pose Controller Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-[#091526] bg-[#FFF9EC] px-4 py-2 text-[#091526] sm:px-5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-[#091526] bg-[#F5D78E] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#091526]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#E05A47]" />
+                    2D RIG SYSTEM
+                  </span>
+                  <span className="font-journal text-[11px] font-bold text-[#1E2F47]">
+                    {isLoading
+                      ? isId
+                        ? 'Pose Aktif: Red-Team Deep Scan'
+                        : 'Active Pose: Red-Team Deep Scan'
+                      : isTyping
+                        ? isId
+                          ? 'Pose Aktif: Mencatat Tesis (Scribe IK)'
+                          : 'Active Pose: Scribe IK Mode'
+                        : isId
+                          ? 'Gerakkan kursor untuk Eye-Tracking • Pilih Pose:'
+                          : 'Move cursor for Eye-Tracking • Select Pose:'}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1">
+                  {(
+                    [
+                      { id: 'idle', labelId: 'Siaga', labelEn: 'Idle' },
+                      { id: 'inspect', labelId: 'Inspeksi', labelEn: 'Inspect' },
+                      { id: 'scribe', labelId: 'Catat', labelEn: 'Scribe' },
+                      { id: 'wave', labelId: 'Sapa', labelEn: 'Wave' },
+                    ] as const
+                  ).map((p) => {
+                    const active = !isLoading && !isTyping && rigPose === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setRigPose(p.id)}
+                        className={`cursor-pointer rounded-lg border-[1.5px] border-[#091526] px-2 py-0.5 font-journal text-[10px] font-extrabold transition-all ${
+                          active
+                            ? 'bg-[#E05A47] text-[#FFFDF7] shadow-[1.5px_1.5px_0px_#091526]'
+                            : 'bg-[#FFFDF7] text-[#091526] hover:bg-[#F5D78E]/60'
+                        }`}
+                      >
+                        {isId ? p.labelId : p.labelEn}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setShowRigBones((prev) => !prev)}
+                    title={
+                      isId
+                        ? 'Tampilkan/Sembunyikan Struktur Tulang & Sendi 2D Rig'
+                        : 'Toggle 2D Skeletal Bones & Joints Overlay'
+                    }
+                    className={`cursor-pointer rounded-lg border-[1.5px] border-[#091526] px-2 py-0.5 font-mono-num text-[10px] font-extrabold transition-all ${
+                      showRigBones
+                        ? 'bg-[#091526] text-[#38BDF8] shadow-[1.5px_1.5px_0px_#E05A47]'
+                        : 'bg-[#F5ECDC] text-[#091526] hover:bg-[#F5D78E]'
+                    }`}
+                  >
+                    {showRigBones ? '🦴 Rig: ON' : '🦴 Rig'}
                   </button>
                 </div>
               </div>
@@ -736,21 +1257,40 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
               {/* Conversation Body */}
               <div
                 ref={chatScrollRef}
-                className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6"
+                className="flex-1 space-y-4 overflow-y-auto bg-[#F7EFE0] px-4 py-4 sm:px-6"
               >
                 {messages.length === 0 ? (
                   <div className="space-y-3.5">
-                    <div className="sketch-note-card p-3.5 sm:p-4">
-                      <p className="font-brush text-lg text-[#091526] sm:text-xl">
-                        {isId
-                          ? '⚡ Ceritakan masalah, rencana, karier, atau keputusan uang/Web3 yang sedang kamu hadapi.'
-                          : '⚡ Share the problem, plan, career move, or financial/Web3 decision you are facing.'}
-                      </p>
-                      <p className="mt-1 font-journal text-xs leading-relaxed text-[#1E2F47] sm:text-[13px]">
-                        {isId
-                          ? 'Maxi menggunakan bahasa Indonesia yang sederhana, jelas, dan jujur untuk membantumu: (1) Pahami Masalahnya, (2) Periksa Fakta, (3) Temukan Kesalahan Berpikir, (4) Pilihan Masuk Akal, (5) Dampak Jangka Panjang, (6) Hitung Risiko & Keuntungan, (7) Cari Kelemahan Ide, (8) Pengembangan Hidup, (9) Analisis Karier, (10) Analisis Uang & Crypto/Web3, (11) Ubah Menjadi Tindakan, hingga (12) Evaluasi Keputusan.'
-                          : 'Maxi uses clear, honest, and grounded analysis to help you understand the root problem, verify facts, spot thinking errors, weigh realistic options, calculate long-term impact & risks, and turn analysis into concrete action.'}
-                      </p>
+                    <div className="sketch-note-card flex flex-col items-center gap-3.5 p-3.5 sm:flex-row sm:items-start sm:p-4">
+                      {/* Featured 2D Rig Character Showcase inside Empty State */}
+                      <div className="flex shrink-0 flex-col items-center">
+                        <div className="h-24 w-24">
+                          <Maxi2DRigCharacter
+                            isOpen={true}
+                            isLoading={isLoading}
+                            isTyping={isTyping}
+                            pose={rigPose}
+                            lookOffset={lookOffset}
+                            showBones={showRigBones}
+                          />
+                        </div>
+                        <span className="mt-1.5 rounded-full border border-[#091526] bg-[#F5D78E] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-[#091526]">
+                          IK 2D SKELETAL RIG
+                        </span>
+                      </div>
+
+                      <div className="flex-1 text-left">
+                        <p className="font-brush text-lg text-[#091526] sm:text-xl">
+                          {isId
+                            ? '⚡ Ceritakan masalah, rencana, karier, atau keputusan uang/Web3 yang sedang kamu hadapi.'
+                            : '⚡ Share the problem, plan, career move, or financial/Web3 decision you are facing.'}
+                        </p>
+                        <p className="mt-1 font-journal text-xs leading-relaxed text-[#1E2F47] sm:text-[13px]">
+                          {isId
+                            ? 'Maxi menggunakan bahasa Indonesia yang sederhana, jelas, dan jujur untuk membantumu: (1) Pahami Masalahnya, (2) Periksa Fakta, (3) Temukan Kesalahan Berpikir, (4) Pilihan Masuk Akal, (5) Dampak Jangka Panjang, (6) Hitung Risiko & Keuntungan, (7) Cari Kelemahan Ide, (8) Pengembangan Hidup, (9) Analisis Karier, (10) Analisis Uang & Crypto/Web3, (11) Ubah Menjadi Tindakan, hingga (12) Evaluasi Keputusan.'
+                            : 'Maxi uses clear, honest, and grounded analysis to help you understand the root problem, verify facts, spot thinking errors, weigh realistic options, calculate long-term impact & risks, and turn analysis into concrete action.'}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Quick Test Prompts */}
@@ -768,12 +1308,14 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                             onClick={() =>
                               submitPrompt(isId ? item.promptId : item.promptEn)
                             }
-                            className="cursor-pointer rounded-xl border-2 border-[#091526] bg-[#FFFDF7] p-2.5 text-left font-journal text-xs font-bold text-[#091526] shadow-[2px_3px_0px_#091526] transition-all hover:-translate-y-0.5 hover:bg-[#F5D78E]/35"
+                            className="cursor-pointer rounded-xl border-2 border-[#091526] bg-[#FFFDF7] p-2.5 text-left font-journal text-xs font-bold text-[#091526] shadow-[2px_3px_0px_#091526] transition-all hover:-translate-y-0.5 hover:bg-[#F5D78E]/45"
                           >
-                            <span className="block text-[#E05A47]">
+                            <span className="block font-extrabold text-[#E05A47]">
                               0{idx + 1}.
                             </span>
-                            <span>{isId ? item.labelId : item.labelEn}</span>
+                            <span className="text-[#091526]">
+                              {isId ? item.labelId : item.labelEn}
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -790,11 +1332,21 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                       <div
                         className={`max-w-[94%] rounded-2xl border-2 border-[#091526] px-3.5 py-2.5 shadow-[3px_3px_0px_#091526] sm:max-w-[90%] sm:px-4 sm:py-3 ${
                           msg.role === 'user'
-                            ? 'bg-[#091526] text-[#FAF6EE]'
-                            : 'bg-[#FFFDF8] text-[#091526]'
+                            ? isDay
+                              ? 'maxi-user-textbox bg-[#FDE6A8] text-[#091526]'
+                              : 'bg-[#122847] text-[#FFFDF7]'
+                            : 'maxi-model-textbox bg-[#FFFDF9] text-[#091526]'
                         }`}
                       >
-                        <div className="mb-1 flex items-center justify-between gap-3 border-b border-current/15 pb-1 text-[10px] font-bold opacity-80">
+                        <div
+                          className={`mb-1 flex items-center justify-between gap-3 border-b pb-1 text-[10px] font-extrabold ${
+                            msg.role === 'user'
+                              ? isDay
+                                ? 'border-[#091526]/25 text-[#091526]'
+                                : 'border-[#FFFDF7]/20 text-[#F5D78E]'
+                              : 'border-[#091526]/15 text-[#7C4A08]'
+                          }`}
+                        >
                           <span>
                             {msg.role === 'user'
                               ? isId
@@ -806,7 +1358,11 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                         </div>
 
                         {msg.role === 'user' ? (
-                          <p className="whitespace-pre-wrap text-left font-journal text-xs leading-relaxed text-[#FAF6EE] sm:text-[13px]">
+                          <p
+                            className={`whitespace-pre-wrap text-left font-journal text-xs leading-relaxed font-semibold sm:text-[13px] ${
+                              isDay ? 'text-[#091526]' : 'text-[#FFFDF7]'
+                            }`}
+                          >
                             {msg.text}
                           </p>
                         ) : (
@@ -830,8 +1386,8 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
 
                 {isLoading && (
                   <div className="flex items-start">
-                    <div className="rounded-2xl border-2 border-[#091526] bg-[#FFFDF8] px-4 py-3 shadow-[3px_3px_0px_#091526]">
-                      <div className="flex items-center gap-2 font-journal text-xs font-bold text-[#091526]">
+                    <div className="maxi-model-textbox rounded-2xl border-2 border-[#091526] bg-[#FFFDF9] px-4 py-3 shadow-[3px_3px_0px_#091526]">
+                      <div className="flex items-center gap-2.5 font-journal text-xs font-bold text-[#091526]">
                         <span className="inline-block h-2.5 w-2.5 animate-ping rounded-full bg-[#E05A47]" />
                         <span>
                           {isId
@@ -856,7 +1412,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                   e.preventDefault();
                   submitPrompt(input);
                 }}
-                className="border-t-2 border-[#091526] bg-[#E8DCC6] px-4 py-3 sm:px-5"
+                className="maxi-input-footer border-t-2 border-[#091526] bg-[#EFE3CE] px-4 py-3 sm:px-5"
               >
                 <div className="flex items-end gap-2.5">
                   <textarea
@@ -864,6 +1420,12 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                     rows={2}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
+                    onFocus={() => {
+                      if (!isLoading) setRigPose('scribe');
+                    }}
+                    onBlur={() => {
+                      if (!isLoading && !input.trim()) setRigPose('idle');
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -875,7 +1437,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                         ? 'Tulis keputusan, rencana trading/investasi Web3, karier, atau masalahmu di sini...'
                         : 'Describe your decision, Web3 thesis, financial move, or career dilemma...'
                     }
-                    className="sketch-input max-h-32 min-h-[46px] flex-1 resize-none px-3 py-2 font-journal text-xs font-semibold text-[#091526] placeholder:text-[#5C6B7F] sm:text-[13px]"
+                    className="sketch-input maxi-input-textarea max-h-32 min-h-[48px] flex-1 resize-none bg-[#FFFFFF] px-3.5 py-2.5 font-journal text-xs font-semibold text-[#091526] placeholder:text-[#52657C] focus:bg-[#FFFDF9] sm:text-[13px]"
                   />
                   <button
                     type="submit"
