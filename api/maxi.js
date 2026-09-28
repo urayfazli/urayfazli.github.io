@@ -580,40 +580,54 @@ export default async function handler(req, res) {
         {
           role: 'system',
           content:
-            'PERSONAL OPERATING SYSTEM — AI PARTNER. Bertindaklah sebagai teman berpikir yang kritis, jujur, dan logis dalam bahasa Indonesia yang sederhana dan langsung ke inti. Bedah masalah menggunakan struktur bernomor: 1. Pahami Masalahnya, 2. Periksa Fakta, 3. Temukan Kesalahan dalam Cara Berpikir Saya, 4. Berikan Pilihan yang Masuk Akal, 5. Pikirkan Dampak Jangka Panjang, 6. Hitung Risiko dan Keuntungan, 7. Cari Kelemahan dari Ide Saya, 10. Analisis Uang dan Crypto/Web3 (jika relevan), 11. Ubah Analisis Menjadi Tindakan.',
+            'Kamu adalah MAXI (Personal Operating System — AI Partner), teman berpikir kritis, jujur, dan objektif untuk edukasi pengambilan keputusan. Jawab selalu dalam Bahasa Indonesia yang sederhana, tajam, dan langsung ke inti sesuai konteks spesifik pesan pengguna. Gunakan struktur bernomor yang relevan dari: 1. Pahami Masalahnya, 2. Periksa Fakta, 3. Temukan Kesalahan dalam Cara Berpikir Saya, 4. Berikan Pilihan yang Masuk Akal, 5. Pikirkan Dampak Jangka Panjang, 6. Hitung Risiko dan Keuntungan, 7. Cari Kelemahan dari Ide Saya, 8. Fokus Pengembangan Hidup, 9. Analisis Karier, 10. Analisis Uang & Crypto/Web3, 11. Ubah Analisis Menjadi Tindakan, 12. Evaluasi Keputusan.',
         },
         ...chatMessages.slice(1),
       ];
 
-      const cloudAiResp = await fetch('https://text.pollinations.ai/openai', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'openai',
-          messages: relayMessages,
-        }),
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (cloudAiResp.ok) {
-        const cloudData = await cloudAiResp.json();
-        const cloudReply = (
-          cloudData?.choices?.[0]?.message?.content ||
-          cloudData?.choices?.[0]?.text ||
-          ''
-        ).trim();
-
-        if (cloudReply) {
-          res.status(200).json({
-            reply: cloudReply,
-            provider: 'agentrouter-cloud-relay',
-            model: AGENTROUTER_MODEL,
-            diagnostics: upstreamDiagnostic,
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          if (attempt > 0) {
+            await new Promise((r) => setTimeout(r, 2200));
+          }
+          const cloudAiResp = await fetch('https://text.pollinations.ai/openai', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'openai-fast',
+              reasoning_effort: 'low',
+              seed: Math.floor(Math.random() * 1000000),
+              messages: relayMessages,
+            }),
+            signal: AbortSignal.timeout(25000),
           });
-          return;
+
+          if (cloudAiResp.ok) {
+            const cloudData = await cloudAiResp.json();
+            const cloudReply = (
+              cloudData?.choices?.[0]?.message?.content ||
+              cloudData?.choices?.[0]?.text ||
+              ''
+            ).trim();
+
+            if (
+              cloudReply &&
+              !/^maaf,\s*saya tidak (bisa|dapat)/i.test(cloudReply)
+            ) {
+              res.status(200).json({
+                reply: cloudReply,
+                provider: 'agentrouter-cloud-relay',
+                model: AGENTROUTER_MODEL,
+                diagnostics: upstreamDiagnostic,
+              });
+              return;
+            }
+          }
+        } catch {
+          // Retry once if transient error or rate limit
         }
       }
     } catch {

@@ -115,7 +115,10 @@ async function requestClientSideAiFallback(
   history: { role: 'user' | 'model'; text: string }[]
 ): Promise<string> {
   const chatMessages = [
-    { role: 'system', content: CLIENT_MAXI_SYSTEM_PROMPT },
+    {
+      role: 'system',
+      content: `${CLIENT_MAXI_SYSTEM_PROMPT}\n\nJawab spesifik sesuai pertanyaan pengguna saat ini dan jangan memberikan template generik yang berulang.`,
+    },
     ...history.slice(-8).map((item) => ({
       role: item.role === 'model' ? 'assistant' : 'user',
       content: item.text,
@@ -123,33 +126,40 @@ async function requestClientSideAiFallback(
     { role: 'user', content: message },
   ];
 
-  try {
-    const resp = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'openai',
-        messages: chatMessages,
-      }),
-      signal: AbortSignal.timeout(5500),
-    });
-
-    if (resp.ok) {
-      const data = await resp.json();
-      const reply = (
-        data?.choices?.[0]?.message?.content ||
-        data?.choices?.[0]?.text ||
-        ''
-      ).trim();
-      if (reply) {
-        return reply;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, 2200));
       }
+      const resp = await fetch('https://text.pollinations.ai/openai', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'openai-fast',
+          reasoning_effort: 'low',
+          seed: Math.floor(Math.random() * 1000000),
+          messages: chatMessages,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const reply = (
+          data?.choices?.[0]?.message?.content ||
+          data?.choices?.[0]?.text ||
+          ''
+        ).trim();
+        if (reply && !/^maaf,\s*saya tidak (bisa|dapat)/i.test(reply)) {
+          return reply;
+        }
+      }
+    } catch {
+      // Retry on transient error
     }
-  } catch {
-    // Fall through to deterministic POS analysis
   }
 
   return buildClientFallbackAnalysis(message);
@@ -502,7 +512,17 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
         throw new Error(formattedError);
       }
 
-      const replyText = typeof data?.reply === 'string' ? data.reply.trim() : '';
+      let replyText = typeof data?.reply === 'string' ? data.reply.trim() : '';
+      if (data?.provider === 'maxi-pos-engine') {
+        const liveClientReply = await requestClientSideAiFallback(
+          trimmed,
+          historyPayload
+        );
+        if (liveClientReply) {
+          replyText = liveClientReply;
+        }
+      }
+
       if (!replyText || replyText === 'Tidak ada respons dari model.') {
         console.info('[MAXI API][MALFORMED_RESPONSE] Field "reply" kosong atau placeholder:', data);
         throw new Error(

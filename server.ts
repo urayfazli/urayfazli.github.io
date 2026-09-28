@@ -674,7 +674,7 @@ async function startServer() {
           {
             role: 'system',
             content:
-              'PERSONAL OPERATING SYSTEM — AI PARTNER. Bertindaklah sebagai teman berpikir yang kritis, jujur, dan logis dalam bahasa Indonesia yang sederhana dan langsung ke inti. Bedah masalah menggunakan struktur bernomor: 1. Pahami Masalahnya, 2. Periksa Fakta, 3. Temukan Kesalahan dalam Cara Berpikir Saya, 4. Berikan Pilihan yang Masuk Akal, 5. Pikirkan Dampak Jangka Panjang, 6. Hitung Risiko dan Keuntungan, 7. Cari Kelemahan dari Ide Saya, 10. Analisis Uang dan Crypto/Web3 (jika relevan), 11. Ubah Analisis Menjadi Tindakan.',
+              'Kamu adalah MAXI (Personal Operating System — AI Partner), teman berpikir kritis, jujur, dan objektif untuk edukasi pengambilan keputusan. Jawab selalu dalam Bahasa Indonesia yang sederhana, tajam, dan langsung ke inti sesuai konteks spesifik pesan pengguna. Gunakan struktur bernomor yang relevan dari: 1. Pahami Masalahnya, 2. Periksa Fakta, 3. Temukan Kesalahan dalam Cara Berpikir Saya, 4. Berikan Pilihan yang Masuk Akal, 5. Pikirkan Dampak Jangka Panjang, 6. Hitung Risiko dan Keuntungan, 7. Cari Kelemahan dari Ide Saya, 8. Fokus Pengembangan Hidup, 9. Analisis Karier, 10. Analisis Uang & Crypto/Web3, 11. Ubah Analisis Menjadi Tindakan, 12. Evaluasi Keputusan.',
           },
           ...chatMessages.slice(1),
         ];
@@ -686,10 +686,12 @@ async function startServer() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'openai',
+            model: 'openai-fast',
+            reasoning_effort: 'low',
+            seed: Math.floor(Math.random() * 1000000),
             messages: relayMessages,
           }),
-          signal: AbortSignal.timeout(5000),
+          signal: AbortSignal.timeout(25000),
         });
 
         if (cloudAiResp.ok) {
@@ -702,7 +704,10 @@ async function startServer() {
             ''
           ).trim();
 
-          if (cloudReply) {
+          if (
+            cloudReply &&
+            !/^maaf,\s*saya tidak (bisa|dapat)/i.test(cloudReply)
+          ) {
             res.status(200).json({
               reply: cloudReply,
               provider: 'agentrouter-cloud-relay',
@@ -736,6 +741,24 @@ async function startServer() {
     }
   });
 
+  app.all('/api/visitors', async (req, res) => {
+    try {
+      const mod = await import('./api/visitors.js');
+      await mod.default(req, res);
+    } catch {
+      res.status(200).json({ count: 1, value: 1, source: 'fallback' });
+    }
+  });
+
+  app.all('/api/notes', async (req, res) => {
+    try {
+      const mod = await import('./api/notes.js');
+      await mod.default(req, res);
+    } catch {
+      res.status(200).json({ notes: [], count: 0 });
+    }
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
@@ -746,7 +769,7 @@ async function startServer() {
   } else {
     const distPath = path.join(__dirname, 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
+    app.use((_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
