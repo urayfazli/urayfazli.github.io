@@ -233,8 +233,10 @@ export const HeroChibiCharacter: React.FC<{
   const [isSpeakingNow, setIsSpeakingNow] = useState(false);
 
   const lastTapRef = useRef<number>(0);
+  const clickCountRef = useRef<number>(0);
+  const singleClickTimerRef = useRef<number | null>(null);
+  const bubblePartIdxRef = useRef<number>(bubblePartIdx);
   const hasGreetedRef = useRef<boolean>(false);
-  const prevPlayingRef = useRef<boolean>(false);
   const hintTimerRef = useRef<number | null>(null);
   const bounceTimerRef = useRef<number | null>(null);
   const speakingTimerRef = useRef<number | null>(null);
@@ -242,6 +244,10 @@ export const HeroChibiCharacter: React.FC<{
   const greetingDelayTimerRef = useRef<number | null>(null);
   const rigContainerRef = useRef<HTMLDivElement | null>(null);
   const rigInstanceRef = useRef<CharacterRig | null>(null);
+
+  useEffect(() => {
+    bubblePartIdxRef.current = bubblePartIdx;
+  }, [bubblePartIdx]);
 
   const currentFactPart =
     CHIBI_CRYPTO_TALK_PARTS[bubblePartIdx] || CHIBI_CRYPTO_TALK_PARTS[0];
@@ -403,21 +409,11 @@ export const HeroChibiCharacter: React.FC<{
     };
   }, []);
 
-  // Sync Cozy Backsound mode with 2D Rig; if backsound turns ON and bubble is not open, show bubble so mouth animates
+  // Sync Cozy Backsound mode with 2D Rig
   useEffect(() => {
     if (rigInstanceRef.current) {
       rigInstanceRef.current.setCozyMode(isPlaying);
     }
-    if (isPlaying && !prevPlayingRef.current) {
-      if (!bubbleOpen) {
-        const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
-        triggerRigTalking(nextRandomIdx);
-      } else if (rigInstanceRef.current) {
-        rigInstanceRef.current.setSpeechBubbleActive(true);
-        rigInstanceRef.current.playAnimation('talk');
-      }
-    }
-    prevPlayingRef.current = isPlaying;
   }, [isPlaying, rigReady]);
 
   useEffect(() => {
@@ -426,6 +422,9 @@ export const HeroChibiCharacter: React.FC<{
     });
     return () => {
       unsubscribe();
+      if (singleClickTimerRef.current !== null) {
+        window.clearTimeout(singleClickTimerRef.current);
+      }
       if (hintTimerRef.current !== null) {
         window.clearTimeout(hintTimerRef.current);
       }
@@ -451,8 +450,9 @@ export const HeroChibiCharacter: React.FC<{
   const handleChibiPress = async () => {
     const now = performance.now();
     const diff = now - lastTapRef.current;
+    lastTapRef.current = now;
 
-    // Visual micro-bounce on every tap
+    // Visual micro-bounce on tap
     setTapBounce(true);
     if (bounceTimerRef.current !== null) {
       window.clearTimeout(bounceTimerRef.current);
@@ -462,22 +462,39 @@ export const HeroChibiCharacter: React.FC<{
       bounceTimerRef.current = null;
     }, 180);
 
-    // Open or pick a new random Crypto / Web3 / Meme Speech Bubble & trigger 2D Rig talking expression
-    const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
-    triggerRigTalking(nextRandomIdx);
+    clickCountRef.current += 1;
 
-    if (diff > 0 && diff < 320) {
-      // Rapid 2x press also toggles Cozy & ASMR backsound
-      lastTapRef.current = 0;
-      if (hintTimerRef.current !== null) {
-        window.clearTimeout(hintTimerRef.current);
-        hintTimerRef.current = null;
-      }
-      setSingleTapHint(false);
-      const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
-      setIsPlaying(nextState);
+    if (singleClickTimerRef.current !== null) {
+      window.clearTimeout(singleClickTimerRef.current);
+      singleClickTimerRef.current = null;
+    }
+
+    if (clickCountRef.current === 1) {
+      // Wait 280ms to verify the user only clicked 1 time (not >1x or spam)
+      singleClickTimerRef.current = window.setTimeout(() => {
+        if (clickCountRef.current === 1) {
+          const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdxRef.current);
+          triggerRigTalking(nextRandomIdx);
+        }
+        clickCountRef.current = 0;
+        singleClickTimerRef.current = null;
+      }, 280);
     } else {
-      lastTapRef.current = now;
+      // Clicked > 1 time (2x or spam): DO NOT show text bubble (and hide if open)
+      closeSpeechBubble();
+      setSingleTapHint(false);
+
+      if (clickCountRef.current === 2 && diff > 0 && diff < 340) {
+        // Exact 2x rapid press toggles Cozy & ASMR backsound without showing bubble
+        const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
+        setIsPlaying(nextState);
+      }
+
+      // Reset click counter only after the multi-click / spam burst stops
+      singleClickTimerRef.current = window.setTimeout(() => {
+        clickCountRef.current = 0;
+        singleClickTimerRef.current = null;
+      }, 380);
     }
   };
 
@@ -485,10 +502,6 @@ export const HeroChibiCharacter: React.FC<{
     e.stopPropagation();
     const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
     setIsPlaying(nextState);
-    if (nextState) {
-      const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
-      triggerRigTalking(nextRandomIdx);
-    }
   };
 
   return (
@@ -504,13 +517,13 @@ export const HeroChibiCharacter: React.FC<{
       }}
       aria-label={
         isId
-          ? 'Klik karakter Chibi untuk menampilkan fakta unik Crypto, Web3 & Meme secara acak atau ketuk 2x untuk Cozy ASMR'
-          : 'Click Chibi character to reveal random Crypto, Web3 & Meme facts or double-tap for Cozy ASMR'
+          ? 'Klik 1x karakter Chibi untuk menampilkan fakta unik Crypto, Web3 & Meme secara acak atau ketuk 2x untuk Cozy ASMR'
+          : 'Single-click Chibi character to reveal random Crypto, Web3 & Meme facts or double-tap for Cozy ASMR'
       }
       title={
         isId
-          ? 'Klik untuk Fakta Unik Crypto, Web3 & Meme (Acak) • Ketuk 2x untuk Cozy ASMR'
-          : 'Click for Random Crypto, Web3 & Meme Facts • Double-tap for Cozy ASMR'
+          ? 'Klik 1x untuk Fakta Unik Crypto, Web3 & Meme (Acak) • Ketuk 2x untuk Cozy ASMR'
+          : 'Single-click for Random Crypto, Web3 & Meme Facts • Double-tap for Cozy ASMR'
       }
       className="group relative mx-auto h-[265px] w-[265px] cursor-pointer overflow-visible touch-manipulation select-none focus:outline-none sm:h-[335px] sm:w-[335px] lg:h-[378px] lg:w-[378px]"
     >
@@ -525,8 +538,7 @@ export const HeroChibiCharacter: React.FC<{
             transition={{ type: 'spring', stiffness: 390, damping: 24 }}
             onClick={(e) => {
               e.stopPropagation();
-              const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
-              triggerRigTalking(nextRandomIdx);
+              handleChibiPress();
             }}
             className=" -top-14 left-1/2 z-40 w-[198px] -translate-x-1/2 sm:-top-16 sm:w-[224px] lg:-top-16 lg:w-[238px] absolute cursor-pointer"
           >

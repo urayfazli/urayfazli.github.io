@@ -1,10 +1,36 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, getDocFromServer, doc } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  getFirestore,
+  getDoc,
+  doc,
+  setLogLevel,
+   Firestore,
+} from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
+// Suppress noisy internal @firebase/firestore WebChannel 10s timeout console.error logs
+// when operating in proxied or offline-capable browser environments
+setLogLevel('silent');
+
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+function createFirestoreInstance(): Firestore {
+  try {
+    return initializeFirestore(
+      app,
+      {
+        experimentalAutoDetectLongPolling: true,
+      },
+      firebaseConfig.firestoreDatabaseId
+    );
+  } catch {
+    return getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  }
+}
+
+export const db = createFirestoreInstance();
 export const auth = getAuth(app);
 
 export enum OperationType {
@@ -40,8 +66,18 @@ export function handleFirestoreError(
   operationType: OperationType,
   path: string | null
 ): void {
+  const message = error instanceof Error ? error.message : String(error);
+  // Ignore transient offline / network timeout states as the app has local state fallback
+  if (
+    message.includes('client is offline') ||
+    message.includes('Could not reach Cloud Firestore backend') ||
+    message.includes('unavailable')
+  ) {
+    return;
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: message,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -59,16 +95,13 @@ export function handleFirestoreError(
     operationType,
     path,
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  console.warn('Firestore Notice:', JSON.stringify(errInfo));
 }
 
-async function testConnection() {
+export async function testConnection(): Promise<void> {
   try {
-    await getDocFromServer(doc(db, 'collaboration_notes', '_connection_check'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-    }
+    await getDoc(doc(db, 'collaboration_notes', '_connection_check'));
+  } catch {
+    // Gracefully operate in offline/cached mode without throwing console errors
   }
 }
-testConnection();

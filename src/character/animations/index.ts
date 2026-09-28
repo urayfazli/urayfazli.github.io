@@ -273,6 +273,11 @@ export class AnimationController {
     let mouthY = 0;
     let mouthRotZ = 0;
 
+    // If speech bubble is closed, cancel any active TALK state immediately so mouth never animates without a bubble
+    if (!isBubbleActive && this.activeInteraction === CharacterAnimationState.TALK) {
+      this.activeInteraction = null;
+    }
+
     // 3. Evaluate Active Interaction Animation (talk, head_tilt, happy)
     if (this.activeInteraction) {
       this.interactionElapsed += dt;
@@ -284,26 +289,30 @@ export class AnimationController {
           isTalking = true;
           const t = this.interactionElapsed;
 
-          // Initial excited pop when the bubble appears / switches part
+          // Initial excited pop when the bubble appears or backsound starts
           const startPop = p < 0.16 ? Math.sin((p / 0.16) * Math.PI) : 0;
 
-          // Multi-syllable anime lip-sync cadence (active until p = 0.88, then warm smile)
+          // Crisp anime syllable open/close cadence
           const speechWindow =
-            smoothstep01(0.02, 0.09, p) * (1 - smoothstep01(0.84, 0.94, p));
-          const phraseGate = Math.sin(t * 4.8) > -0.62 ? 1 : 0.15;
-          const rawSyllable =
-            0.52 +
-            0.34 * Math.sin(t * 22.0) +
-            0.24 * Math.cos(t * 13.5) +
-            0.18 * Math.sin(t * 31.0);
-          mouthOpenAmount = clamp(rawSyllable * phraseGate * speechWindow, 0, 1);
+            smoothstep01(0.02, 0.08, p) * (1 - smoothstep01(0.86, 0.96, p));
+          const phraseGate = Math.sin(t * 3.8) > -0.58 ? 1 : 0;
+          const beatWave = Math.sin(t * 26.0) * 0.65 + Math.sin(t * 14.5) * 0.35;
+          mouthOpenAmount =
+            phraseGate > 0
+              ? clamp((beatWave + 0.26) * 0.88 * speechWindow, 0, 1)
+              : 0;
 
-          mouthScaleX = 0.94 + mouthOpenAmount * 0.14;
-          mouthScaleY = 0.48 + mouthOpenAmount * 0.66;
-          mouthY = -mouthOpenAmount * 1.2 * pxToWorld;
+          const isOpenSyllable = mouthOpenAmount > 0.28;
+          mouthScaleX = isOpenSyllable
+            ? 0.95 + mouthOpenAmount * 0.15
+            : 0.98 + mouthOpenAmount * 0.08;
+          mouthScaleY = isOpenSyllable
+            ? 0.68 + mouthOpenAmount * 0.46
+            : 0.95 + mouthOpenAmount * 0.15;
+          mouthY = -mouthOpenAmount * 1.25 * pxToWorld;
           mouthRotZ = Math.sin(t * 7.2) * 0.028 * speechWindow;
 
-          // Expressive conversational head nods & tilts while explaining Crypto/Web3 facts
+          // Expressive conversational head nods & tilts
           const nodWave = Math.abs(Math.sin(t * 5.8)) * speechWindow;
           const tiltWave =
             (Math.sin(t * 3.4) * 0.046 + Math.cos(t * 1.9) * 0.026) * envelope;
@@ -383,30 +392,32 @@ export class AnimationController {
       }
     }
 
-    // 3b. Bubble Text Mouth Animation (Active whenever speech bubble is visible, including when backsound is ON)
+    // 3b. Mouth Animation (ONLY active when speech bubble is visible)
     if (isBubbleActive && !isTalking) {
       isTalking = true;
       const t = this.elapsedTime;
-      const phraseGate = Math.sin(t * 4.2) > -0.45 ? 1 : 0.18;
-      const rawSyllable =
-        0.5 +
-        0.34 * Math.sin(t * 19.5) +
-        0.24 * Math.cos(t * 12.2) +
-        0.16 * Math.sin(t * 27.0);
-      mouthOpenAmount = clamp(rawSyllable * phraseGate, 0, 1);
+      const phraseGate = Math.sin(t * 3.6) > -0.55 ? 1 : 0;
+      const beatWave = Math.sin(t * 26.0) * 0.65 + Math.sin(t * 14.5) * 0.35;
+      mouthOpenAmount =
+        phraseGate > 0 ? clamp((beatWave + 0.25) * 0.86, 0, 1) : 0;
 
-      mouthScaleX = 0.94 + mouthOpenAmount * 0.14;
-      mouthScaleY = 0.48 + mouthOpenAmount * 0.64;
-      mouthY = -mouthOpenAmount * 1.15 * pxToWorld;
+      const isOpenSyllable = mouthOpenAmount > 0.28;
+      mouthScaleX = isOpenSyllable
+        ? 0.95 + mouthOpenAmount * 0.15
+        : 0.98 + mouthOpenAmount * 0.08;
+      mouthScaleY = isOpenSyllable
+        ? 0.68 + mouthOpenAmount * 0.46
+        : 0.95 + mouthOpenAmount * 0.15;
+      mouthY = -mouthOpenAmount * 1.2 * pxToWorld;
       mouthRotZ = Math.sin(t * 6.4) * 0.026 * phraseGate;
 
-      // Subtle conversational nod while bubble remains open
+      // Subtle conversational nod while bubble is active
       const nodWave = Math.abs(Math.sin(t * 4.8)) * phraseGate;
       headRotZ += Math.sin(t * 2.8) * 0.025;
       headY += nodWave * 1.6 * pxToWorld;
     }
 
-    // 3c. Gentle Cozy Backsound Head/Body Groove (Mouth stays calm unless bubble text is open)
+    // 3c. Gentle Cozy Backsound Head/Body Groove (Mouth stays hidden/inactive unless speech bubble is open)
     if (isCozyMode) {
       const t = this.elapsedTime;
       const grooveBeat = Math.sin(t * 3.2);

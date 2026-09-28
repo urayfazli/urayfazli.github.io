@@ -100,7 +100,6 @@ export class CharacterRig {
   private scene: THREE.Scene;
   private camera: THREE.OrthographicCamera;
   private renderer: THREE.WebGLRenderer | null = null;
-  private textureManager = new THREE.TextureLoader();
   private customTextureManager = new TextureManager();
   private animationController = new AnimationController();
   private parts: RigPartsMap | null = null;
@@ -156,6 +155,9 @@ export class CharacterRig {
 
   // Bound DOM listeners for clean removal in dispose()
   private resizeObserver: ResizeObserver | null = null;
+  private intersectionObserver: IntersectionObserver | null = null;
+  private isInViewport = true;
+  private boundResize: () => void;
   private boundMouseMove: (e: MouseEvent) => void;
   private boundTouchMove: (e: TouchEvent) => void;
   private boundTouchEnd: () => void;
@@ -177,6 +179,7 @@ export class CharacterRig {
     this.camera.position.set(0, 0, 5);
     this.camera.lookAt(0, 0, 0);
 
+    this.boundResize = this.handleResize.bind(this);
     this.boundMouseMove = this.handleWindowMouseMove.bind(this);
     this.boundTouchMove = this.handleWindowTouchMove.bind(this);
     this.boundTouchEnd = this.handleWindowTouchEnd.bind(this);
@@ -258,7 +261,23 @@ export class CharacterRig {
       this.resizeObserver = new ResizeObserver(() => this.handleResize());
       this.resizeObserver.observe(this.container);
     } else {
-      window.addEventListener('resize', () => this.handleResize());
+      window.addEventListener('resize', this.boundResize, { passive: true });
+    }
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      this.intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[0];
+          if (entry) {
+            this.isInViewport = entry.isIntersecting;
+            if (this.isInViewport) {
+              this.lastFrameTime = performance.now();
+            }
+          }
+        },
+        { rootMargin: '120px' }
+      );
+      this.intersectionObserver.observe(this.container);
     }
 
     this.isInitialized = true;
@@ -451,6 +470,9 @@ export class CharacterRig {
     if (MOUTH.material) {
       MOUTH.material.depthTest = false;
     }
+    if (MOUTH.mesh) {
+      MOUTH.mesh.visible = false;
+    }
 
     const EAR_LEFT = createPart(
       {
@@ -585,6 +607,7 @@ export class CharacterRig {
     if (tex.characterCozy) {
       const cozyLayer = createLayer(tex.characterCozy, W, H, 42, 0, segX, segY);
       this.cozyMesh = cozyLayer.mesh;
+      this.cozyMesh.visible = false;
       ROOT.add(this.cozyMesh);
     }
 
@@ -781,9 +804,10 @@ export class CharacterRig {
     if (!this.parts || !this.characterMesh) return;
 
     const posAttr = this.characterMesh.geometry.attributes.position;
-    const cozyPosAttr = this.cozyMesh
-      ? this.cozyMesh.geometry.attributes.position
-      : null;
+    const cozyPosAttr =
+      this.cozyMesh && this.cozyMesh.visible
+        ? this.cozyMesh.geometry.attributes.position
+        : null;
 
     const {
       BODY,
@@ -940,6 +964,12 @@ export class CharacterRig {
 
   public setSpeechBubbleActive(active: boolean): void {
     this.isBubbleActive = active;
+    if (!active && this.parts?.MOUTH.material) {
+      this.parts.MOUTH.material.opacity = 0;
+      if (this.parts.MOUTH.mesh) {
+        this.parts.MOUTH.mesh.visible = false;
+      }
+    }
   }
 
   public getState(): CharacterAnimationState {
@@ -949,6 +979,14 @@ export class CharacterRig {
   private startLoop(): void {
     const tick = (now: number) => {
       if (this.isDisposed) return;
+      if (
+        !this.isInViewport ||
+        (typeof document !== 'undefined' && document.visibilityState === 'hidden')
+      ) {
+        this.lastFrameTime = now;
+        this.rafId = requestAnimationFrame(tick);
+        return;
+      }
       const delta = Math.min((now - this.lastFrameTime) / 1000, 0.1);
       this.lastFrameTime = now;
       this.update(delta);
@@ -1162,6 +1200,7 @@ export class CharacterRig {
         10,
         delta
       );
+      this.cozyMesh.visible = this.cozyMesh.material.opacity > 0.002;
     }
 
     const eyesVisibleOpacity = this.isCozyMode ? 0 : 1;
@@ -1178,6 +1217,9 @@ export class CharacterRig {
         14,
         delta
       );
+      const showEyes = this.parts.EYE_LEFT.material.opacity > 0.002;
+      if (this.parts.EYE_LEFT.mesh) this.parts.EYE_LEFT.mesh.visible = showEyes;
+      if (this.parts.EYE_RIGHT.mesh) this.parts.EYE_RIGHT.mesh.visible = showEyes;
     }
 
     animatePart(this.parts.EYE_LEFT, {
@@ -1194,20 +1236,22 @@ export class CharacterRig {
       scaleY: pose.eyeScaleY,
     });
 
-    // 2D Rig Mouth Lip-Sync (Animates when speech bubble is visible, including when backsound is ON)
-    const animateMouthRig = pose.isTalking || this.isBubbleActive;
+    // 2D Rig Mouth Lip-Sync (ONLY visible and animated when speech bubble is active)
+    const animateMouthRig = this.isBubbleActive && pose.isTalking;
     if (this.parts.MOUTH.material && this.textures) {
-      const showMouth = animateMouthRig || this.isCozyMode;
-      const targetMouthOpacity = showMouth ? 1 : 0;
+      const targetMouthOpacity = animateMouthRig ? 1 : 0;
       this.parts.MOUTH.material.opacity = damp(
         this.parts.MOUTH.material.opacity,
         targetMouthOpacity,
-        18,
+        22,
         delta
       );
+      if (this.parts.MOUTH.mesh) {
+        this.parts.MOUTH.mesh.visible = this.parts.MOUTH.material.opacity > 0.002;
+      }
 
       const desiredMouthMap =
-        animateMouthRig && pose.mouthOpenAmount > 0.22
+        animateMouthRig && pose.mouthOpenAmount > 0.28
           ? this.textures.mouthOpen
           : this.textures.mouthSmile;
       if (this.parts.MOUTH.material.map !== desiredMouthMap) {
@@ -1339,9 +1383,11 @@ export class CharacterRig {
   }
 
   private handleContainerClick(): void {
-    const played = this.animationController.playRandomPlayfulAnimation();
-    if (this.onAnimationTrigger) {
-      this.onAnimationTrigger(played);
+    if (this.isBubbleActive) {
+      const played = this.animationController.playRandomPlayfulAnimation();
+      if (this.onAnimationTrigger) {
+        this.onAnimationTrigger(played);
+      }
     }
     if (this.onTap) {
       this.onTap();
@@ -1365,6 +1411,7 @@ export class CharacterRig {
       this.rafId = null;
     }
 
+    window.removeEventListener('resize', this.boundResize);
     window.removeEventListener('mousemove', this.boundMouseMove);
     window.removeEventListener('touchmove', this.boundTouchMove);
     window.removeEventListener('touchend', this.boundTouchEnd);
@@ -1379,6 +1426,10 @@ export class CharacterRig {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
+    }
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
     }
 
     this.scene.traverse((obj) => {
