@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cozyAsmrAudio } from '../utils/cozyAsmrAudio';
+import { CharacterRig } from './CharacterRig';
 import heroChibiImg from '../assets/images/anime_chibi_hero.png';
 import heroChibiCozyImg from '../assets/images/anime_chibi_hero_cozy.png';
 import aboutChibiImg from '../assets/images/anime_chibi_about.png';
@@ -138,21 +139,286 @@ export const ChibiMiniAvatar: React.FC<{ className?: string }> = ({ className = 
   </div>
 );
 
+const CHIBI_CRYPTO_TALK_PARTS = [
+  {
+    partNumber: 1,
+    icon: '🍕',
+    categoryId: 'Fakta Crypto #1',
+    categoryEn: 'Crypto Fact #1',
+    textId:
+      'Tahukah kamu? Transaksi fisik Bitcoin pertama (22 Mei 2010) dipakai membeli 2 loyang pizza seharga 10.000 BTC!',
+    textEn:
+      'Did you know? The first real-world Bitcoin tx (May 22, 2010) bought 2 large pizzas for 10,000 BTC!',
+  },
+  {
+    partNumber: 2,
+    icon: '🌐',
+    categoryId: 'Fakta Web3 #2',
+    categoryEn: 'Web3 Fact #2',
+    textId:
+      'Fakta Web3: Vitalik Buterin menciptakan Ethereum setelah karakter Warlock miliknya di World of Warcraft di-nerf sepihak!',
+    textEn:
+      'Web3 Fact: Vitalik Buterin created Ethereum after centralized devs nerfed his beloved Warlock in World of Warcraft!',
+  },
+  {
+    partNumber: 3,
+    icon: '💎',
+    categoryId: 'Meme Crypto #3',
+    categoryEn: 'Crypto Meme #3',
+    textId:
+      'Meme Legendaris: Istilah "HODL" bukan singkatan, tapi salah ketik kata "HOLD" di forum BitcoinTalk tahun 2013!',
+    textEn:
+      'Crypto Meme: "HODL" wasn’t an acronym—it started as a famous typo for "HOLD" on BitcoinTalk in 2013!',
+  },
+  {
+    partNumber: 4,
+    icon: '🐕',
+    categoryId: 'Meme & Kultur #4',
+    categoryEn: 'Meme & Lore #4',
+    textId:
+      'Fakta Meme: Dogecoin dibuat cuma 2 jam dari meme anjing Shiba Inu "Kabosu", melahirkan kultur "GM & WAGMI" di Web3!',
+    textEn:
+      'Meme Fact: Dogecoin was coded in just 2 hours from the "Kabosu" Shiba Inu meme, sparking Web3’s "GM & WAGMI" culture!',
+  },
+] as const;
+
+const CHIBI_GREETING_BUBBLE = {
+  icon: '👋',
+  categoryId: 'Halo, Selamat Datang!',
+  categoryEn: 'Hey, Welcome!',
+  textId:
+    'Halo! Selamat datang di jurnal Web3-ku ✨ Klik aku buat fakta acak Crypto & Meme, atau ketuk 2x buat musik Cozy ASMR!',
+  textEn:
+    'Hi! Welcome to my Web3 journal ✨ Click me for random Crypto & Meme facts, or double-tap for Cozy ASMR music!',
+} as const;
+
+function pickRandomBubbleIndex(excludeIndex?: number): number {
+  const total = CHIBI_CRYPTO_TALK_PARTS.length;
+  if (excludeIndex === undefined || total <= 1) {
+    return Math.floor(Math.random() * total);
+  }
+  const candidates: number[] = [];
+  for (let i = 0; i < total; i++) {
+    if (i !== excludeIndex) candidates.push(i);
+  }
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 /**
  * 1. HERO CHIBI CHARACTER
  * Uses the transparent PNG anime chibi close-up portrait (anime_chibi_hero.png) with bottom-flush framing & gentle float.
- * Double-tap / double-click (2x press) toggles the Cozy & ASMR background soundscape on and off.
+ * Automatically shows a Greeting Speech Bubble after the loading screen finishes.
+ * Clicking around the Chibi area triggers a random 4-part Crypto, Web3 & Meme Speech Bubble with 2D Rig talking mouth animation.
+ * Turning on the Cozy & ASMR backsound also triggers the speech bubble + 2D Rig mouth animation whenever the bubble text appears.
  */
-export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> = ({
+export const HeroChibiCharacter: React.FC<{
+  isId?: boolean;
+  isDay?: boolean;
+  isLoading?: boolean;
+}> = ({
   isId = true,
   isDay = false,
+  isLoading = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [singleTapHint, setSingleTapHint] = useState(false);
   const [tapBounce, setTapBounce] = useState(false);
+  const [rigReady, setRigReady] = useState(false);
+  const [bubbleOpen, setBubbleOpen] = useState(false);
+  const [bubbleMode, setBubbleMode] = useState<'greeting' | 'fact'>('greeting');
+  const [bubblePartIdx, setBubblePartIdx] = useState<number>(() =>
+    pickRandomBubbleIndex()
+  );
+  const [typedLength, setTypedLength] = useState(0);
+  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
+
   const lastTapRef = useRef<number>(0);
+  const hasGreetedRef = useRef<boolean>(false);
+  const prevPlayingRef = useRef<boolean>(false);
   const hintTimerRef = useRef<number | null>(null);
   const bounceTimerRef = useRef<number | null>(null);
+  const speakingTimerRef = useRef<number | null>(null);
+  const autoHideTimerRef = useRef<number | null>(null);
+  const greetingDelayTimerRef = useRef<number | null>(null);
+  const rigContainerRef = useRef<HTMLDivElement | null>(null);
+  const rigInstanceRef = useRef<CharacterRig | null>(null);
+
+  const currentFactPart =
+    CHIBI_CRYPTO_TALK_PARTS[bubblePartIdx] || CHIBI_CRYPTO_TALK_PARTS[0];
+  const activeBubbleIcon =
+    bubbleMode === 'greeting' ? CHIBI_GREETING_BUBBLE.icon : currentFactPart.icon;
+  const fullBubbleCategory =
+    bubbleMode === 'greeting'
+      ? isId
+        ? CHIBI_GREETING_BUBBLE.categoryId
+        : CHIBI_GREETING_BUBBLE.categoryEn
+      : isId
+        ? currentFactPart.categoryId
+        : currentFactPart.categoryEn;
+  const fullBubbleText =
+    bubbleMode === 'greeting'
+      ? isId
+        ? CHIBI_GREETING_BUBBLE.textId
+        : CHIBI_GREETING_BUBBLE.textEn
+      : isId
+        ? currentFactPart.textId
+        : currentFactPart.textEn;
+
+  const startBubbleTimersAndRig = () => {
+    setBubbleOpen(true);
+    setTypedLength(0);
+    setIsSpeakingNow(true);
+
+    if (rigInstanceRef.current) {
+      rigInstanceRef.current.setSpeechBubbleActive(true);
+      rigInstanceRef.current.playAnimation('talk');
+    }
+
+    if (speakingTimerRef.current !== null) {
+      window.clearTimeout(speakingTimerRef.current);
+    }
+    speakingTimerRef.current = window.setTimeout(() => {
+      setIsSpeakingNow(false);
+      speakingTimerRef.current = null;
+    }, 3600);
+
+    if (autoHideTimerRef.current !== null) {
+      window.clearTimeout(autoHideTimerRef.current);
+    }
+    autoHideTimerRef.current = window.setTimeout(() => {
+      setBubbleOpen(false);
+      setIsSpeakingNow(false);
+      if (rigInstanceRef.current) {
+        rigInstanceRef.current.setSpeechBubbleActive(false);
+        rigInstanceRef.current.playAnimation('idle');
+      }
+      autoHideTimerRef.current = null;
+    }, 11500);
+  };
+
+  const triggerGreetingBubble = () => {
+    setBubbleMode('greeting');
+    startBubbleTimersAndRig();
+  };
+
+  const triggerRigTalking = (partIndex: number) => {
+    setBubbleMode('fact');
+    setBubblePartIdx(partIndex);
+    startBubbleTimersAndRig();
+  };
+
+  const closeSpeechBubble = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setBubbleOpen(false);
+    setIsSpeakingNow(false);
+    if (speakingTimerRef.current !== null) {
+      window.clearTimeout(speakingTimerRef.current);
+      speakingTimerRef.current = null;
+    }
+    if (autoHideTimerRef.current !== null) {
+      window.clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+    if (rigInstanceRef.current) {
+      rigInstanceRef.current.setSpeechBubbleActive(false);
+      rigInstanceRef.current.playAnimation('idle');
+    }
+  };
+
+  // Trigger Greeting Speech Bubble automatically right after the Loading Screen finishes
+  useEffect(() => {
+    if (isLoading || hasGreetedRef.current) return;
+    hasGreetedRef.current = true;
+    greetingDelayTimerRef.current = window.setTimeout(() => {
+      triggerGreetingBubble();
+      greetingDelayTimerRef.current = null;
+    }, 380);
+
+    return () => {
+      if (greetingDelayTimerRef.current !== null) {
+        window.clearTimeout(greetingDelayTimerRef.current);
+        greetingDelayTimerRef.current = null;
+      }
+    };
+  }, [isLoading]);
+
+  // Keep 2D Rig speech-bubble mouth animation synced whenever rigReady or bubbleOpen changes
+  useEffect(() => {
+    if (!rigInstanceRef.current) return;
+    rigInstanceRef.current.setSpeechBubbleActive(bubbleOpen);
+    if (bubbleOpen) {
+      rigInstanceRef.current.playAnimation('talk');
+    }
+  }, [rigReady, bubbleOpen]);
+
+  // Smooth typewriter text reveal synced with 2D Rig mouth lip-sync
+  useEffect(() => {
+    if (!bubbleOpen) return;
+    setTypedLength(0);
+    const totalLen = fullBubbleText.length;
+    const stepMs = Math.max(16, Math.min(28, Math.floor(2500 / Math.max(1, totalLen))));
+    const interval = window.setInterval(() => {
+      setTypedLength((prev) => {
+        if (prev >= totalLen) {
+          window.clearInterval(interval);
+          return totalLen;
+        }
+        return prev + 2;
+      });
+    }, stepMs);
+    return () => window.clearInterval(interval);
+  }, [bubbleOpen, bubbleMode, bubblePartIdx, fullBubbleText]);
+
+  // Initialize Three.js 2D Rig System on mount and dispose cleanly on unmount
+  useEffect(() => {
+    const containerEl = rigContainerRef.current;
+    if (!containerEl) return;
+
+    let cancelled = false;
+    const character = new CharacterRig({
+      container: containerEl,
+      heroImageSrc: heroChibiImg,
+      cozyImageSrc: heroChibiCozyImg,
+    });
+    rigInstanceRef.current = character;
+
+    character
+      .init()
+      .then(() => {
+        if (!cancelled) {
+          setRigReady(true);
+        }
+      })
+      .catch(() => {
+        // Fallback to static image if WebGL context is unavailable
+        if (!cancelled) {
+          setRigReady(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      character.dispose();
+      rigInstanceRef.current = null;
+    };
+  }, []);
+
+  // Sync Cozy Backsound mode with 2D Rig; if backsound turns ON and bubble is not open, show bubble so mouth animates
+  useEffect(() => {
+    if (rigInstanceRef.current) {
+      rigInstanceRef.current.setCozyMode(isPlaying);
+    }
+    if (isPlaying && !prevPlayingRef.current) {
+      if (!bubbleOpen) {
+        const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
+        triggerRigTalking(nextRandomIdx);
+      } else if (rigInstanceRef.current) {
+        rigInstanceRef.current.setSpeechBubbleActive(true);
+        rigInstanceRef.current.playAnimation('talk');
+      }
+    }
+    prevPlayingRef.current = isPlaying;
+  }, [isPlaying, rigReady]);
 
   useEffect(() => {
     const unsubscribe = cozyAsmrAudio.subscribe((playing) => {
@@ -165,6 +431,15 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       }
       if (bounceTimerRef.current !== null) {
         window.clearTimeout(bounceTimerRef.current);
+      }
+      if (speakingTimerRef.current !== null) {
+        window.clearTimeout(speakingTimerRef.current);
+      }
+      if (autoHideTimerRef.current !== null) {
+        window.clearTimeout(autoHideTimerRef.current);
+      }
+      if (greetingDelayTimerRef.current !== null) {
+        window.clearTimeout(greetingDelayTimerRef.current);
       }
     };
   }, []);
@@ -187,8 +462,12 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       bounceTimerRef.current = null;
     }, 180);
 
-    if (diff > 0 && diff < 430) {
-      // 2x press detected: toggle Cozy & ASMR backsound for current mode (Day / Night)
+    // Open or pick a new random Crypto / Web3 / Meme Speech Bubble & trigger 2D Rig talking expression
+    const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
+    triggerRigTalking(nextRandomIdx);
+
+    if (diff > 0 && diff < 320) {
+      // Rapid 2x press also toggles Cozy & ASMR backsound
       lastTapRef.current = 0;
       if (hintTimerRef.current !== null) {
         window.clearTimeout(hintTimerRef.current);
@@ -198,15 +477,17 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
       setIsPlaying(nextState);
     } else {
-      // First press: store timestamp and show brief hint to press 1 more time
       lastTapRef.current = now;
-      setSingleTapHint(true);
-      if (hintTimerRef.current !== null) {
-        window.clearTimeout(hintTimerRef.current);
-      }
-      hintTimerRef.current = window.setTimeout(() => {
-        setSingleTapHint(false);
-      }, 950);
+    }
+  };
+
+  const handleCozyBadgeClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextState = await cozyAsmrAudio.toggle(isDay ? 'day' : 'night');
+    setIsPlaying(nextState);
+    if (nextState) {
+      const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
+      triggerRigTalking(nextRandomIdx);
     }
   };
 
@@ -223,16 +504,118 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       }}
       aria-label={
         isId
-          ? 'Ketuk 2x karakter Chibi untuk menyalakan atau mematikan backsound Cozy Game Farm ASMR'
-          : 'Double-tap Chibi character to toggle Cozy Game Farm ASMR background sound'
+          ? 'Klik karakter Chibi untuk menampilkan fakta unik Crypto, Web3 & Meme secara acak atau ketuk 2x untuk Cozy ASMR'
+          : 'Click Chibi character to reveal random Crypto, Web3 & Meme facts or double-tap for Cozy ASMR'
       }
       title={
         isId
-          ? 'Ketuk 2x untuk Backsound Cozy Game Farm ASMR (On/Off)'
-          : 'Double-tap for Cozy Game Farm ASMR Soundscape (On/Off)'
+          ? 'Klik untuk Fakta Unik Crypto, Web3 & Meme (Acak) • Ketuk 2x untuk Cozy ASMR'
+          : 'Click for Random Crypto, Web3 & Meme Facts • Double-tap for Cozy ASMR'
       }
       className="group relative mx-auto h-[265px] w-[265px] cursor-pointer overflow-visible touch-manipulation select-none focus:outline-none sm:h-[335px] sm:w-[335px] lg:h-[378px] lg:w-[378px]"
     >
+      {/* Compact Random Crypto, Web3, Meme & Greeting Speech Bubble */}
+      <AnimatePresence mode="wait">
+        {bubbleOpen && (
+          <motion.div
+            key={`crypto-speech-${bubbleMode}-${bubblePartIdx}`}
+            initial={{ opacity: 0, y: 8, scale: 0.9, rotate: -1 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotate: -0.4 }}
+            exit={{ opacity: 0, y: 5, scale: 0.92 }}
+            transition={{ type: 'spring', stiffness: 390, damping: 24 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdx);
+              triggerRigTalking(nextRandomIdx);
+            }}
+            className=" -top-14 left-1/2 z-40 w-[198px] -translate-x-1/2 sm:-top-16 sm:w-[224px] lg:-top-16 lg:w-[238px] absolute cursor-pointer"
+          >
+            <div
+              className={`relative rounded-xl border-[1.5px] border-[#091526] px-2.5 py-1.5 text-left shadow-[2px_3px_0px_#091526] transition-colors sm:px-3 sm:py-2 ${
+                isDay
+                  ? 'bg-gradient-to-b from-[#FFFDF7] to-[#FCE9B5] text-[#091526]'
+                  : 'bg-[#FAF6EE] text-[#091526]'
+              }`}
+            >
+              {/* Top Header: Category Badge + Close Button */}
+              <div className="mb-1 flex items-center justify-between gap-1 border-b border-[#091526]/15 pb-0.5">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] leading-none sm:text-[11px]">
+                    {activeBubbleIcon}
+                  </span>
+                  <span className="font-journal text-[8px] font-extrabold tracking-wide text-[#B45309] uppercase sm:text-[8.5px]">
+                    {fullBubbleCategory}
+                  </span>
+                  {isSpeakingNow && (
+                    <span
+                      className="inline-flex items-center gap-0.5 pl-0.5"
+                      aria-hidden="true"
+                    >
+                      <span className="h-1.5 w-0.5 animate-pulse rounded-full bg-[#E05A47]" />
+                      <span className="h-2 w-0.5 animate-bounce rounded-full bg-[#091526]" />
+                      <span className="h-1.5 w-0.5 animate-pulse rounded-full bg-[#E05A47]" />
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeSpeechBubble}
+                  aria-label={isId ? 'Tutup bubble teks' : 'Close speech bubble'}
+                  className="ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[#091526]/40 bg-white/70 font-sans text-[8.5px] leading-none font-bold text-[#091526] hover:bg-[#E05A47] hover:text-white sm:h-4 sm:w-4"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Main Spoken Crypto / Web3 / Meme Fact Text */}
+              <p className="min-h-[30px] font-journal text-[9px] leading-[1.32] font-bold !text-[#091526] sm:min-h-[34px] sm:text-[9.5px]">
+                {fullBubbleText.slice(0, typedLength)}
+                {typedLength < fullBubbleText.length && (
+                  <span className="ml-0.5 inline-block h-2.5 w-0.5 animate-pulse bg-[#E05A47] align-middle" />
+                )}
+              </p>
+
+              {/* Footer Hint to Click for Random Next Part */}
+              <div className="mt-1 flex items-center justify-between text-[7.5px] font-bold text-[#091526]/70 sm:text-[8px]">
+                <span>
+                  {isSpeakingNow
+                    ? isId
+                      ? '🗣️ Sedang bicara...'
+                      : '🗣️ Speaking...'
+                    : isId
+                      ? '🎲 Mode Acak'
+                      : '🎲 Random Mode'}
+                </span>
+                <span className="text-[#B45309] underline decoration-dotted underline-offset-2">
+                  {isId ? 'Klik acak 🎲 →' : 'Click random 🎲 →'}
+                </span>
+              </div>
+
+              {/* Hand-Drawn Comic Speech Bubble Tail pointing to Chibi head */}
+              <svg
+                viewBox="0 0 32 20"
+                fill="none"
+                className="pointer-events-none -bottom-[12px] left-1/2 h-3.5 w-5 -translate-x-1/2 absolute"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 0 L15 16 L25 0 Z"
+                  fill={isDay ? '#FCE9B5' : '#FAF6EE'}
+                />
+                <path
+                  d="M6 1 L15 16 L25 1"
+                  stroke="#091526"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Warm Cozy Glow behind Chibi when Cozy & ASMR soundscape is playing (0% idle CPU) */}
       <AnimatePresence>
         {isPlaying && (
@@ -335,7 +718,7 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
       <div className="relative h-full w-full overflow-hidden">
         <div
           className={`relative h-full w-full transition-transform duration-150 ${
-            tapBounce ? 'scale-[0.97]' : 'scale-100'
+            !rigReady && tapBounce ? 'scale-[0.97]' : 'scale-100'
           }`}
         >
           {/* Hand-drawn comic burst ticks framing the chibi head */}
@@ -364,40 +747,52 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
             </g>
           </svg>
 
-          {/* Default Open-Eyes Expression */}
-          <img
-            src={heroChibiImg}
-            alt="Uray Fazli Alman Anime Chibi Web3 Explorer"
-            fetchPriority="high"
-            decoding="async"
-            draggable={false}
-            referrerPolicy="no-referrer"
-            className={`mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 group-hover:scale-[1.015] ${
-              isPlaying ? 'opacity-0' : 'opacity-100'
+          {/* Interactive Three.js 2.5D Rig Canvas Container */}
+          <div
+            ref={rigContainerRef}
+            className={`relative z-10 h-full w-full transition-opacity duration-200 ${
+              rigReady ? 'opacity-100' : 'opacity-0'
             }`}
           />
 
-          {/* Cozy Music-Listening Expression (Relaxed Closed Curved Eyes ^◡^, Rosy Blush & Happy Smile) */}
-          <img
-            src={heroChibiCozyImg}
-            alt="Uray Fazli Alman Anime Chibi Enjoying Cozy ASMR Music"
-            decoding="async"
-            draggable={false}
-            referrerPolicy="no-referrer"
-            aria-hidden={!isPlaying}
-            className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 group-hover:scale-[1.015] ${
-              isPlaying ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
+          {/* Zero-Latency Static Fallback while WebGL initializes or if WebGL is unavailable */}
+          {!rigReady && (
+            <>
+              <img
+                src={heroChibiImg}
+                alt="Uray Fazli Alman Anime Chibi Web3 Explorer"
+                fetchPriority="high"
+                decoding="async"
+                draggable={false}
+                referrerPolicy="no-referrer"
+                className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 ${
+                  isPlaying ? 'opacity-0' : 'opacity-100'
+                }`}
+              />
+              <img
+                src={heroChibiCozyImg}
+                alt="Uray Fazli Alman Anime Chibi Enjoying Cozy ASMR Music"
+                decoding="async"
+                draggable={false}
+                referrerPolicy="no-referrer"
+                aria-hidden={!isPlaying}
+                className={`pointer-events-none absolute inset-0 mx-auto block h-full w-full object-contain object-bottom transition-opacity duration-300 ${
+                  isPlaying ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            </>
+          )}
         </div>
       </div>
 
-      {/* Compact Hand-Drawn Earphone Backsound Status Badge at Bottom Center of Chibi */}
-      <div className="pointer-events-none absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
-        <div
+      {/* Compact Hand-Drawn Status Badge at Bottom Center of Chibi */}
+      <div className="absolute right-0 bottom-1.5 left-0 z-30 flex justify-center">
+        <button
+          type="button"
+          onClick={handleCozyBadgeClick}
           className={`cozy-asmr-card ${
             isPlaying ? 'cozy-asmr-card-active' : ''
-          } inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-2.5 py-0.5 font-journal text-[9px] leading-tight font-bold transition-all sm:px-3 sm:py-0.5 sm:text-[10px] ${
+          } inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-2.5 py-0.5 font-journal text-[9px] leading-tight font-bold transition-all sm:px-3 sm:py-0.5 sm:text-[10px] ${
             isDay
               ? isPlaying
                 ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF4] to-[#FCE5A2] !text-[#091526] shadow-[2px_2.5px_0px_#091526]'
@@ -408,9 +803,11 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
           }`}
         >
           <span className="text-[9.5px] leading-none">
-            {isDay ? '☀️' : '🌙'}
+            {bubbleOpen ? '🎲' : isDay ? '☀️' : '🌙'}
           </span>
-          <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>♪</span>
+          <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>
+            {bubbleOpen ? `#${bubblePartIdx + 1}` : '♪'}
+          </span>
           <span
             className={
               isDay
@@ -432,15 +829,15 @@ export const HeroChibiCharacter: React.FC<{ isId?: boolean; isDay?: boolean }> =
                   : isId
                     ? 'Cozy ASMR Malam: ON'
                     : 'Cozy ASMR Night: ON'
-                : isDay
+                : bubbleOpen
                   ? isId
-                    ? 'Ketuk 2x • Cozy ASMR Siang'
-                    : 'Tap 2x • Cozy ASMR Day'
+                    ? `Fakta #${bubblePartIdx + 1} • Klik Chibi Acak`
+                    : `Fact #${bubblePartIdx + 1} • Click Chibi Random`
                   : isId
-                    ? 'Ketuk 2x • Cozy ASMR Malam'
-                    : 'Tap 2x • Cozy ASMR Night'}
+                    ? 'Klik Chibi: Fakta Crypto • Cozy ♪'
+                    : 'Click Chibi: Crypto Facts • Cozy ♪'}
           </span>
-        </div>
+        </button>
       </div>
     </div>
   );

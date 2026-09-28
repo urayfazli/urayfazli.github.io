@@ -517,15 +517,53 @@ export default function App() {
         }`}
       >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 px-3.5 py-2 sm:px-8 sm:py-2.5">
-          {/* Zone 1: Brand Wordmark */}
+          {/* Zone 1: Brand Logo Tag & "Web3 Portfolio" Name Tag */}
           <a
             href="#home"
             onClick={(e) => {
               e.preventDefault();
               scrollToSection('home');
             }}
-            className="group flex min-w-0 items-center focus:outline-none"
+            aria-label="Web3 Portfolio"
+            className="group flex min-w-0 items-center gap-2 focus:outline-none sm:gap-2.5"
           >
+            {/* Hand-Drawn Web3 Hexagonal Node Logo Tag */}
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border-[1.8px] transition-transform duration-200 group-hover:-rotate-6 group-hover:scale-105 sm:h-8 sm:w-8 ${
+                isDay
+                  ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF7] to-[#FCE5A2] shadow-[2px_2px_0px_#091526]'
+                  : 'border-[#F5D78E] bg-[#0B1B32] shadow-[2px_2px_0px_#030913]'
+              }`}
+              aria-hidden="true"
+            >
+              <svg viewBox="0 0 32 32" fill="none" className="h-4.5 w-4.5 sm:h-5 sm:w-5">
+                <path
+                  d="M16 4.5L26 10.2V21.8L16 27.5L6 21.8V10.2L16 4.5Z"
+                  fill={isDay ? '#091526' : '#132847'}
+                  stroke={isDay ? '#091526' : '#F5D78E'}
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M6 10.2L16 16L26 10.2M16 16V27.5"
+                  stroke="#F5D78E"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="2.6"
+                  fill="#F5D78E"
+                  stroke="#091526"
+                  strokeWidth="1.4"
+                />
+              </svg>
+            </span>
+
+            {/* "Web3 Portfolio" Name Tag */}
             <span className="truncate font-brush text-[19px] tracking-wider text-[#FAF6EE] sm:text-[25px]">
               Web3 Portfolio
             </span>
@@ -818,6 +856,40 @@ export default function App() {
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-20 pt-2 text-center sm:text-left lg:col-span-5 lg:pl-6 lg:pb-6"
           >
+            {/* Hero Top Logo Tag & "Web3 Portfolio" Name Tag */}
+            <div className="mb-2.5 flex items-center justify-center sm:justify-start">
+              <div
+                className={`inline-flex items-center gap-1.5 rounded-full border-[1.5px] px-3 py-1 font-journal text-[11px] font-extrabold tracking-wide shadow-[2px_2.5px_0px_#091526] sm:text-[12px] ${
+                  isDay
+                    ? 'border-[#091526] bg-gradient-to-b from-[#FFFDF7] to-[#FCE8B2] !text-[#091526]'
+                    : 'border-[#F5D78E]/85 bg-[#0A182D]/95 text-[#F5D78E]'
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 3L20 7.6V16.4L12 21L4 16.4V7.6L12 3Z"
+                    fill={isDay ? '#091526' : '#152C4E'}
+                    stroke={isDay ? '#091526' : '#F5D78E'}
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M4 7.6L12 12.2L20 7.6M12 12.2V21"
+                    stroke="#F5D78E"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="12" cy="12.2" r="2" fill="#F5D78E" />
+                </svg>
+                <span className="uppercase">Web3 Portfolio</span>
+              </div>
+            </div>
+
             <div className="relative inline-block">
               <h1
                 aria-label="URAY FAZLI ALMAN"
@@ -1123,14 +1195,6 @@ export default function App() {
                 </a>
               </div>
             </div>
-
-            {/* Handwritten Crypto Coins Strip in Hero Left Empty Space */}
-            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-1.5 select-none sm:justify-start">
-              <GoldBitcoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
-              <EthereumCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
-              <SolanaCoinDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
-              <MemeDogeCoinMiniDoodle className="h-7 w-8 sm:h-8 sm:w-9" />
-            </div>
           </motion.div>
 
           {/* RIGHT COLUMN: Oversized Hero Chibi Explorer + Callouts (7 cols) */}
@@ -1139,7 +1203,7 @@ export default function App() {
             whileInView={{ opacity: 1, x: 0, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 flex items-end justify-center lg:col-span-7"
+            className="relative z-30 flex items-end justify-center lg:col-span-7"
           >
             <div className="relative mx-auto flex w-full max-w-[350px] items-end justify-center pt-5 pb-5 sm:max-w-[500px] sm:pt-3 sm:pb-2 lg:max-w-[560px] lg:pt-1 lg:pb-0">
               {/* Top-Left Empty Space Fill: Floating Airdrop Parachute + "Airdrop Alpha" Callout */}
@@ -1168,7 +1232,7 @@ export default function App() {
 
               {/* Center-Left Shifted Chibi Bust Sitting Flush on Horizon */}
               <div className="relative z-10 sm:-ml-6 lg:-ml-10">
-                <HeroChibiCharacter isId={isId} isDay={isDay} />
+                <HeroChibiCharacter isId={isId} isDay={isDay} isLoading={isLoading} />
               </div>
 
               {/* Top-Right Annotation: Crown + "Small Steps / Big Bags" + Burst Ticks */}
