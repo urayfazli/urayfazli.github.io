@@ -166,6 +166,7 @@ export class CharacterRig {
   private boundMouseLeave: () => void;
   private boundClick: (e: MouseEvent) => void;
   private boundReducedMotionChange: (e: MediaQueryListEvent) => void;
+  private boundVisibilityChange: () => void;
 
   constructor(options: CharacterRigOptions) {
     this.container = options.container;
@@ -188,6 +189,7 @@ export class CharacterRig {
     this.boundMouseLeave = this.handleMouseLeave.bind(this);
     this.boundClick = this.handleContainerClick.bind(this);
     this.boundReducedMotionChange = this.handleReducedMotionChange.bind(this);
+    this.boundVisibilityChange = this.handleVisibilityChange.bind(this);
   }
 
   /**
@@ -223,6 +225,11 @@ export class CharacterRig {
     canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
     });
+    canvas.addEventListener('webglcontextrestored', () => {
+      if (!this.isDisposed && this.renderer) {
+        this.update(0.016);
+      }
+    });
 
     this.container.appendChild(canvas);
     this.handleResize();
@@ -253,9 +260,12 @@ export class CharacterRig {
     window.addEventListener('deviceorientation', this.boundDeviceOrientation, {
       passive: true,
     });
+    document.addEventListener('visibilitychange', this.boundVisibilityChange);
     this.container.addEventListener('mouseenter', this.boundMouseEnter);
     this.container.addEventListener('mouseleave', this.boundMouseLeave);
-    this.container.addEventListener('click', this.boundClick);
+    if (this.onTap || this.onAnimationTrigger) {
+      this.container.addEventListener('click', this.boundClick);
+    }
 
     if (typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => this.handleResize());
@@ -272,6 +282,7 @@ export class CharacterRig {
             this.isInViewport = entry.isIntersecting;
             if (this.isInViewport) {
               this.lastFrameTime = performance.now();
+              this.ensureLoopRunning();
             }
           }
         },
@@ -282,7 +293,8 @@ export class CharacterRig {
 
     this.isInitialized = true;
     this.lastFrameTime = performance.now();
-    this.startLoop();
+    this.update(0.016);
+    this.ensureLoopRunning();
   }
 
   /**
@@ -318,7 +330,6 @@ export class CharacterRig {
     const HOODIE = createPart(
       {
         name: 'HOODIE',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.HOODIE,
@@ -332,7 +343,6 @@ export class CharacterRig {
     const ARM_LEFT = createPart(
       {
         name: 'ARM_LEFT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.ARM_LEFT,
@@ -346,7 +356,6 @@ export class CharacterRig {
     const ARM_RIGHT = createPart(
       {
         name: 'ARM_RIGHT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.ARM_RIGHT,
@@ -360,7 +369,6 @@ export class CharacterRig {
     const STRING_LEFT = createPart(
       {
         name: 'STRING_LEFT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.STRING_LEFT,
@@ -374,7 +382,6 @@ export class CharacterRig {
     const STRING_RIGHT = createPart(
       {
         name: 'STRING_RIGHT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.STRING_RIGHT,
@@ -399,7 +406,6 @@ export class CharacterRig {
     const HAIR_BACK = createPart(
       {
         name: 'HAIR_BACK',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.HAIR_BACK,
@@ -413,7 +419,6 @@ export class CharacterRig {
     const FACE = createPart(
       {
         name: 'FACE',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.FACE,
@@ -424,33 +429,41 @@ export class CharacterRig {
       false
     );
 
-    // Independent crisp alpha-matted EYE_LEFT & EYE_RIGHT layers at exact BFS centroids
+    // Independent crisp alpha-matted EYE_LEFT & EYE_RIGHT sub-rect layers at exact BFS centroids
     const EYE_LEFT = createPart(
       {
         name: 'EYE_LEFT',
-        texture: tex.eyeLeft,
+        texture: tex.eyeLeft.texture,
         planeWidth: W,
         planeHeight: H,
-        uvPivot: tex.leftEyePivot,
+        uvPivot: { u: tex.eyeLeft.pivotU, v: tex.eyeLeft.pivotV },
         depthZ: LAYER_DEPTH.EYES,
         renderOrder: 35,
       },
       FACE.bone,
-      true
+      true,
+      W * tex.eyeLeft.widthU,
+      H * tex.eyeLeft.heightV,
+      tex.eyeLeft.centerU,
+      tex.eyeLeft.centerV
     );
 
     const EYE_RIGHT = createPart(
       {
         name: 'EYE_RIGHT',
-        texture: tex.eyeRight,
+        texture: tex.eyeRight.texture,
         planeWidth: W,
         planeHeight: H,
-        uvPivot: tex.rightEyePivot,
+        uvPivot: { u: tex.eyeRight.pivotU, v: tex.eyeRight.pivotV },
         depthZ: LAYER_DEPTH.EYES,
         renderOrder: 36,
       },
       FACE.bone,
-      true
+      true,
+      W * tex.eyeRight.widthU,
+      H * tex.eyeRight.heightV,
+      tex.eyeRight.centerU,
+      tex.eyeRight.centerV
     );
 
     const MOUTH = createPart(
@@ -459,25 +472,25 @@ export class CharacterRig {
         texture: tex.mouthSmile,
         planeWidth: W,
         planeHeight: H,
-        uvPivot: tex.mouthPivot,
+        uvPivot: { u: tex.mouthPatch.pivotU, v: tex.mouthPatch.pivotV },
         depthZ: LAYER_DEPTH.MOUTH,
         renderOrder: 65,
-        opacity: 0,
+        opacity: 1,
       },
       FACE.bone,
-      true
+      true,
+      W * tex.mouthPatch.widthU,
+      H * tex.mouthPatch.heightV,
+      tex.mouthPatch.centerU,
+      tex.mouthPatch.centerV
     );
     if (MOUTH.material) {
       MOUTH.material.depthTest = false;
-    }
-    if (MOUTH.mesh) {
-      MOUTH.mesh.visible = false;
     }
 
     const EAR_LEFT = createPart(
       {
         name: 'EAR_LEFT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.EAR_LEFT,
@@ -491,7 +504,6 @@ export class CharacterRig {
     const EAR_RIGHT = createPart(
       {
         name: 'EAR_RIGHT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.EAR_RIGHT,
@@ -505,7 +517,6 @@ export class CharacterRig {
     const GLASSES = createPart(
       {
         name: 'GLASSES',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.GLASSES,
@@ -519,7 +530,6 @@ export class CharacterRig {
     const HAIR_FRONT = createPart(
       {
         name: 'HAIR_FRONT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.HAIR_FRONT,
@@ -544,7 +554,6 @@ export class CharacterRig {
     const EARPHONE_LEFT = createPart(
       {
         name: 'EARPHONE_LEFT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.EARPHONE_LEFT,
@@ -558,7 +567,6 @@ export class CharacterRig {
     const EARPHONE_RIGHT = createPart(
       {
         name: 'EARPHONE_RIGHT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.EARPHONE_RIGHT,
@@ -572,7 +580,6 @@ export class CharacterRig {
     const CABLE_LEFT = createPart(
       {
         name: 'CABLE_LEFT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.CABLE_LEFT,
@@ -586,7 +593,6 @@ export class CharacterRig {
     const CABLE_RIGHT = createPart(
       {
         name: 'CABLE_RIGHT',
-        texture: tex.emptyLayer,
         planeWidth: W,
         planeHeight: H,
         uvPivot: ANATOMICAL_PIVOTS.CABLE_RIGHT,
@@ -597,9 +603,9 @@ export class CharacterRig {
       false
     );
 
-    // 5. Build High-Resolution 2.5D Deformer Mesh (52 x 60 grid) bound to the RigBones
-    const segX = 52;
-    const segY = 60;
+    // 5. Build Optimized 2.5D Deformer Mesh (36 x 42 grid) bound to the RigBones
+    const segX = 36;
+    const segY = 42;
     const baseLayer = createLayer(tex.characterBase, W, H, 15, 1, segX, segY);
     this.characterMesh = baseLayer.mesh;
     ROOT.add(this.characterMesh);
@@ -674,9 +680,9 @@ export class CharacterRig {
       // Anchor bottom hem so the character stays flush on the horizon line
       const wBottomAnchor = smoothstep(0.92, 1.0, v);
 
-      // Protect the glasses & eye region (u: 0.20..0.76, v: 0.36..0.64) from hair spring warping
-      const inFaceCoreU = 1 - smoothstep(0.21, 0.11, u) - smoothstep(0.75, 0.86, u);
-      const inFaceCoreV = smoothstep(0.32, 0.41, v) * (1 - smoothstep(0.61, 0.67, v));
+      // Protect the glasses, eye, cheek & mouth region (u: 0.22..0.75, v: 0.34..0.70) from hair/cable warping
+      const inFaceCoreU = 1 - smoothstep(0.22, 0.12, u) - smoothstep(0.74, 0.84, u);
+      const inFaceCoreV = smoothstep(0.32, 0.41, v) * (1 - smoothstep(0.66, 0.71, v));
       const faceRigidityMask = clamp(inFaceCoreU * inFaceCoreV, 0, 1);
 
       // Front & top hair crown spring weight (v < 0.39)
@@ -706,12 +712,18 @@ export class CharacterRig {
         Math.exp(-(dRightLens * dRightLens) / 0.012);
       const wGlasses = clamp(glassesRegion * 0.35 * pupilProtection, 0, 0.35);
 
-      // Left & Right Earphone Cable secondary sway weights (v: 0.60..0.86)
-      const cableBandV = smoothstep(0.57, 0.65, v) * (1 - smoothstep(0.8, 0.9, v));
+      // Left & Right Earphone Cable secondary sway weights outside the jawline (u ~ 0.215 and u ~ 0.765)
+      const cableBandV = smoothstep(0.58, 0.66, v) * (1 - smoothstep(0.8, 0.9, v));
       const wCableLeft =
-        cableBandV * Math.exp(-Math.pow((u - 0.3) / 0.085, 2)) * 0.65;
+        cableBandV *
+        Math.exp(-Math.pow((u - 0.215) / 0.055, 2)) *
+        0.6 *
+        (1 - faceRigidityMask);
       const wCableRight =
-        cableBandV * Math.exp(-Math.pow((u - 0.67) / 0.085, 2)) * 0.65;
+        cableBandV *
+        Math.exp(-Math.pow((u - 0.765) / 0.055, 2)) *
+        0.6 *
+        (1 - faceRigidityMask);
 
       // Left & Right Hoodie Drawstring secondary sway weights (v: 0.78..0.96)
       const stringBandV = smoothstep(0.77, 0.83, v) * (1 - smoothstep(0.92, 0.98, v));
@@ -964,27 +976,56 @@ export class CharacterRig {
 
   public setSpeechBubbleActive(active: boolean): void {
     this.isBubbleActive = active;
-    if (!active && this.parts?.MOUTH.material) {
-      this.parts.MOUTH.material.opacity = 0;
-      if (this.parts.MOUTH.mesh) {
-        this.parts.MOUTH.mesh.visible = false;
+    if (!active) {
+      this.animationController.setSpeechViseme(0, 1, false);
+      if (this.parts?.MOUTH.material && this.textures) {
+        this.parts.MOUTH.material.opacity = 1;
+        if (this.parts.MOUTH.material.map !== this.textures.mouthSmile) {
+          this.parts.MOUTH.material.map = this.textures.mouthSmile;
+          this.parts.MOUTH.material.needsUpdate = true;
+        }
+        if (this.parts.MOUTH.mesh) {
+          this.parts.MOUTH.mesh.visible = true;
+        }
       }
     }
+  }
+
+  public setSpeechViseme(
+    openAmount: number,
+    widthFactor = 1,
+    active = true
+  ): void {
+    this.animationController.setSpeechViseme(openAmount, widthFactor, active);
   }
 
   public getState(): CharacterAnimationState {
     return this.animationController.getState();
   }
 
-  private startLoop(): void {
+  private handleVisibilityChange(): void {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      this.lastFrameTime = performance.now();
+      this.ensureLoopRunning();
+    }
+  }
+
+  private ensureLoopRunning(): void {
+    if (this.isDisposed || !this.isInitialized || this.rafId !== null) return;
+    if (
+      !this.isInViewport ||
+      (typeof document !== 'undefined' && document.visibilityState === 'hidden')
+    ) {
+      return;
+    }
+
     const tick = (now: number) => {
+      this.rafId = null;
       if (this.isDisposed) return;
       if (
         !this.isInViewport ||
         (typeof document !== 'undefined' && document.visibilityState === 'hidden')
       ) {
-        this.lastFrameTime = now;
-        this.rafId = requestAnimationFrame(tick);
         return;
       }
       const delta = Math.min((now - this.lastFrameTime) / 1000, 0.1);
@@ -992,6 +1033,8 @@ export class CharacterRig {
       this.update(delta);
       this.rafId = requestAnimationFrame(tick);
     };
+
+    this.lastFrameTime = performance.now();
     this.rafId = requestAnimationFrame(tick);
   }
 
@@ -1236,22 +1279,16 @@ export class CharacterRig {
       scaleY: pose.eyeScaleY,
     });
 
-    // 2D Rig Mouth Lip-Sync (ONLY visible and animated when speech bubble is active)
+    // 2D Rig Mouth: Always visible (`mouthSmile` in idle/cozy state, animated lip-sync when speech bubble is active)
     const animateMouthRig = this.isBubbleActive && pose.isTalking;
     if (this.parts.MOUTH.material && this.textures) {
-      const targetMouthOpacity = animateMouthRig ? 1 : 0;
-      this.parts.MOUTH.material.opacity = damp(
-        this.parts.MOUTH.material.opacity,
-        targetMouthOpacity,
-        22,
-        delta
-      );
+      this.parts.MOUTH.material.opacity = 1;
       if (this.parts.MOUTH.mesh) {
-        this.parts.MOUTH.mesh.visible = this.parts.MOUTH.material.opacity > 0.002;
+        this.parts.MOUTH.mesh.visible = true;
       }
 
       const desiredMouthMap =
-        animateMouthRig && pose.mouthOpenAmount > 0.28
+        animateMouthRig && pose.mouthOpenAmount > 0.24
           ? this.textures.mouthOpen
           : this.textures.mouthSmile;
       if (this.parts.MOUTH.material.map !== desiredMouthMap) {
@@ -1416,6 +1453,7 @@ export class CharacterRig {
     window.removeEventListener('touchmove', this.boundTouchMove);
     window.removeEventListener('touchend', this.boundTouchEnd);
     window.removeEventListener('deviceorientation', this.boundDeviceOrientation);
+    document.removeEventListener('visibilitychange', this.boundVisibilityChange);
     this.container.removeEventListener('mouseenter', this.boundMouseEnter);
     this.container.removeEventListener('mouseleave', this.boundMouseLeave);
     this.container.removeEventListener('click', this.boundClick);

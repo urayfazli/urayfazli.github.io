@@ -1205,7 +1205,7 @@ export default function App() {
             transition={{ duration: 0.6, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-30 flex items-end justify-center lg:col-span-7"
           >
-            <div className="relative mx-auto flex w-full max-w-[350px] items-end justify-center pt-5 pb-5 sm:max-w-[500px] sm:pt-3 sm:pb-2 lg:max-w-[560px] lg:pt-1 lg:pb-0">
+            <div className="relative mx-auto flex w-full max-w-[350px] items-end justify-center pt-8 pb-5 sm:max-w-[500px] sm:pt-6 sm:pb-2 lg:max-w-[560px] lg:pt-5 lg:pb-0">
               {/* Top-Left Empty Space Fill: Floating Airdrop Parachute + "Airdrop Alpha" Callout */}
               <div className="top-2 left-0 sm:top-5 sm:left-2 lg:top-6 lg:left-3 absolute z-20 flex flex-col items-center select-none">
                 <MiniAirdropParachuteDoodle className="h-9 w-8 sm:h-12 sm:w-10" />

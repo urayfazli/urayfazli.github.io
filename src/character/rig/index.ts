@@ -76,7 +76,7 @@ export interface RigPart {
 
 export interface LayerConfig {
   name: string;
-  texture: THREE.Texture;
+  texture?: THREE.Texture;
   planeWidth: number;
   planeHeight: number;
   uvPivot: { u: number; v: number };
@@ -231,7 +231,7 @@ export function createPart(
     parentBone
   );
 
-  if (!attachMesh) {
+  if (!attachMesh || !config.texture) {
     return { name: config.name, bone };
   }
 

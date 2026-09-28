@@ -261,7 +261,6 @@ export const HeroChibiCharacter: React.FC<{
   isLoading = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [singleTapHint, setSingleTapHint] = useState(false);
   const [tapBounce, setTapBounce] = useState(false);
   const [rigReady, setRigReady] = useState(false);
   const [bubbleOpen, setBubbleOpen] = useState(false);
@@ -277,9 +276,7 @@ export const HeroChibiCharacter: React.FC<{
   const singleClickTimerRef = useRef<number | null>(null);
   const bubblePartIdxRef = useRef<number>(bubblePartIdx);
   const hasGreetedRef = useRef<boolean>(false);
-  const hintTimerRef = useRef<number | null>(null);
   const bounceTimerRef = useRef<number | null>(null);
-  const speakingTimerRef = useRef<number | null>(null);
   const autoHideTimerRef = useRef<number | null>(null);
   const greetingDelayTimerRef = useRef<number | null>(null);
   const rigContainerRef = useRef<HTMLDivElement | null>(null);
@@ -310,6 +307,79 @@ export const HeroChibiCharacter: React.FC<{
         ? currentFactPart.textId
         : currentFactPart.textEn;
 
+  // Compute natural human speech viseme (mouth opening, lip width, and cadence pause) for each character
+  const computeSpeechVisemeForChar = (
+    text: string,
+    idx: number
+  ): { open: number; width: number; delayMs: number } => {
+    if (idx < 0 || idx >= text.length) {
+      return { open: 0, width: 1, delayMs: 28 };
+    }
+    const ch = text[idx].toLowerCase();
+    const prev = idx > 0 ? text[idx - 1].toLowerCase() : '';
+    const next = idx + 1 < text.length ? text[idx + 1].toLowerCase() : '';
+    const isDigitSeparator =
+      (ch === '.' || ch === ',') && /\d/.test(prev) && /\d/.test(next);
+
+    // Clause / phrase punctuation: natural human breathing pause with closed lips
+    if (
+      !isDigitSeparator &&
+      (ch === ':' || ch === ',' || ch === ';' || ch === '—' || ch === '-')
+    ) {
+      return { open: 0, width: 0.99, delayMs: 280 };
+    }
+
+    // Sentence-ending punctuation: longer natural pause with warm closed smile
+    if (!isDigitSeparator && (ch === '.' || ch === '!' || ch === '?')) {
+      return { open: 0, width: 1.0, delayMs: 360 };
+    }
+
+    // Quotes & parentheses
+    if (ch === '"' || ch === '“' || ch === '”' || ch === '(' || ch === ')') {
+      return { open: 0.05, width: 0.99, delayMs: 48 };
+    }
+
+    // Word boundary space: calm pause between words
+    if (ch === ' ') {
+      return { open: 0.04, width: 0.99, delayMs: 72 };
+    }
+
+    // Bilabial consonants (m, b, p): lips press together clearly (open = 0)
+    if (ch === 'm' || ch === 'b' || ch === 'p') {
+      return { open: 0, width: 0.95, delayMs: 58 };
+    }
+
+    // Semi-vowel glides (y, w): slight narrowing so adjacent vowels articulate separately
+    if (ch === 'y' || ch === 'w') {
+      return { open: 0.12, width: ch === 'y' ? 1.04 : 0.92, delayMs: 50 };
+    }
+
+    // Double identical vowels (e.g., 'aa' in Kekayaan): dip briefly to re-articulate syllable
+    if (ch === prev && /[aiueo]/.test(ch)) {
+      return { open: 0.14, width: 1.0, delayMs: 54 };
+    }
+
+    // Vowels (Syllable nuclei — primary mouth openings at calm readable pace)
+    if (ch === 'a') return { open: 0.95, width: 1.05, delayMs: 86 };
+    if (ch === 'o') return { open: 0.80, width: 0.92, delayMs: 84 };
+    if (ch === 'e') return { open: 0.70, width: 1.03, delayMs: 78 };
+    if (ch === 'i') return { open: 0.52, width: 1.08, delayMs: 78 };
+    if (ch === 'u') return { open: 0.48, width: 0.90, delayMs: 78 };
+
+    // Spoken digits (0-9) and symbols (&, %)
+    if (/\d/.test(ch) || ch === '%' || ch === '&') {
+      const isBeat = idx % 2 === 0;
+      return {
+        open: isBeat ? 0.76 : 0.08,
+        width: isBeat ? 1.02 : 0.98,
+        delayMs: isBeat ? 80 : 52,
+      };
+    }
+
+    // Dental / alveolar / velar consonants: syllable closure between vowels
+    return { open: 0.08, width: 0.98, delayMs: 52 };
+  };
+
   const startBubbleTimersAndRig = () => {
     setBubbleOpen(true);
     setTypedLength(0);
@@ -320,14 +390,6 @@ export const HeroChibiCharacter: React.FC<{
       rigInstanceRef.current.playAnimation('talk');
     }
 
-    if (speakingTimerRef.current !== null) {
-      window.clearTimeout(speakingTimerRef.current);
-    }
-    speakingTimerRef.current = window.setTimeout(() => {
-      setIsSpeakingNow(false);
-      speakingTimerRef.current = null;
-    }, 3600);
-
     if (autoHideTimerRef.current !== null) {
       window.clearTimeout(autoHideTimerRef.current);
     }
@@ -335,11 +397,12 @@ export const HeroChibiCharacter: React.FC<{
       setBubbleOpen(false);
       setIsSpeakingNow(false);
       if (rigInstanceRef.current) {
+        rigInstanceRef.current.setSpeechViseme(0, 1, false);
         rigInstanceRef.current.setSpeechBubbleActive(false);
         rigInstanceRef.current.playAnimation('idle');
       }
       autoHideTimerRef.current = null;
-    }, 11500);
+    }, 17500);
   };
 
   const triggerGreetingBubble = () => {
@@ -357,15 +420,12 @@ export const HeroChibiCharacter: React.FC<{
     if (e) e.stopPropagation();
     setBubbleOpen(false);
     setIsSpeakingNow(false);
-    if (speakingTimerRef.current !== null) {
-      window.clearTimeout(speakingTimerRef.current);
-      speakingTimerRef.current = null;
-    }
     if (autoHideTimerRef.current !== null) {
       window.clearTimeout(autoHideTimerRef.current);
       autoHideTimerRef.current = null;
     }
     if (rigInstanceRef.current) {
+      rigInstanceRef.current.setSpeechViseme(0, 1, false);
       rigInstanceRef.current.setSpeechBubbleActive(false);
       rigInstanceRef.current.playAnimation('idle');
     }
@@ -394,25 +454,58 @@ export const HeroChibiCharacter: React.FC<{
     rigInstanceRef.current.setSpeechBubbleActive(bubbleOpen);
     if (bubbleOpen) {
       rigInstanceRef.current.playAnimation('talk');
+    } else {
+      rigInstanceRef.current.setSpeechViseme(0, 1, false);
     }
   }, [rigReady, bubbleOpen]);
 
-  // Smooth typewriter text reveal synced with 2D Rig mouth lip-sync
+  // Natural human speech cadence typewriter + real-time phoneme/viseme lip-sync driver
   useEffect(() => {
-    if (!bubbleOpen) return;
+    if (!bubbleOpen) {
+      if (rigInstanceRef.current) {
+        rigInstanceRef.current.setSpeechViseme(0, 1, false);
+      }
+      return;
+    }
+
     setTypedLength(0);
+    setIsSpeakingNow(true);
     const totalLen = fullBubbleText.length;
-    const stepMs = Math.max(16, Math.min(28, Math.floor(2500 / Math.max(1, totalLen))));
-    const interval = window.setInterval(() => {
-      setTypedLength((prev) => {
-        if (prev >= totalLen) {
-          window.clearInterval(interval);
-          return totalLen;
+    let currentIdx = 0;
+    let cancelled = false;
+    let stepTimer: number | null = null;
+
+    const speakNextChar = () => {
+      if (cancelled) return;
+      if (currentIdx >= totalLen) {
+        setTypedLength(totalLen);
+        setIsSpeakingNow(false);
+        if (rigInstanceRef.current) {
+          // Sentence finished: close mouth into a calm natural smile while bubble remains readable
+          rigInstanceRef.current.setSpeechViseme(0, 1, false);
         }
-        return prev + 2;
-      });
-    }, stepMs);
-    return () => window.clearInterval(interval);
+        return;
+      }
+
+      const viseme = computeSpeechVisemeForChar(fullBubbleText, currentIdx);
+      currentIdx += 1;
+      setTypedLength(currentIdx);
+
+      if (rigInstanceRef.current) {
+        rigInstanceRef.current.setSpeechViseme(viseme.open, viseme.width, true);
+      }
+
+      stepTimer = window.setTimeout(speakNextChar, viseme.delayMs);
+    };
+
+    stepTimer = window.setTimeout(speakNextChar, 30);
+
+    return () => {
+      cancelled = true;
+      if (stepTimer !== null) {
+        window.clearTimeout(stepTimer);
+      }
+    };
   }, [bubbleOpen, bubbleMode, bubblePartIdx, fullBubbleText]);
 
   // Initialize Three.js 2D Rig System on mount and dispose cleanly on unmount
@@ -465,14 +558,8 @@ export const HeroChibiCharacter: React.FC<{
       if (singleClickTimerRef.current !== null) {
         window.clearTimeout(singleClickTimerRef.current);
       }
-      if (hintTimerRef.current !== null) {
-        window.clearTimeout(hintTimerRef.current);
-      }
       if (bounceTimerRef.current !== null) {
         window.clearTimeout(bounceTimerRef.current);
-      }
-      if (speakingTimerRef.current !== null) {
-        window.clearTimeout(speakingTimerRef.current);
       }
       if (autoHideTimerRef.current !== null) {
         window.clearTimeout(autoHideTimerRef.current);
@@ -487,6 +574,12 @@ export const HeroChibiCharacter: React.FC<{
     cozyAsmrAudio.setMode(isDay ? 'day' : 'night');
   }, [isDay]);
 
+  const handleSpeechBubbleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdxRef.current);
+    triggerRigTalking(nextRandomIdx);
+  };
+
   const handleChibiPress = async () => {
     const now = performance.now();
     const diff = now - lastTapRef.current;
@@ -500,7 +593,7 @@ export const HeroChibiCharacter: React.FC<{
     bounceTimerRef.current = window.setTimeout(() => {
       setTapBounce(false);
       bounceTimerRef.current = null;
-    }, 180);
+    }, 160);
 
     clickCountRef.current += 1;
 
@@ -510,7 +603,7 @@ export const HeroChibiCharacter: React.FC<{
     }
 
     if (clickCountRef.current === 1) {
-      // Wait 280ms to verify the user only clicked 1 time (not >1x or spam)
+      // Wait 260ms to verify the user only clicked 1 time (not >1x or spam)
       singleClickTimerRef.current = window.setTimeout(() => {
         if (clickCountRef.current === 1) {
           const nextRandomIdx = pickRandomBubbleIndex(bubblePartIdxRef.current);
@@ -518,11 +611,10 @@ export const HeroChibiCharacter: React.FC<{
         }
         clickCountRef.current = 0;
         singleClickTimerRef.current = null;
-      }, 280);
+      }, 260);
     } else {
       // Clicked > 1 time (2x or spam): DO NOT show text bubble (and hide if open)
       closeSpeechBubble();
-      setSingleTapHint(false);
 
       if (clickCountRef.current === 2 && diff > 0 && diff < 340) {
         // Exact 2x rapid press toggles Cozy & ASMR backsound without showing bubble
@@ -534,7 +626,7 @@ export const HeroChibiCharacter: React.FC<{
       singleClickTimerRef.current = window.setTimeout(() => {
         clickCountRef.current = 0;
         singleClickTimerRef.current = null;
-      }, 380);
+      }, 360);
     }
   };
 
@@ -576,11 +668,8 @@ export const HeroChibiCharacter: React.FC<{
             animate={{ opacity: 1, y: 0, scale: 1, rotate: -0.4 }}
             exit={{ opacity: 0, y: 5, scale: 0.92 }}
             transition={{ type: 'spring', stiffness: 390, damping: 24 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleChibiPress();
-            }}
-            className=" -top-14 left-1/2 z-40 w-[198px] -translate-x-1/2 sm:-top-16 sm:w-[224px] lg:-top-16 lg:w-[238px] absolute cursor-pointer"
+            onClick={handleSpeechBubbleClick}
+            className="-top-11 left-1/2 z-40 w-[198px] -translate-x-1/2 sm:-top-13 sm:w-[224px] lg:-top-14 lg:w-[238px] absolute cursor-pointer"
           >
             <div
               className={`relative rounded-xl border-[1.5px] border-[#091526] px-2.5 py-1.5 text-left shadow-[2px_3px_0px_#091526] transition-colors sm:px-3 sm:py-2 ${
@@ -770,7 +859,7 @@ export const HeroChibiCharacter: React.FC<{
       <div className="relative h-full w-full overflow-hidden">
         <div
           className={`relative h-full w-full transition-transform duration-150 ${
-            !rigReady && tapBounce ? 'scale-[0.97]' : 'scale-100'
+            tapBounce ? 'scale-[0.982]' : 'scale-100'
           }`}
         >
           {/* Hand-drawn comic burst ticks framing the chibi head */}
@@ -855,10 +944,20 @@ export const HeroChibiCharacter: React.FC<{
           }`}
         >
           <span className="text-[9.5px] leading-none">
-            {bubbleOpen ? '🎲' : isDay ? '☀️' : '🌙'}
+            {bubbleOpen
+              ? bubbleMode === 'greeting'
+                ? '👋'
+                : '🎲'
+              : isDay
+                ? '☀️'
+                : '🌙'}
           </span>
           <span className={isDay ? '!text-[#B4690E]' : 'text-[#F5D78E]'}>
-            {bubbleOpen ? `#${bubblePartIdx + 1}` : '♪'}
+            {bubbleOpen
+              ? bubbleMode === 'greeting'
+                ? '✨'
+                : `#${bubblePartIdx + 1}`
+              : '♪'}
           </span>
           <span
             className={
@@ -869,25 +968,25 @@ export const HeroChibiCharacter: React.FC<{
                   : 'text-[#FAF6EE] group-hover:text-[#F5D78E]'
             }
           >
-            {singleTapHint
-              ? isId
-                ? 'Ketuk 1x lagi...'
-                : 'Tap 1x more...'
-              : isPlaying
-                ? isDay
+            {isPlaying
+              ? isDay
+                ? isId
+                  ? 'Cozy ASMR Siang: ON'
+                  : 'Cozy ASMR Day: ON'
+                : isId
+                  ? 'Cozy ASMR Malam: ON'
+                  : 'Cozy ASMR Night: ON'
+              : bubbleOpen
+                ? bubbleMode === 'greeting'
                   ? isId
-                    ? 'Cozy ASMR Siang: ON'
-                    : 'Cozy ASMR Day: ON'
+                    ? 'Halo! • Klik Chibi Acak'
+                    : 'Hello! • Click Chibi Random'
                   : isId
-                    ? 'Cozy ASMR Malam: ON'
-                    : 'Cozy ASMR Night: ON'
-                : bubbleOpen
-                  ? isId
                     ? `Fakta #${bubblePartIdx + 1} • Klik Chibi Acak`
                     : `Fact #${bubblePartIdx + 1} • Click Chibi Random`
-                  : isId
-                    ? 'Klik Chibi: Fakta Crypto • Cozy ♪'
-                    : 'Click Chibi: Crypto Facts • Cozy ♪'}
+                : isId
+                  ? 'Klik Chibi: Fakta Crypto • Cozy ♪'
+                  : 'Click Chibi: Crypto Facts • Cozy ♪'}
           </span>
         </button>
       </div>

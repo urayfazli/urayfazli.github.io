@@ -2,18 +2,25 @@ import * as THREE from 'three';
 import { TextureManager } from '../textures';
 import { clamp, lerp } from '../../utils/lerp';
 
+export interface SubLayerPatch {
+  texture: THREE.CanvasTexture;
+  pivotU: number;
+  pivotV: number;
+  centerU: number;
+  centerV: number;
+  widthU: number;
+  heightV: number;
+}
+
 export interface CharacterLayerTextures {
   aspectRatio: number;
   characterBase: THREE.CanvasTexture;
   characterCozy?: THREE.CanvasTexture;
-  eyeLeft: THREE.CanvasTexture;
-  eyeRight: THREE.CanvasTexture;
+  eyeLeft: SubLayerPatch;
+  eyeRight: SubLayerPatch;
   mouthOpen: THREE.CanvasTexture;
   mouthSmile: THREE.CanvasTexture;
-  leftEyePivot: { u: number; v: number };
-  rightEyePivot: { u: number; v: number };
-  mouthPivot: { u: number; v: number };
-  emptyLayer: THREE.CanvasTexture;
+  mouthPatch: Omit<SubLayerPatch, 'texture'>;
 }
 
 function createOffscreenCanvas(width: number, height: number): {
@@ -21,8 +28,8 @@ function createOffscreenCanvas(width: number, height: number): {
   ctx: CanvasRenderingContext2D;
 } {
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = Math.max(1, Math.round(width));
+  canvas.height = Math.max(1, Math.round(height));
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) {
     throw new Error('Failed to create 2D canvas context for character layer slicing.');
@@ -34,16 +41,15 @@ interface ExtractedEyeResult {
   canvas: HTMLCanvasElement;
   centroidU: number;
   centroidV: number;
+  centerU: number;
+  centerV: number;
+  widthU: number;
+  heightV: number;
 }
 
 /**
  * Red-channel Connected-Component BFS + 2px Dilation + Row-Matched Skin Inpainting.
- * In anime_chibi_hero.png (908x1016):
- * - Warm peach skin is RGB(255, 199, 152) -> R = 255
- * - Coral cheek blush is RGB(255, 142, 108) -> R = 255
- * - Dark oval pupils are RGB(1, 1, 1) -> R = 1..15
- * Using Red-channel (R < 228) isolates 100% of the left pupil (y=471..593) and right pupil (y=458..582)
- * without ever leaking into the coral cheek blush or leaving any bottom pupil crescent behind.
+ * Extracts only the tight bounding box around each pupil to eliminate 98% GPU overdraw.
  */
 function extractAndInpaintPupil(
   srcPixels: Uint8ClampedArray,
@@ -57,10 +63,6 @@ function extractAndInpaintPupil(
   boxV0: number,
   boxV1: number
 ): ExtractedEyeResult {
-  const { canvas: eyeCanvas, ctx: eyeCtx } = createOffscreenCanvas(W, H);
-  const eyeImgData = eyeCtx.createImageData(W, H);
-  const eyeOut = eyeImgData.data;
-
   const minX = Math.max(4, Math.floor(boxU0 * W));
   const maxX = Math.min(W - 5, Math.ceil(boxU1 * W));
   const minY = Math.max(4, Math.floor(boxV0 * H));
@@ -127,7 +129,11 @@ function extractAndInpaintPupil(
     }
   }
 
-  // 3. Extract crisp alpha-matted pupil to eyeOut & row-matched skin inpainting on cleanFacePixels
+  // 3. Extract crisp alpha-matted pupil into tight sub-canvas & row-matched skin inpainting on cleanFacePixels
+  const { canvas: eyeCanvas, ctx: eyeCtx } = createOffscreenCanvas(boxW, boxH);
+  const eyeImgData = eyeCtx.createImageData(boxW, boxH);
+  const eyeOut = eyeImgData.data;
+
   let sumWeightedX = 0;
   let sumWeightedY = 0;
   let sumWeights = 0;
@@ -155,15 +161,16 @@ function extractAndInpaintPupil(
       const rowSkinB = Math.round(lerp(lB, rB, tRow));
 
       const idx = (y * W + x) * 4;
+      const outIdx = (by * boxW + bx) * 4;
       const r = srcPixels[idx];
 
       // Exact Red-channel alpha matting against rowSkinR
       const alpha = clamp((rowSkinR - r) / Math.max(20, rowSkinR - 4), 0, 1);
       if (alpha > 0.015) {
-        eyeOut[idx] = 5;
-        eyeOut[idx + 1] = 8;
-        eyeOut[idx + 2] = 15;
-        eyeOut[idx + 3] = Math.round(alpha * 255);
+        eyeOut[outIdx] = 5;
+        eyeOut[outIdx + 1] = 8;
+        eyeOut[outIdx + 2] = 15;
+        eyeOut[outIdx + 3] = Math.round(alpha * 255);
 
         sumWeightedX += x * alpha;
         sumWeightedY += y * alpha;
@@ -182,20 +189,26 @@ function extractAndInpaintPupil(
 
   const centroidU = sumWeights > 0 ? sumWeightedX / sumWeights / W : seedU;
   const centroidV = sumWeights > 0 ? sumWeightedY / sumWeights / H : seedV;
+  const centerU = (minX + boxW * 0.5) / W;
+  const centerV = (minY + boxH * 0.5) / H;
 
   return {
     canvas: eyeCanvas,
     centroidU,
     centroidV,
+    centerU,
+    centerV,
+    widthU: boxW / W,
+    heightV: boxH / H,
   };
 }
 
 /**
- * Inpaints the static smile on the cozy texture (x: 400..468, y: 654..684)
- * with row-matched warm peach skin so the rigged 2D MOUTH bone can animate
- * talking expressions without overlapping the static smile.
+ * Inpaints the static smile on both base and cozy textures (x: 400..468, y: 654..684)
+ * with row-matched warm peach skin so the rigged 2D MOUTH bone can render both
+ * calm idle smiles and talking expressions without double-mouth overlap or missing mouth.
  */
-function inpaintCozyMouthRegion(
+function inpaintMouthRegion(
   pixels: Uint8ClampedArray,
   W: number,
   H: number
@@ -227,9 +240,9 @@ function inpaintCozyMouthRegion(
 }
 
 /**
- * Builds the two 2D Rig mouth textures (`mouthOpen` for active vowel syllables and
- * `mouthSmile` for consonant closures & happy expression) centered at (434, 670)
- * on the 908x1016 canvas.
+ * Builds the two cropped 2D Rig mouth textures (`mouthOpen` for active vowel syllables and
+ * `mouthSmile` for idle/consonant closures & happy expression) centered at (434, 670)
+ * on the 908x1016 reference coordinate system.
  */
 function createRiggedMouthCanvases(
   W: number,
@@ -237,65 +250,66 @@ function createRiggedMouthCanvases(
 ): {
   openCanvas: HTMLCanvasElement;
   smileCanvas: HTMLCanvasElement;
-  mouthPivot: { u: number; v: number };
+  mouthPatch: Omit<SubLayerPatch, 'texture'>;
 } {
-  const sx = W / 908;
-  const sy = H / 1016;
+  const refW = 908;
+  const refH = 1016;
   const cx = 434;
   const cy = 670;
+  const patchRefW = 76;
+  const patchRefH = 56;
+  const localCx = patchRefW * 0.5;
+  const localCy = patchRefH * 0.5;
+
+  const sx = W / refW;
+  const sy = H / refH;
+  const canvasW = Math.max(16, Math.round(patchRefW * sx));
+  const canvasH = Math.max(16, Math.round(patchRefH * sy));
 
   // 1. Open Talking Mouth (`mouthOpen`): Cute anime "D" / rounded triangular open mouth with warm pink tongue
-  const { canvas: openCanvas, ctx: openCtx } = createOffscreenCanvas(W, H);
+  const { canvas: openCanvas, ctx: openCtx } = createOffscreenCanvas(canvasW, canvasH);
   openCtx.save();
-  openCtx.scale(sx, sy);
+  openCtx.scale(canvasW / patchRefW, canvasH / patchRefH);
   openCtx.lineCap = 'round';
   openCtx.lineJoin = 'round';
 
   const traceOpenMouth = (ctx: CanvasRenderingContext2D) => {
     ctx.beginPath();
-    // Upper lip curve (gently arched happy anime upper lip)
-    ctx.moveTo(cx - 21, cy - 6);
-    ctx.quadraticCurveTo(cx, cy - 9.5, cx + 21, cy - 7.5);
-    // Right mouth corner curving down to lower jaw
-    ctx.bezierCurveTo(cx + 23, cy + 5, cx + 14, cy + 18, cx, cy + 18.5);
-    // Left lower jaw curving back up to left mouth corner
-    ctx.bezierCurveTo(cx - 14, cy + 18, cx - 23, cy + 6, cx - 21, cy - 6);
+    ctx.moveTo(localCx - 21, localCy - 6);
+    ctx.quadraticCurveTo(localCx, localCy - 9.5, localCx + 21, localCy - 7.5);
+    ctx.bezierCurveTo(localCx + 23, localCy + 5, localCx + 14, localCy + 18, localCx, localCy + 18.5);
+    ctx.bezierCurveTo(localCx - 14, localCy + 18, localCx - 23, localCy + 6, localCx - 21, localCy - 6);
     ctx.closePath();
   };
 
-  // Deep warm maroon-coral oral cavity fill
   traceOpenMouth(openCtx);
   openCtx.fillStyle = '#7E2B33';
   openCtx.fill();
 
-  // Clip interior for cute pink anime tongue and subtle upper tooth highlight
   openCtx.save();
   traceOpenMouth(openCtx);
   openCtx.clip();
 
-  // Cute warm coral-pink tongue dome at the bottom of the mouth
   openCtx.beginPath();
-  openCtx.arc(cx + 1, cy + 17, 15.5, Math.PI * 1.05, Math.PI * 1.95, false);
+  openCtx.arc(localCx + 1, localCy + 17, 15.5, Math.PI * 1.05, Math.PI * 1.95, false);
   openCtx.closePath();
-  const tongueGrad = openCtx.createLinearGradient(cx, cy + 2, cx, cy + 19);
+  const tongueGrad = openCtx.createLinearGradient(localCx, localCy + 2, localCx, localCy + 19);
   tongueGrad.addColorStop(0, '#FF9E99');
   tongueGrad.addColorStop(1, '#E56B6F');
   openCtx.fillStyle = tongueGrad;
   openCtx.fill();
 
-  // Subtle white upper teeth rim
   openCtx.beginPath();
-  openCtx.moveTo(cx - 16, cy - 7);
-  openCtx.quadraticCurveTo(cx, cy - 9.5, cx + 16, cy - 8);
-  openCtx.lineTo(cx + 14, cy - 3.5);
-  openCtx.quadraticCurveTo(cx, cy - 5, cx - 14, cy - 3);
+  openCtx.moveTo(localCx - 16, localCy - 7);
+  openCtx.quadraticCurveTo(localCx, localCy - 9.5, localCx + 16, localCy - 8);
+  openCtx.lineTo(localCx + 14, localCy - 3.5);
+  openCtx.quadraticCurveTo(localCx, localCy - 5, localCx - 14, localCy - 3);
   openCtx.closePath();
   openCtx.fillStyle = '#FFFDF9';
   openCtx.fill();
 
   openCtx.restore();
 
-  // Crisp anime ink outline matching the illustration's line art (#0B1424)
   traceOpenMouth(openCtx);
   openCtx.strokeStyle = '#0B1424';
   openCtx.lineWidth = 6.0;
@@ -303,31 +317,48 @@ function createRiggedMouthCanvases(
   openCtx.restore();
 
   // 2. Smiling / Closed-Syllable Mouth (`mouthSmile`): Matches the exact curved anime smile at (434, 670)
-  const { canvas: smileCanvas, ctx: smileCtx } = createOffscreenCanvas(W, H);
+  const { canvas: smileCanvas, ctx: smileCtx } = createOffscreenCanvas(canvasW, canvasH);
   smileCtx.save();
-  smileCtx.scale(sx, sy);
+  smileCtx.scale(canvasW / patchRefW, canvasH / patchRefH);
   smileCtx.lineCap = 'round';
   smileCtx.lineJoin = 'round';
 
   smileCtx.beginPath();
-  smileCtx.moveTo(cx - 22, cy - 5);
-  smileCtx.bezierCurveTo(cx - 12, cy + 10, cx + 11, cy + 9, cx + 22, cy - 7);
+  smileCtx.moveTo(localCx - 22, localCy - 5);
+  smileCtx.bezierCurveTo(
+    localCx - 12,
+    localCy + 10,
+    localCx + 11,
+    localCy + 9,
+    localCx + 22,
+    localCy - 7
+  );
   smileCtx.strokeStyle = '#0B1424';
   smileCtx.lineWidth = 6.5;
   smileCtx.stroke();
 
   smileCtx.restore();
 
+  const pivotU = cx / refW;
+  const pivotV = cy / refH;
+
   return {
     openCanvas,
     smileCanvas,
-    mouthPivot: { u: cx / 908, v: cy / 1016 },
+    mouthPatch: {
+      pivotU,
+      pivotV,
+      centerU: pivotU,
+      centerV: pivotV,
+      widthU: patchRefW / refW,
+      heightV: patchRefH / refH,
+    },
   };
 }
 
 /**
- * Builds the spotless eyeless base texture, crisp alpha-matted EYE_LEFT / EYE_RIGHT
- * textures, and rigged MOUTH textures (`mouthOpen` & `mouthSmile`) directly from anime_chibi_hero.png.
+ * Builds the spotless eyeless/mouthless base texture, crisp cropped EYE_LEFT / EYE_RIGHT
+ * textures, and cropped rigged MOUTH textures (`mouthOpen` & `mouthSmile`) directly from anime_chibi_hero.png.
  */
 export function buildCharacterLayerTextures(
   heroImg: HTMLImageElement,
@@ -343,7 +374,7 @@ export function buildCharacterLayerTextures(
   const srcData = srcCtx.getImageData(0, 0, W, H);
   const srcPixels = srcData.data;
 
-  // Base character canvas with pupils cleanly inpainted with row-matched skin tone
+  // Base character canvas with pupils and static mouth cleanly inpainted with row-matched skin tone
   const { canvas: baseCanvas, ctx: baseCtx } = createOffscreenCanvas(W, H);
   const baseData = baseCtx.createImageData(W, H);
   baseData.data.set(srcPixels);
@@ -376,10 +407,12 @@ export function buildCharacterLayerTextures(
     0.585
   );
 
+  // Inpaint static mouth on base character so rigged MOUTH layer never causes a double-mouth artifact
+  inpaintMouthRegion(baseData.data, W, H);
   baseCtx.putImageData(baseData, 0, 0);
 
-  // Build 2D Rig Mouth textures (`mouthOpen` and `mouthSmile`)
-  const { openCanvas, smileCanvas, mouthPivot } = createRiggedMouthCanvases(W, H);
+  // Build cropped 2D Rig Mouth textures (`mouthOpen` and `mouthSmile`)
+  const { openCanvas, smileCanvas, mouthPatch } = createRiggedMouthCanvases(W, H);
 
   // Optional Cozy expression full texture (with static mouth cleanly inpainted so MOUTH bone controls it)
   let cozyTexture: THREE.CanvasTexture | undefined;
@@ -387,26 +420,35 @@ export function buildCharacterLayerTextures(
     const { canvas: cozyCanvas, ctx: cozyCtx } = createOffscreenCanvas(W, H);
     cozyCtx.drawImage(cozyImg, 0, 0, W, H);
     const cozyData = cozyCtx.getImageData(0, 0, W, H);
-    inpaintCozyMouthRegion(cozyData.data, W, H);
+    inpaintMouthRegion(cozyData.data, W, H);
     cozyCtx.putImageData(cozyData, 0, 0);
     cozyTexture = textureManager.registerCanvasTexture(cozyCanvas);
   }
-
-  // Lightweight 2x2 transparent texture for bone-only deformer nodes
-  const { canvas: emptyCanvas } = createOffscreenCanvas(2, 2);
-  const emptyLayer = textureManager.registerCanvasTexture(emptyCanvas);
 
   return {
     aspectRatio,
     characterBase: textureManager.registerCanvasTexture(baseCanvas),
     characterCozy: cozyTexture,
-    eyeLeft: textureManager.registerCanvasTexture(leftEye.canvas),
-    eyeRight: textureManager.registerCanvasTexture(rightEye.canvas),
+    eyeLeft: {
+      texture: textureManager.registerCanvasTexture(leftEye.canvas),
+      pivotU: leftEye.centroidU,
+      pivotV: leftEye.centroidV,
+      centerU: leftEye.centerU,
+      centerV: leftEye.centerV,
+      widthU: leftEye.widthU,
+      heightV: leftEye.heightV,
+    },
+    eyeRight: {
+      texture: textureManager.registerCanvasTexture(rightEye.canvas),
+      pivotU: rightEye.centroidU,
+      pivotV: rightEye.centroidV,
+      centerU: rightEye.centerU,
+      centerV: rightEye.centerV,
+      widthU: rightEye.widthU,
+      heightV: rightEye.heightV,
+    },
     mouthOpen: textureManager.registerCanvasTexture(openCanvas),
     mouthSmile: textureManager.registerCanvasTexture(smileCanvas),
-    leftEyePivot: { u: leftEye.centroidU, v: leftEye.centroidV },
-    rightEyePivot: { u: rightEye.centroidU, v: rightEye.centroidV },
-    mouthPivot,
-    emptyLayer,
+    mouthPatch,
   };
 }
