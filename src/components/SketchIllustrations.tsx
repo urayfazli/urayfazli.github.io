@@ -180,6 +180,46 @@ const CHIBI_CRYPTO_TALK_PARTS = [
     textEn:
       'Meme Fact: Dogecoin was coded in just 2 hours from the "Kabosu" Shiba Inu meme, sparking Web3’s "GM & WAGMI" culture!',
   },
+  {
+    partNumber: 5,
+    icon: '⏳',
+    categoryId: 'Psikologi Uang #5',
+    categoryEn: 'Money Psych #5',
+    textId:
+      'Psikologi Uang: Kekayaan sejati di masa depan bukanlah barang mewah yang terlihat, melainkan kebebasan atas waktumu sendiri!',
+    textEn:
+      'Psychology of Money: True future wealth isn’t the luxury you show off—it’s having complete freedom over your own time!',
+  },
+  {
+    partNumber: 6,
+    icon: '🌱',
+    categoryId: 'Psikologi Uang #6',
+    categoryEn: 'Money Psych #6',
+    textId:
+      'Efek Compounding: Mengelola uang untuk masa depan 80% soal kesabaran & emosi tenang, bukan sekadar rumus instan semalam!',
+    textEn:
+      'Compounding Effect: Building future wealth is 80% patience and calm behavior—not overnight genius formulas!',
+  },
+  {
+    partNumber: 7,
+    icon: '🧭',
+    categoryId: 'Psikologi Uang #7',
+    categoryEn: 'Money Psych #7',
+    textId:
+      'Masa Depan Finansial: Menabung tanpa alasan spesifik memberimu fleksibilitas menghadapi kejutan masa depan yang tak terduga!',
+    textEn:
+      'Future Finance: Saving without a specific purchase goal gives you the flexibility to navigate life’s unexpected surprises!',
+  },
+  {
+    partNumber: 8,
+    icon: '🛡️',
+    categoryId: 'Psikologi Uang #8',
+    categoryEn: 'Money Psych #8',
+    textId:
+      'Kunci Bertahan: Di masa depan, kemampuan bertahan melewati badai pasar jauh lebih berharga daripada mengejar untung sesaat!',
+    textEn:
+      'Survival Mindset: In the long run, staying resilient through market storms matters far more than chasing quick gains!',
+  },
 ] as const;
 
 const CHIBI_GREETING_BUBBLE = {
@@ -331,14 +371,14 @@ export const HeroChibiCharacter: React.FC<{
     }
   };
 
-  // Trigger Greeting Speech Bubble automatically right after the Loading Screen finishes
+  // Trigger Greeting Speech Bubble & animation 4 seconds (4000ms) after the Loading Screen finishes
   useEffect(() => {
     if (isLoading || hasGreetedRef.current) return;
-    hasGreetedRef.current = true;
     greetingDelayTimerRef.current = window.setTimeout(() => {
-      triggerGreetingBubble();
+      hasGreetedRef.current = true;
       greetingDelayTimerRef.current = null;
-    }, 380);
+      triggerGreetingBubble();
+    }, 4000);
 
     return () => {
       if (greetingDelayTimerRef.current !== null) {
