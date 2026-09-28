@@ -178,16 +178,21 @@ interface Maxi2DRigProps {
 
 /**
  * Hierarchical 2D Skeletal Rig System for MAXI AI Companion
+ * Driven by a dedicated 60fps requestAnimationFrame Forward/Inverse Kinematics (FK/IK) solver
+ * applying native SVG user-space `transform="rotate(deg, pivotX, pivotY)"` attributes.
+ * This guarantees 100% cross-browser & Vercel production animation fidelity without
+ * WAAPI / CSS transform-box / prefers-reduced-motion freezes.
+ *
  * Articulated Bone Hierarchy:
  *   Root/Pelvis (60,82)
- *   ├── Leg.L (48,84 -> 46,104)
- *   ├── Leg.R (72,84 -> 74,104)
+ *   ├── Leg.L (48,86 -> 45,101)
+ *   ├── Leg.R (72,86 -> 75,101)
  *   └── Spine/Torso (60,76)
  *       ├── Arm.L Shoulder (34,58) -> Forearm.L Elbow (22,66) -> Red-Team Magnifier Prop
  *       ├── Arm.R Shoulder (86,58) -> Forearm.R Elbow (98,66) -> Sketchbook Quill Pen Prop
- *       └── Neck/Head (60,46)
- *           ├── Eyes & Brow Rig (2D gaze tracking + blink + brow tilt)
- *           └── Antenna Joint (60,16 -> 60,5)
+ *       └── Neck/Head (60,48)
+ *           ├── Eyes & Brow Rig (2D gaze tracking + natural blink + brow tilt)
+ *           └── Antenna Joint (60,18 -> 60,6)
  */
 const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
   isOpen,
@@ -203,108 +208,327 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
       ? 'scribe'
       : pose;
 
-  const torsoRotate =
-    activeMode === 'analyzing'
-      ? [-3, 3.5, -3]
-      : activeMode === 'scribe'
-        ? [1.5, 4, 1.5]
-        : activeMode === 'inspect'
-          ? [-4, -1.5, -4]
-          : activeMode === 'wave'
-            ? [-2.5, 2.5, -2.5]
-            : [-1.2, 1.2, -1.2];
+  // Keep latest props in a ref for the 60fps animation loop without restarting rAF
+  const rigPropsRef = useRef({
+    activeMode,
+    lookX: Math.max(-3.5, Math.min(3.5, lookOffset.x)),
+    lookY: Math.max(-2.6, Math.min(2.6, lookOffset.y)),
+  });
+  rigPropsRef.current = {
+    activeMode,
+    lookX: Math.max(-3.5, Math.min(3.5, lookOffset.x)),
+    lookY: Math.max(-2.6, Math.min(2.6, lookOffset.y)),
+  };
 
-  const headRotate =
-    activeMode === 'analyzing'
-      ? [-5, 5, -5]
-      : activeMode === 'scribe'
-        ? [3, 6.5, 3]
-        : activeMode === 'inspect'
-          ? [-7, -3, -7]
-          : activeMode === 'wave'
-            ? [4, -4, 4]
-            : [-2, 2, -2];
+  // Direct SVG DOM refs for 60fps native SVG attribute transforms
+  const shadowRef = useRef<SVGEllipseElement | null>(null);
+  const pelvisRef = useRef<SVGGElement | null>(null);
+  const leftLegRef = useRef<SVGGElement | null>(null);
+  const rightLegRef = useRef<SVGGElement | null>(null);
+  const torsoRef = useRef<SVGGElement | null>(null);
+  const leftArmRef = useRef<SVGGElement | null>(null);
+  const leftForearmRef = useRef<SVGGElement | null>(null);
+  const rightArmRef = useRef<SVGGElement | null>(null);
+  const rightForearmRef = useRef<SVGGElement | null>(null);
+  const coreStarRef = useRef<SVGPathElement | null>(null);
+  const headRef = useRef<SVGGElement | null>(null);
+  const antennaRef = useRef<SVGGElement | null>(null);
+  const eyeGroupRef = useRef<SVGGElement | null>(null);
+  const mouthWaveRef = useRef<SVGPathElement | null>(null);
 
-  const leftArmRotate =
-    activeMode === 'analyzing' || activeMode === 'inspect'
-      ? [-38, -26, -38]
-      : activeMode === 'wave'
-        ? [-58, -22, -58]
-        : [-8, 4, -8];
+  // Damped kinematic state for smooth spring transitions between poses
+  const currentBonesRef = useRef({
+    pelvisY: 0,
+    pelvisRot: 0,
+    leftLegRot: 0,
+    rightLegRot: 0,
+    torsoRot: 0,
+    leftArmRot: -12,
+    leftForearmRot: -10,
+    rightArmRot: 10,
+    rightForearmRot: 8,
+    headRot: 0,
+    headX: 0,
+    headY: 0,
+    antennaRot: 0,
+    eyeX: 0,
+    eyeY: 0,
+    coreRot: 0,
+  });
 
-  const leftForearmRotate =
-    activeMode === 'analyzing' || activeMode === 'inspect'
-      ? [-28, -12, -28]
-      : activeMode === 'wave'
-        ? [-35, 18, -35]
-        : [-6, 6, -6];
+  useEffect(() => {
+    let rafId = 0;
+    let lastTime = performance.now();
+    // Offset phase slightly per instance so multiple rigs feel organic
+    const phaseOffset = Math.random() * 1.5;
 
-  const rightArmRotate =
-    activeMode === 'scribe'
-      ? [-32, -18, -32]
-      : activeMode === 'analyzing'
-        ? [-24, -10, -24]
-        : [8, -4, 8];
+    const animateRig = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+      const t = now / 1000 + phaseOffset;
 
-  const rightForearmRotate =
-    activeMode === 'scribe'
-      ? [-25, 15, -25]
-      : activeMode === 'analyzing'
-        ? [-18, 12, -18]
-        : [6, -6, 6];
+      const { activeMode: mode, lookX, lookY } = rigPropsRef.current;
+      const cur = currentBonesRef.current;
 
-  const antennaRotate =
-    activeMode === 'analyzing'
-      ? [-18, 18, -18]
-      : activeMode === 'wave'
-        ? [-14, 14, -14]
-        : [-6, 6, -6];
+      // Target bone angles & translations computed from harmonic oscillators
+      let targetPelvisY = 0;
+      let targetPelvisRot = 0;
+      let targetLeftLegRot = 0;
+      let targetRightLegRot = 0;
+      let targetTorsoRot = 0;
+      let targetLeftArmRot = 0;
+      let targetLeftForearmRot = 0;
+      let targetRightArmRot = 0;
+      let targetRightForearmRot = 0;
+      let targetHeadRot = 0;
+      let targetAntennaRot = 0;
+      let coreSpinSpeed = 28;
 
-  const cycleDuration =
-    activeMode === 'analyzing'
-      ? 1.1
-      : activeMode === 'scribe' || activeMode === 'wave'
-        ? 1.35
-        : 2.6;
+      if (mode === 'analyzing') {
+        // High-energy Red-Team Deep Scan kinematics
+        const fast = t * 5.8;
+        targetPelvisY = Math.sin(fast) * -4.2 - 1.5;
+        targetPelvisRot = Math.cos(fast * 0.5) * 2.8;
+        targetLeftLegRot = Math.sin(fast) * 11 - 3;
+        targetRightLegRot = -Math.sin(fast) * 11 + 3;
+        targetTorsoRot = Math.sin(fast * 0.7) * 5.5;
+        targetLeftArmRot = -44 + Math.sin(fast * 1.1) * 16;
+        targetLeftForearmRot = -26 + Math.cos(fast * 1.3) * 18;
+        targetRightArmRot = -28 + Math.cos(fast * 1.1) * 14;
+        targetRightForearmRot = -14 + Math.sin(fast * 1.4) * 16;
+        targetHeadRot = Math.sin(fast * 0.85) * 7.5;
+        targetAntennaRot = Math.sin(fast * 1.8) * 22;
+        coreSpinSpeed = 160;
+      } else if (mode === 'scribe') {
+        // Scribe IK Mode: right hand actively writing notes with quill pen
+        const writeCycle = t * 6.5;
+        targetPelvisY = Math.sin(t * 3.0) * -2.2;
+        targetPelvisRot = 1.2 + Math.sin(t * 1.8) * 1.2;
+        targetLeftLegRot = -3 + Math.sin(t * 2.5) * 3.5;
+        targetRightLegRot = 4 + Math.cos(t * 2.5) * 3.5;
+        targetTorsoRot = 3.2 + Math.sin(t * 2.2) * 2.2;
+        targetLeftArmRot = -18 + Math.sin(t * 2.0) * 6;
+        targetLeftForearmRot = -14 + Math.cos(t * 2.0) * 6;
+        targetRightArmRot = -38 + Math.sin(writeCycle * 0.5) * 9;
+        targetRightForearmRot = -22 + Math.sin(writeCycle) * 22;
+        targetHeadRot = 4.8 + Math.sin(writeCycle * 0.5) * 3.2;
+        targetAntennaRot = Math.sin(writeCycle * 0.8) * 12;
+        coreSpinSpeed = 75;
+      } else if (mode === 'inspect') {
+        // Inspect Mode: raises Red-Team magnifying glass up to visor eye level
+        const scan = t * 3.2;
+        targetPelvisY = Math.sin(scan) * -2.8;
+        targetPelvisRot = -1.8 + Math.sin(scan * 0.6) * 1.5;
+        targetLeftLegRot = -4 + Math.sin(scan) * 4.5;
+        targetRightLegRot = 4 - Math.sin(scan) * 4.5;
+        targetTorsoRot = -4.5 + Math.sin(scan * 0.8) * 2.8;
+        targetLeftArmRot = -56 + Math.sin(scan * 1.1) * 10;
+        targetLeftForearmRot = -38 + Math.cos(scan * 1.1) * 12;
+        targetRightArmRot = 12 + Math.sin(scan * 0.8) * 6;
+        targetRightForearmRot = 10 + Math.cos(scan * 0.8) * 8;
+        targetHeadRot = -6.5 + Math.sin(scan * 0.9) * 4.5;
+        targetAntennaRot = -8 + Math.sin(scan * 1.6) * 14;
+        coreSpinSpeed = 60;
+      } else if (mode === 'wave') {
+        // Friendly Enthusiastic Wave Mode
+        const wave = t * 6.2;
+        targetPelvisY = Math.abs(Math.sin(wave * 0.5)) * -4.2;
+        targetPelvisRot = Math.sin(wave * 0.5) * 3.5;
+        targetLeftLegRot = Math.sin(wave * 0.5) * 8;
+        targetRightLegRot = -Math.sin(wave * 0.5) * 8;
+        targetTorsoRot = Math.sin(wave * 0.5) * 4.5;
+        targetLeftArmRot = -68 + Math.sin(wave) * 20;
+        targetLeftForearmRot = -25 + Math.cos(wave) * 28;
+        targetRightArmRot = 14 + Math.sin(wave * 0.5) * 8;
+        targetRightForearmRot = 12 + Math.cos(wave * 0.5) * 10;
+        targetHeadRot = Math.sin(wave * 0.5) * 6.5;
+        targetAntennaRot = Math.sin(wave * 1.2) * 18;
+        coreSpinSpeed = 90;
+      } else {
+        // Lively Idle Mode: continuous breathing, floating bob, arm sway, & periodic curiosity check
+        const breath = t * 2.6;
+        // Every ~7 seconds, perform a subtle magnifying-glass curiosity glance so idle is visibly dynamic
+        const curiosityPulse = Math.max(0, Math.sin(t * 0.9) - 0.65) / 0.35;
 
-  const pupilX = Math.max(-3.2, Math.min(3.2, lookOffset.x));
-  const pupilY = Math.max(-2.4, Math.min(2.4, lookOffset.y));
+        targetPelvisY = Math.sin(breath) * -3.2 - 0.8;
+        targetPelvisRot = Math.sin(breath * 0.5) * 2.0;
+        targetLeftLegRot = -3.5 + Math.sin(breath) * 5.5;
+        targetRightLegRot = 3.5 - Math.sin(breath) * 5.5;
+        targetTorsoRot = Math.sin(breath * 0.75) * 3.2 - curiosityPulse * 2.5;
+        targetLeftArmRot =
+          -14 + Math.sin(breath + 0.4) * 9 - curiosityPulse * 28;
+        targetLeftForearmRot =
+          -10 + Math.cos(breath + 0.8) * 11 - curiosityPulse * 18;
+        targetRightArmRot =
+          12 - Math.sin(breath + 0.4) * 8 + curiosityPulse * 6;
+        targetRightForearmRot =
+          8 - Math.cos(breath + 0.8) * 10 + Math.sin(t * 4.2) * 5;
+        targetHeadRot =
+          Math.sin(breath * 0.85 - 0.3) * 4.2 +
+          lookX * 1.2 -
+          curiosityPulse * 4;
+        targetAntennaRot = Math.sin(breath * 1.5 - 0.6) * 12;
+        coreSpinSpeed = 38;
+      }
+
+      // Smooth exponential spring damping (frame-rate independent)
+      const smooth = Math.min(1, dt * 10.5);
+      cur.pelvisY += (targetPelvisY - cur.pelvisY) * smooth;
+      cur.pelvisRot += (targetPelvisRot - cur.pelvisRot) * smooth;
+      cur.leftLegRot += (targetLeftLegRot - cur.leftLegRot) * smooth;
+      cur.rightLegRot += (targetRightLegRot - cur.rightLegRot) * smooth;
+      cur.torsoRot += (targetTorsoRot - cur.torsoRot) * smooth;
+      cur.leftArmRot += (targetLeftArmRot - cur.leftArmRot) * smooth;
+      cur.leftForearmRot += (targetLeftForearmRot - cur.leftForearmRot) * smooth;
+      cur.rightArmRot += (targetRightArmRot - cur.rightArmRot) * smooth;
+      cur.rightForearmRot += (targetRightForearmRot - cur.rightForearmRot) * smooth;
+      cur.headRot += (targetHeadRot - cur.headRot) * smooth;
+      cur.headX += (lookX * 0.65 - cur.headX) * smooth;
+      cur.headY += (lookY * 0.45 - cur.headY) * smooth;
+      cur.antennaRot += (targetAntennaRot - cur.antennaRot) * smooth;
+      cur.eyeX += (lookX - cur.eyeX) * Math.min(1, dt * 14);
+      cur.eyeY += (lookY - cur.eyeY) * Math.min(1, dt * 14);
+      cur.coreRot = (cur.coreRot + dt * coreSpinSpeed) % 360;
+
+      // Natural periodic blink every ~3.4 seconds
+      const blinkCycle = (t % 3.4) / 3.4;
+      let blinkScaleY = 1;
+      if (blinkCycle > 0.47 && blinkCycle < 0.53) {
+        const norm = Math.abs(blinkCycle - 0.5) / 0.03;
+        blinkScaleY = 0.1 + norm * 0.9;
+      }
+
+      // Apply native SVG user-space transforms directly to DOM nodes
+      if (shadowRef.current) {
+        const shadowScale = Math.max(0.8, Math.min(1.08, 1 + cur.pelvisY * 0.035));
+        const shadowOpacity = Math.max(0.18, Math.min(0.36, 0.32 + cur.pelvisY * 0.02));
+        shadowRef.current.setAttribute('rx', (26 * shadowScale).toFixed(2));
+        shadowRef.current.setAttribute('opacity', shadowOpacity.toFixed(2));
+      }
+
+      if (pelvisRef.current) {
+        pelvisRef.current.setAttribute(
+          'transform',
+          `translate(0 ${cur.pelvisY.toFixed(2)}) rotate(${cur.pelvisRot.toFixed(2)} 60 82)`
+        );
+      }
+
+      if (leftLegRef.current) {
+        leftLegRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.leftLegRot.toFixed(2)} 48 86)`
+        );
+      }
+
+      if (rightLegRef.current) {
+        rightLegRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.rightLegRot.toFixed(2)} 72 86)`
+        );
+      }
+
+      if (torsoRef.current) {
+        torsoRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.torsoRot.toFixed(2)} 60 76)`
+        );
+      }
+
+      if (leftArmRef.current) {
+        leftArmRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.leftArmRot.toFixed(2)} 34 58)`
+        );
+      }
+
+      if (leftForearmRef.current) {
+        leftForearmRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.leftForearmRot.toFixed(2)} 22 66)`
+        );
+      }
+
+      if (rightArmRef.current) {
+        rightArmRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.rightArmRot.toFixed(2)} 86 58)`
+        );
+      }
+
+      if (rightForearmRef.current) {
+        rightForearmRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.rightForearmRot.toFixed(2)} 98 66)`
+        );
+      }
+
+      if (coreStarRef.current) {
+        coreStarRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.coreRot.toFixed(1)} 60 68)`
+        );
+      }
+
+      if (headRef.current) {
+        headRef.current.setAttribute(
+          'transform',
+          `translate(${cur.headX.toFixed(2)} ${cur.headY.toFixed(2)}) rotate(${cur.headRot.toFixed(2)} 60 48)`
+        );
+      }
+
+      if (antennaRef.current) {
+        antennaRef.current.setAttribute(
+          'transform',
+          `rotate(${cur.antennaRot.toFixed(2)} 60 18)`
+        );
+      }
+
+      if (eyeGroupRef.current) {
+        eyeGroupRef.current.setAttribute(
+          'transform',
+          `translate(${cur.eyeX.toFixed(2)} ${cur.eyeY.toFixed(2)}) translate(60 33) scale(1 ${blinkScaleY.toFixed(2)}) translate(-60 -33)`
+        );
+      }
+
+      if (mouthWaveRef.current) {
+        const mouthScaleX = 0.85 + Math.sin(t * 11) * 0.2;
+        mouthWaveRef.current.setAttribute(
+          'transform',
+          `translate(60 40.5) scale(${mouthScaleX.toFixed(2)} 1) translate(-60 -40.5)`
+        );
+      }
+
+      rafId = window.requestAnimationFrame(animateRig);
+    };
+
+    rafId = window.requestAnimationFrame(animateRig);
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   return (
     <svg
       viewBox="0 0 120 120"
       fill="none"
-      className="maxi-2d-rig-svg h-full w-full overflow-visible drop-shadow-[2.5px_3.5px_0px_#091526]"
+      className="maxi-2d-rig-svg h-full w-full overflow-visible"
       aria-hidden="true"
     >
       {/* Ground Shadow */}
-      <motion.ellipse
+      <ellipse
+        ref={shadowRef}
         cx="60"
         cy="111"
         rx="26"
         ry="5"
         fill="#091526"
         opacity="0.32"
-        animate={{ scaleX: [1, 0.88, 1], opacity: [0.32, 0.22, 0.32] }}
-        transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       {/* ROOT / PELVIS BONE (60, 82) */}
-      <motion.g
-        style={{ transformOrigin: '60px 82px' }}
-        animate={{
-          y: activeMode === 'analyzing' ? [0, -4.5, 0] : [0, -2.5, 0],
-        }}
-        transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-      >
+      <g ref={pelvisRef}>
         {/* BONE: LEFT LEG (Hip Joint 48, 86) */}
-        <motion.g
-          style={{ transformOrigin: '48px 86px' }}
-          animate={{
-            rotate: activeMode === 'analyzing' ? [-10, 10, -10] : [-4, 4, -4],
-          }}
-          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <g ref={leftLegRef}>
           <path
             d="M48 85L45 101"
             stroke="#091526"
@@ -321,16 +545,10 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
             stroke="#091526"
             strokeWidth="2.8"
           />
-        </motion.g>
+        </g>
 
         {/* BONE: RIGHT LEG (Hip Joint 72, 86) */}
-        <motion.g
-          style={{ transformOrigin: '72px 86px' }}
-          animate={{
-            rotate: activeMode === 'analyzing' ? [10, -10, 10] : [4, -4, 4],
-          }}
-          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <g ref={rightLegRef}>
           <path
             d="M72 85L75 101"
             stroke="#091526"
@@ -347,20 +565,12 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
             stroke="#091526"
             strokeWidth="2.8"
           />
-        </motion.g>
+        </g>
 
         {/* BONE: SPINE / TORSO CHASSIS (Pivot 60, 76) */}
-        <motion.g
-          style={{ transformOrigin: '60px 76px' }}
-          animate={{ rotate: torsoRotate }}
-          transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-        >
+        <g ref={torsoRef}>
           {/* BONE: LEFT ARM 2-JOINT IK CHAIN (Shoulder 34, 58) */}
-          <motion.g
-            style={{ transformOrigin: '34px 58px' }}
-            animate={{ rotate: leftArmRotate }}
-            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <g ref={leftArmRef}>
             {/* Upper Left Arm */}
             <path
               d="M34 58L22 66"
@@ -371,11 +581,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
             <circle cx="34" cy="58" r="4" fill="#F5D78E" stroke="#091526" strokeWidth="2.2" />
 
             {/* Left Forearm + Hand (Elbow 22, 66) */}
-            <motion.g
-              style={{ transformOrigin: '22px 66px' }}
-              animate={{ rotate: leftForearmRotate }}
-              transition={{ duration: cycleDuration * 0.85, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <g ref={leftForearmRef}>
               <path
                 d="M22 66L13 58"
                 stroke="#091526"
@@ -398,15 +604,11 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
                 />
                 <circle cx="1.5" cy="3.5" r="2" fill="#FFFDF7" opacity="0.85" />
               </g>
-            </motion.g>
-          </motion.g>
+            </g>
+          </g>
 
           {/* BONE: RIGHT ARM 2-JOINT IK CHAIN (Shoulder 86, 58) */}
-          <motion.g
-            style={{ transformOrigin: '86px 58px' }}
-            animate={{ rotate: rightArmRotate }}
-            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <g ref={rightArmRef}>
             {/* Upper Right Arm */}
             <path
               d="M86 58L98 66"
@@ -417,11 +619,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
             <circle cx="86" cy="58" r="4" fill="#F5D78E" stroke="#091526" strokeWidth="2.2" />
 
             {/* Right Forearm + Hand (Elbow 98, 66) */}
-            <motion.g
-              style={{ transformOrigin: '98px 66px' }}
-              animate={{ rotate: rightForearmRotate }}
-              transition={{ duration: cycleDuration * 0.75, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <g ref={rightForearmRef}>
               <path
                 d="M98 66L107 57"
                 stroke="#091526"
@@ -444,8 +642,8 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
                 />
                 <path d="M-2 -14L0 -20L2.2 -14Z" fill="#E05A47" stroke="#091526" strokeWidth="1.8" />
               </g>
-            </motion.g>
-          </motion.g>
+            </g>
+          </g>
 
           {/* TORSO ARMOR SHELL (Poké-Core Body) */}
           <g>
@@ -487,23 +685,16 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
               strokeWidth="1.8"
             />
             <path
+              ref={coreStarRef}
               d="M60 63.8L61.1 66.9L64.2 68L61.1 69.1L60 72.2L58.9 69.1L55.8 68L58.9 66.9L60 63.8Z"
               fill={activeMode === 'analyzing' ? '#091526' : '#F5D78E'}
             />
           </g>
 
           {/* BONE: NECK & HEAD UNIT (Pivot 60, 48) */}
-          <motion.g
-            style={{ transformOrigin: '60px 48px' }}
-            animate={{ rotate: headRotate }}
-            transition={{ duration: cycleDuration, repeat: Infinity, ease: 'easeInOut' }}
-          >
+          <g ref={headRef}>
             {/* BONE: ANTENNA CREST (Pivot 60, 18) */}
-            <motion.g
-              style={{ transformOrigin: '60px 18px' }}
-              animate={{ rotate: antennaRotate }}
-              transition={{ duration: cycleDuration * 0.8, repeat: Infinity, ease: 'easeInOut' }}
-            >
+            <g ref={antennaRef}>
               <line x1="60" y1="18" x2="60" y2="7" stroke="#091526" strokeWidth="3.4" strokeLinecap="round" />
               <circle
                 cx="60"
@@ -513,7 +704,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
                 stroke="#091526"
                 strokeWidth="2.2"
               />
-            </motion.g>
+            </g>
 
             {/* Side Ear Comms */}
             <rect x="27" y="28" width="6" height="13" rx="3" fill="#F5D78E" stroke="#091526" strokeWidth="2.4" />
@@ -551,19 +742,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
             />
 
             {/* 2D EYE GAZE + BLINK RIG */}
-            <motion.g
-              animate={{
-                x: pupilX,
-                y: pupilY,
-                scaleY: [1, 1, 0.12, 1, 1],
-              }}
-              transition={{
-                scaleY: { duration: 3.8, repeat: Infinity, times: [0, 0.46, 0.5, 0.54, 1] },
-                x: { type: 'spring', stiffness: 260, damping: 22 },
-                y: { type: 'spring', stiffness: 260, damping: 22 },
-              }}
-              style={{ transformOrigin: '60px 33px' }}
-            >
+            <g ref={eyeGroupRef}>
               {/* Left Eye */}
               <circle
                 cx="49.5"
@@ -585,34 +764,32 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
               {/* Articulated Left & Right Eyebrow Bones */}
               <line
                 x1="44.5"
-                y1={activeMode === 'analyzing' ? '27.5' : '28.5'}
+                y1={activeMode === 'analyzing' || activeMode === 'inspect' ? '27.5' : '28.5'}
                 x2="54"
-                y2={activeMode === 'analyzing' ? '29.8' : '28'}
+                y2={activeMode === 'analyzing' || activeMode === 'inspect' ? '29.8' : '28'}
                 stroke="#FAF6EE"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
               <line
                 x1="75.5"
-                y1={activeMode === 'analyzing' ? '27.5' : '28.5'}
+                y1={activeMode === 'analyzing' || activeMode === 'inspect' ? '27.5' : '28.5'}
                 x2="66"
-                y2={activeMode === 'analyzing' ? '29.8' : '28'}
+                y2={activeMode === 'analyzing' || activeMode === 'inspect' ? '29.8' : '28'}
                 stroke="#FAF6EE"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
-            </motion.g>
+            </g>
 
             {/* Mouth / Phoneme Visor Wave */}
             {activeMode === 'analyzing' ? (
-              <motion.path
+              <path
+                ref={mouthWaveRef}
                 d="M53 40.5Q56.5 37.5 60 40.5T67 40.5"
                 stroke="#F5D78E"
                 strokeWidth="2.2"
                 strokeLinecap="round"
-                animate={{ scaleX: [0.85, 1.15, 0.85] }}
-                transition={{ duration: 0.55, repeat: Infinity }}
-                style={{ transformOrigin: '60px 40.5px' }}
               />
             ) : activeMode === 'scribe' ? (
               <circle cx="60" cy="40.5" r="2.3" fill="#38BDF8" />
@@ -624,7 +801,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
                 strokeLinecap="round"
               />
             )}
-          </motion.g>
+          </g>
 
           {/* OPTIONAL 2D SKELETAL RIG BONE & JOINT GIZMO OVERLAY */}
           {showBones && (
@@ -659,8 +836,8 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
               ))}
             </g>
           )}
-        </motion.g>
-      </motion.g>
+        </g>
+      </g>
     </svg>
   );
 };
@@ -725,6 +902,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [messages, setMessages] = useState<MaxiMessage[]>([]);
   const [rigPose, setRigPose] = useState<MaxiRigPose>('idle');
+  const [isFloatingHovered, setIsFloatingHovered] = useState(false);
   const [showRigBones, setShowRigBones] = useState(false);
   const [lookOffset, setLookOffset] = useState<{ x: number; y: number }>({
     x: 0,
@@ -732,11 +910,34 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
   });
 
   const constraintsRef = useRef<HTMLDivElement | null>(null);
+  const floatingWidgetRef = useRef<HTMLDivElement | null>(null);
   const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
   const wasDraggedRef = useRef(false);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isTyping = input.trim().length > 0;
+
+  // Global cursor gaze tracking so MAXI's 2D rig eyes & head follow the pointer anywhere on screen
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (isOpen) return;
+      const widgetEl = floatingWidgetRef.current;
+      if (widgetEl) {
+        const rect = widgetEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = (e.clientX - centerX) / Math.max(window.innerWidth * 0.35, 180);
+        const dy = (e.clientY - centerY) / Math.max(window.innerHeight * 0.35, 180);
+        setLookOffset({
+          x: Math.max(-3.2, Math.min(3.2, dx * 3.2)),
+          y: Math.max(-2.4, Math.min(2.4, dy * 2.4)),
+        });
+      }
+    };
+
+    window.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
+    return () => window.removeEventListener('pointermove', handleGlobalPointerMove);
+  }, [isOpen]);
 
   const handleDialogPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -1040,12 +1241,15 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
       >
         {/* Draggable Pokéball MAXI Widget */}
         <motion.div
+          ref={floatingWidgetRef}
           drag
           dragConstraints={constraintsRef}
           dragElastic={0.12}
           dragMomentum={false}
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.95 }}
+          onPointerEnter={() => setIsFloatingHovered(true)}
+          onPointerLeave={() => setIsFloatingHovered(false)}
           onPointerDown={handleBallPointerDown}
           onPointerUp={handleBallPointerUp}
           onClick={handleBallClick}
@@ -1098,7 +1302,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
               isOpen={isOpen}
               isLoading={isLoading}
               isTyping={isTyping}
-              pose={rigPose}
+              pose={isFloatingHovered && !isOpen ? 'wave' : rigPose}
               lookOffset={lookOffset}
               showBones={showRigBones}
             />
