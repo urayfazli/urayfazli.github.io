@@ -172,7 +172,7 @@ interface Maxi2DRigProps {
   isLoading: boolean;
   isTyping?: boolean;
   pose?: MaxiRigPose;
-  lookOffset?: { x: number; y: number };
+  lookOffsetRef?: React.MutableRefObject<{ x: number; y: number }>;
   showBones?: boolean;
 }
 
@@ -181,7 +181,7 @@ interface Maxi2DRigProps {
  * Driven by a dedicated 60fps requestAnimationFrame Forward/Inverse Kinematics (FK/IK) solver
  * applying native SVG user-space `transform="rotate(deg, pivotX, pivotY)"` attributes.
  * This guarantees 100% cross-browser & Vercel production animation fidelity without
- * WAAPI / CSS transform-box / prefers-reduced-motion freezes.
+ * WAAPI / CSS transform-box / prefers-reduced-motion freezes or scroll re-renders.
  *
  * Articulated Bone Hierarchy:
  *   Root/Pelvis (60,82)
@@ -194,12 +194,12 @@ interface Maxi2DRigProps {
  *           ├── Eyes & Brow Rig (2D gaze tracking + natural blink + brow tilt)
  *           └── Antenna Joint (60,18 -> 60,6)
  */
-const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
+const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = React.memo(({
   isOpen,
   isLoading,
   isTyping = false,
   pose = 'idle',
-  lookOffset = { x: 0, y: 0 },
+  lookOffsetRef,
   showBones = false,
 }) => {
   const activeMode: MaxiRigPose = isLoading
@@ -211,13 +211,9 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
   // Keep latest props in a ref for the 60fps animation loop without restarting rAF
   const rigPropsRef = useRef({
     activeMode,
-    lookX: Math.max(-3.5, Math.min(3.5, lookOffset.x)),
-    lookY: Math.max(-2.6, Math.min(2.6, lookOffset.y)),
   });
   rigPropsRef.current = {
     activeMode,
-    lookX: Math.max(-3.5, Math.min(3.5, lookOffset.x)),
-    lookY: Math.max(-2.6, Math.min(2.6, lookOffset.y)),
   };
 
   // Direct SVG DOM refs for 60fps native SVG attribute transforms
@@ -267,7 +263,10 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
       lastTime = now;
       const t = now / 1000 + phaseOffset;
 
-      const { activeMode: mode, lookX, lookY } = rigPropsRef.current;
+      const { activeMode: mode } = rigPropsRef.current;
+      const rawLook = lookOffsetRef?.current ?? { x: 0, y: 0 };
+      const lookX = Math.max(-3.5, Math.min(3.5, rawLook.x));
+      const lookY = Math.max(-2.6, Math.min(2.6, rawLook.y));
       const cur = currentBonesRef.current;
 
       // Target bone angles & translations computed from harmonic oscillators
@@ -840,7 +839,7 @@ const Maxi2DRigCharacter: React.FC<Maxi2DRigProps> = ({
       </g>
     </svg>
   );
-};
+});
 
 /**
  * Renders Maxi's 12-point structured markdown/text cleanly
@@ -891,7 +890,7 @@ const FormattedMaxiResponse: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
+export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.memo(({
   isId,
   isDay,
   onTriggerToast,
@@ -904,21 +903,73 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
   const [rigPose, setRigPose] = useState<MaxiRigPose>('idle');
   const [isFloatingHovered, setIsFloatingHovered] = useState(false);
   const [showRigBones, setShowRigBones] = useState(false);
-  const [lookOffset, setLookOffset] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
 
-  const constraintsRef = useRef<HTMLDivElement | null>(null);
+  // Ref-based 2D gaze offset (0 React re-renders on pointermove or scroll)
+  const lookOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Viewport-locked drag state (100% immune to window.scrollY & Framer Motion projection bugs)
   const floatingWidgetRef = useRef<HTMLDivElement | null>(null);
-  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
+  const dragOffsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragSessionRef = useRef<{
+    pointerId: number;
+    startClientX: number;
+    startClientY: number;
+    originX: number;
+    originY: number;
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    isDragging: boolean;
+  } | null>(null);
   const wasDraggedRef = useRef(false);
+
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const isTyping = input.trim().length > 0;
 
-  // Global cursor gaze tracking so MAXI's 2D rig eyes & head follow the pointer anywhere on screen
+  // Apply viewport-clamped translate3d directly to floating widget DOM node
+  const applyFloatingTransform = (x: number, y: number, scale = 1) => {
+    const el = floatingWidgetRef.current;
+    if (!el) return;
+    el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${scale})`;
+  };
+
+  // Keep dragged widget inside viewport on window resize / mobile URL bar collapse
   useEffect(() => {
+    const clampToViewport = () => {
+      const el = floatingWidgetRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const curX = dragOffsetRef.current.x;
+      const curY = dragOffsetRef.current.y;
+      const pad = 8;
+      let nextX = curX;
+      let nextY = curY;
+
+      if (rect.left < pad) nextX += pad - rect.left;
+      if (rect.right > window.innerWidth - pad) {
+        nextX -= rect.right - (window.innerWidth - pad);
+      }
+      if (rect.top < pad) nextY += pad - rect.top;
+      if (rect.bottom > window.innerHeight - pad) {
+        nextY -= rect.bottom - (window.innerHeight - pad);
+      }
+
+      if (nextX !== curX || nextY !== curY) {
+        dragOffsetRef.current = { x: nextX, y: nextY };
+        applyFloatingTransform(nextX, nextY, 1);
+      }
+    };
+
+    window.addEventListener('resize', clampToViewport, { passive: true });
+    return () => window.removeEventListener('resize', clampToViewport);
+  }, []);
+
+  // Global cursor & scroll gaze tracking (updates lookOffsetRef directly with 0 re-renders)
+  useEffect(() => {
+    let lastScrollY = window.scrollY || 0;
+
     const handleGlobalPointerMove = (e: PointerEvent) => {
       if (isOpen) return;
       const widgetEl = floatingWidgetRef.current;
@@ -928,32 +979,49 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
         const centerY = rect.top + rect.height / 2;
         const dx = (e.clientX - centerX) / Math.max(window.innerWidth * 0.35, 180);
         const dy = (e.clientY - centerY) / Math.max(window.innerHeight * 0.35, 180);
-        setLookOffset({
+        lookOffsetRef.current = {
           x: Math.max(-3.2, Math.min(3.2, dx * 3.2)),
           y: Math.max(-2.4, Math.min(2.4, dy * 2.4)),
-        });
+        };
+      }
+    };
+
+    const handleWindowScroll = () => {
+      if (isOpen) return;
+      const currentScrollY = window.scrollY || 0;
+      const deltaY = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+      if (Math.abs(deltaY) > 1) {
+        lookOffsetRef.current = {
+          x: lookOffsetRef.current.x * 0.9,
+          y: Math.max(-2.4, Math.min(2.4, (deltaY > 0 ? 1.6 : -1.6))),
+        };
       }
     };
 
     window.addEventListener('pointermove', handleGlobalPointerMove, { passive: true });
-    return () => window.removeEventListener('pointermove', handleGlobalPointerMove);
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('scroll', handleWindowScroll);
+    };
   }, [isOpen]);
 
   const handleDialogPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const normX = ((e.clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 6;
     const normY = ((e.clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 4.5;
-    setLookOffset({
+    lookOffsetRef.current = {
       x: Math.max(-3.2, Math.min(3.2, normX)),
       y: Math.max(-2.4, Math.min(2.4, normY)),
-    });
+    };
   };
 
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading, isOpen]);
+  }, [messages.length, isLoading, isOpen]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -965,20 +1033,76 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isOpen]);
 
-  const handleBallPointerDown = (e: React.PointerEvent) => {
-    pointerDownPosRef.current = { x: e.clientX, y: e.clientY };
+  const handleBallPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const el = floatingWidgetRef.current;
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const curX = dragOffsetRef.current.x;
+    const curY = dragOffsetRef.current.y;
+    const baseLeft = rect.left - curX;
+    const baseTop = rect.top - curY;
+    const pad = 8;
+
+    dragSessionRef.current = {
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      originX: curX,
+      originY: curY,
+      minX: pad - baseLeft,
+      maxX: window.innerWidth - pad - (baseLeft + rect.width),
+      minY: pad - baseTop,
+      maxY: window.innerHeight - pad - (baseTop + rect.height),
+      isDragging: false,
+    };
     wasDraggedRef.current = false;
   };
 
-  const handleBallPointerUp = (e: React.PointerEvent) => {
-    if (pointerDownPosRef.current) {
-      const dx = e.clientX - pointerDownPosRef.current.x;
-      const dy = e.clientY - pointerDownPosRef.current.y;
-      if (Math.hypot(dx, dy) > 6) {
-        wasDraggedRef.current = true;
+  const handleBallPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== e.pointerId) return;
+
+    const dx = e.clientX - session.startClientX;
+    const dy = e.clientY - session.startClientY;
+
+    if (!session.isDragging) {
+      if (Math.hypot(dx, dy) <= 6) return;
+      session.isDragging = true;
+      wasDraggedRef.current = true;
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Ignore if pointer capture unavailable
       }
     }
-    pointerDownPosRef.current = null;
+
+    const clampedX = Math.max(session.minX, Math.min(session.maxX, session.originX + dx));
+    const clampedY = Math.max(session.minY, Math.min(session.maxY, session.originY + dy));
+    dragOffsetRef.current = { x: clampedX, y: clampedY };
+    applyFloatingTransform(clampedX, clampedY, 1.04);
+  };
+
+  const handleBallPointerUpOrCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    const session = dragSessionRef.current;
+    if (!session || session.pointerId !== e.pointerId) return;
+
+    if (session.isDragging) {
+      try {
+        if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore release errors
+      }
+    }
+    dragSessionRef.current = null;
+    applyFloatingTransform(
+      dragOffsetRef.current.x,
+      dragOffsetRef.current.y,
+      isFloatingHovered ? 1.05 : 1
+    );
   };
 
   const handleBallClick = () => {
@@ -1234,80 +1358,80 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
 
   return (
     <>
-      {/* Full-viewport non-blocking drag boundary container */}
+      {/* Viewport-Fixed Draggable MAXI Companion (Zero scroll-offset drift on Vercel) */}
       <div
-        ref={constraintsRef}
-        className="pointer-events-none fixed inset-3 z-50 overflow-visible"
+        ref={floatingWidgetRef}
+        onPointerEnter={() => {
+          setIsFloatingHovered(true);
+          if (!dragSessionRef.current?.isDragging) {
+            applyFloatingTransform(dragOffsetRef.current.x, dragOffsetRef.current.y, 1.06);
+          }
+        }}
+        onPointerLeave={() => {
+          setIsFloatingHovered(false);
+          if (!dragSessionRef.current?.isDragging) {
+            applyFloatingTransform(dragOffsetRef.current.x, dragOffsetRef.current.y, 1);
+          }
+        }}
+        onPointerDown={handleBallPointerDown}
+        onPointerMove={handleBallPointerMove}
+        onPointerUp={handleBallPointerUpOrCancel}
+        onPointerCancel={handleBallPointerUpOrCancel}
+        onClick={handleBallClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen((prev) => !prev);
+          }
+        }}
+        aria-label={
+          isId
+            ? 'Buka atau geser Maxi — AI Critical Thinking Partner'
+            : 'Open or drag Maxi — AI Critical Thinking Partner'
+        }
+        title={
+          isId
+            ? 'Geser (Drag) ke mana saja • Klik untuk membuka MAXI (AI Critical Thinking Partner)'
+            : 'Drag anywhere • Click to open MAXI (AI Critical Thinking Partner)'
+        }
+        className="fixed right-3 bottom-20 z-50 flex cursor-grab flex-col items-center select-none touch-none will-change-transform active:cursor-grabbing sm:right-5 sm:bottom-24"
       >
-        {/* Draggable Pokéball MAXI Widget */}
-        <motion.div
-          ref={floatingWidgetRef}
-          drag
-          dragConstraints={constraintsRef}
-          dragElastic={0.12}
-          dragMomentum={false}
-          whileHover={{ scale: 1.06 }}
-          whileTap={{ scale: 0.95 }}
-          onPointerEnter={() => setIsFloatingHovered(true)}
-          onPointerLeave={() => setIsFloatingHovered(false)}
-          onPointerDown={handleBallPointerDown}
-          onPointerUp={handleBallPointerUp}
-          onClick={handleBallClick}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setIsOpen((prev) => !prev);
-            }
-          }}
-          aria-label={
-            isId
-              ? 'Buka atau geser Maxi — AI Critical Thinking Partner'
-              : 'Open or drag Maxi — AI Critical Thinking Partner'
-          }
-          title={
-            isId
-              ? 'Geser (Drag) ke mana saja • Klik untuk membuka MAXI (AI Critical Thinking Partner)'
-              : 'Drag anywhere • Click to open MAXI (AI Critical Thinking Partner)'
-          }
-          className="pointer-events-auto absolute right-1 bottom-20 flex cursor-grab flex-col items-center select-none active:cursor-grabbing sm:right-3 sm:bottom-24"
+        {/* Floating Status Callout Pill above 2D Rig Companion */}
+        <div
+          className={`mb-1 rounded-full border-[1.5px] border-[#091526] px-2.5 py-0.5 font-journal text-[8.5px] leading-none font-extrabold whitespace-nowrap shadow-[1.5px_2px_0px_#091526] transition-colors sm:text-[9.5px] ${
+            isOpen
+              ? 'maxi-header-light-text bg-[#E05A47] text-[#FFFDF7]'
+              : isDay
+                ? 'bg-[#F5D78E] text-[#091526]'
+                : 'bg-[#F5D78E] text-[#091526]'
+          }`}
         >
-          {/* Floating Status Callout Pill above 2D Rig Companion */}
-          <div
-            className={`mb-1 rounded-full border-[1.5px] border-[#091526] px-2.5 py-0.5 font-journal text-[8.5px] leading-none font-extrabold whitespace-nowrap shadow-[1.5px_2px_0px_#091526] transition-colors sm:text-[9.5px] ${
-              isOpen
-                ? 'maxi-header-light-text bg-[#E05A47] text-[#FFFDF7]'
-                : isDay
-                  ? 'bg-[#F5D78E] text-[#091526]'
-                  : 'bg-[#F5D78E] text-[#091526]'
-            }`}
-          >
-            {isLoading
-              ? isId
-                ? '⚡ Maxi Menganalisis...'
-                : '⚡ Maxi Analyzing...'
-              : 'MAXI • 2D AI'}
-          </div>
+          {isLoading
+            ? isId
+              ? '⚡ Maxi Menganalisis...'
+              : '⚡ Maxi Analyzing...'
+            : 'MAXI'}
+        </div>
 
-          {/* 2D Skeletal Rig Companion Container (No Card) */}
-          <div className="relative h-16 w-16 sm:h-20 sm:w-20">
-            {isLoading && (
-              <span
-                className="pointer-events-none absolute -inset-1 animate-ping rounded-full bg-[#F5D78E]/50"
-                aria-hidden="true"
-              />
-            )}
-            <Maxi2DRigCharacter
-              isOpen={isOpen}
-              isLoading={isLoading}
-              isTyping={isTyping}
-              pose={isFloatingHovered && !isOpen ? 'wave' : rigPose}
-              lookOffset={lookOffset}
-              showBones={showRigBones}
+        {/* 2D Skeletal Rig Companion Container (No Card) */}
+        <div className="relative h-16 w-16 sm:h-20 sm:w-20">
+          {isLoading && (
+            <span
+              className="pointer-events-none absolute -inset-1 animate-ping rounded-full bg-[#F5D78E]/50"
+              aria-hidden="true"
             />
-          </div>
-        </motion.div>
+          )}
+          <Maxi2DRigCharacter
+            isOpen={isOpen}
+            isLoading={isLoading}
+            isTyping={isTyping}
+            pose={isFloatingHovered && !isOpen ? 'wave' : rigPose}
+            lookOffsetRef={lookOffsetRef}
+            showBones={showRigBones}
+          />
+        </div>
       </div>
 
       {/* MAXI Critical Thinking Partner Modal / Drawer */}
@@ -1332,7 +1456,9 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
               exit={{ opacity: 0, y: 18, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 360, damping: 28 }}
               onPointerMove={handleDialogPointerMove}
-              onPointerLeave={() => setLookOffset({ x: 0, y: 0 })}
+              onPointerLeave={() => {
+                lookOffsetRef.current = { x: 0, y: 0 };
+              }}
               role="dialog"
               aria-modal="true"
               aria-labelledby="maxi-dialog-title"
@@ -1347,7 +1473,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                       isLoading={isLoading}
                       isTyping={isTyping}
                       pose={rigPose}
-                      lookOffset={lookOffset}
+                      lookOffsetRef={lookOffsetRef}
                       showBones={showRigBones}
                     />
                   </div>
@@ -1461,7 +1587,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
               {/* Conversation Body */}
               <div
                 ref={chatScrollRef}
-                className="flex-1 space-y-4 overflow-y-auto bg-[#F7EFE0] px-4 py-4 sm:px-6"
+                className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-[#F7EFE0] px-4 py-4 sm:px-6"
               >
                 {messages.length === 0 ? (
                   <div className="space-y-3.5">
@@ -1474,7 +1600,7 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
                             isLoading={isLoading}
                             isTyping={isTyping}
                             pose={rigPose}
-                            lookOffset={lookOffset}
+                            lookOffsetRef={lookOffsetRef}
                             showBones={showRigBones}
                           />
                         </div>
@@ -1664,4 +1790,4 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
       </AnimatePresence>
     </>
   );
-};
+});
