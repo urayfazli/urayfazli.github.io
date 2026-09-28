@@ -28,7 +28,7 @@ export const ANATOMICAL_PIVOTS = {
   ARM_RIGHT: { u: 0.625, v: 0.735 }, // Right shoulder seam joint
   STRING_LEFT: { u: 0.408, v: 0.79 }, // Left hoodie drawstring eyelet
   STRING_RIGHT: { u: 0.535, v: 0.79 }, // Right hoodie drawstring eyelet
-  HEAD: { u: 0.485, v: 0.685 }, // Bagian bawah kepala / Base of head (neck joint)
+  HEAD: { u: 0.485, v: 0.715 }, // Bagian bawah kepala / Base of head (neck joint below chin)
   HAIR_BACK: { u: 0.485, v: 0.26 }, // Akar rambut belakang
   FACE: { u: 0.485, v: 0.52 },
   EYE_LEFT: { u: 0.3375, v: 0.522 }, // Exact centroid of left pupil (x=306.5, y=531)

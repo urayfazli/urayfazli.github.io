@@ -99,6 +99,13 @@ export class AnimationController {
   private smoothedVisemeOpen = 0;
   private smoothedVisemeWidth = 1;
 
+  // Smooth phrase-level head motion state while speaking (prevents 12Hz phoneme jitter & 3.4s cutoff snaps)
+  private talkElapsed = 0;
+  private talkPopElapsed = 10;
+  private speechPauseTimer = 0;
+  private smoothedHeadTalkEnergy = 0;
+  private smoothedSyllableAccent = 0;
+
   constructor() {
     this.scheduleNextBlink();
   }
@@ -112,6 +119,9 @@ export class AnimationController {
     this.speechVisemeActive = active;
     this.targetVisemeOpen = active ? clamp(openAmount, 0, 1) : 0;
     this.targetVisemeWidth = active ? clamp(widthFactor, 0.85, 1.15) : 1;
+    if (active && openAmount > 0.14) {
+      this.speechPauseTimer = 0;
+    }
   }
 
   private scheduleNextBlink(): void {
@@ -152,7 +162,7 @@ export class AnimationController {
       case 'talk':
       case 'speak':
         targetState = CharacterAnimationState.TALK;
-        duration = 3.4;
+        duration = 12.0;
         break;
       case 'happy':
       case 'happy_bounce':
@@ -182,7 +192,7 @@ export class AnimationController {
         break;
       default:
         targetState = CharacterAnimationState.TALK;
-        duration = 3.4;
+        duration = 12.0;
         break;
     }
 
@@ -192,8 +202,16 @@ export class AnimationController {
       : STATE_PRIORITY[CharacterAnimationState.IDLE];
 
     if (incomingPriority >= currentPriority) {
+      if (targetState === CharacterAnimationState.TALK) {
+        // Trigger a gentle initial speaking nod without resetting continuous talkElapsed phase
+        this.talkPopElapsed = 0;
+        if (this.activeInteraction !== CharacterAnimationState.TALK) {
+          this.interactionElapsed = 0;
+        }
+      } else {
+        this.interactionElapsed = 0;
+      }
       this.activeInteraction = targetState;
-      this.interactionElapsed = 0;
       this.interactionDuration = duration;
     }
   }
@@ -263,25 +281,26 @@ export class AnimationController {
     const slowFloatWave = reducedMotion ? 0 : Math.cos(this.elapsedTime * omega * 0.5);
 
     const pxToWorld = planeHeight / 420;
-    let rootY = slowFloatWave * 1.2 * pxToWorld;
-    let bodyY = breathWave * 2.5 * pxToWorld;
-    let bodyScaleY = 1 + breathWave * 0.0055;
-    let hoodieRotZ = secondaryWave * 0.0035;
+    let rootY = slowFloatWave * 1.1 * pxToWorld;
+    let bodyY = breathWave * 2.2 * pxToWorld;
+    let bodyScaleY = 1 + breathWave * 0.005;
+    let hoodieRotZ = secondaryWave * 0.003;
 
     // Subtle idle breathing at the shoulders
     let armLeftX = 0;
-    let armLeftY = secondaryWave * 1.1 * pxToWorld;
-    let armLeftRotZ = -breathWave * 0.012;
+    let armLeftY = secondaryWave * 1.0 * pxToWorld;
+    let armLeftRotZ = -breathWave * 0.011;
 
     let armRightX = 0;
-    let armRightY = secondaryWave * 1.1 * pxToWorld;
-    let armRightRotZ = breathWave * 0.012;
+    let armRightY = secondaryWave * 1.0 * pxToWorld;
+    let armRightRotZ = breathWave * 0.011;
 
-    let stringLeftRotZ = Math.sin(this.elapsedTime * omega - 0.9) * 0.018;
-    let stringRightRotZ = Math.sin(this.elapsedTime * omega - 1.1) * -0.016;
+    let stringLeftRotZ = Math.sin(this.elapsedTime * omega - 0.9) * 0.016;
+    let stringRightRotZ = Math.sin(this.elapsedTime * omega - 1.1) * -0.015;
     let headX = 0;
-    let headY = secondaryWave * 1.2 * pxToWorld;
-    let headRotZ = Math.sin(this.elapsedTime * omega * 0.5 - 0.4) * 0.012;
+    // Couple headY to bodyY so the neck never stretches or compresses during breathing
+    let headY = bodyY + secondaryWave * 0.45 * pxToWorld;
+    let headRotZ = Math.sin(this.elapsedTime * omega * 0.5 - 0.4) * 0.011;
     let happyBounceScale = 1;
 
     // 2D Rig Mouth defaults
@@ -292,16 +311,51 @@ export class AnimationController {
     let mouthY = 0;
     let mouthRotZ = 0;
 
-    // Smoothly track live text-bubble phoneme/viseme targets
+    // Smoothly track live text-bubble phoneme/viseme targets for crisp lip-sync
     const targetOpen =
       isBubbleActive && this.speechVisemeActive ? this.targetVisemeOpen : 0;
     const targetWidth =
       isBubbleActive && this.speechVisemeActive ? this.targetVisemeWidth : 1;
-    this.smoothedVisemeOpen = damp(this.smoothedVisemeOpen, targetOpen, 22, dt);
+    this.smoothedVisemeOpen = damp(this.smoothedVisemeOpen, targetOpen, 24, dt);
     this.smoothedVisemeWidth = damp(
       this.smoothedVisemeWidth,
       targetWidth,
       20,
+      dt
+    );
+
+    // Track phrase-level speaking activity for the head (immune to 12Hz consonant/vowel chatter)
+    this.talkElapsed += dt;
+    this.talkPopElapsed = Math.min(10, this.talkPopElapsed + dt);
+    if (isBubbleActive && this.speechVisemeActive && this.targetVisemeOpen <= 0.14) {
+      this.speechPauseTimer += dt;
+    } else if (!isBubbleActive || !this.speechVisemeActive) {
+      this.speechPauseTimer = 1;
+    }
+
+    const activelyVocalizing =
+      isBubbleActive &&
+      (this.hasSpeechViseme
+        ? this.speechVisemeActive
+        : this.activeInteraction === CharacterAnimationState.TALK);
+
+    // During normal word flow (speechPauseTimer < 0.18s), keep head energy steady at 1.0;
+    // during punctuation pauses (',' '.' '!' '?'), dip gently to 0.35; when finished, damp to 0.
+    const rawTargetHeadEnergy = activelyVocalizing
+      ? this.hasSpeechViseme && this.speechPauseTimer >= 0.18
+        ? 0.35
+        : 1.0
+      : 0;
+    this.smoothedHeadTalkEnergy = damp(
+      this.smoothedHeadTalkEnergy,
+      reducedMotion ? 0 : rawTargetHeadEnergy,
+      5.5,
+      dt
+    );
+    this.smoothedSyllableAccent = damp(
+      this.smoothedSyllableAccent,
+      reducedMotion ? 0 : targetOpen,
+      9.5,
       dt
     );
 
@@ -312,121 +366,55 @@ export class AnimationController {
       this.smoothedVisemeOpen = 0;
     }
 
-    // 3. Evaluate Active Interaction Animation (talk, head_tilt, happy)
-    if (this.activeInteraction) {
+    // 3. Evaluate Active Non-Talk Interaction Animations (head_tilt, happy, look_*)
+    if (
+      this.activeInteraction &&
+      this.activeInteraction !== CharacterAnimationState.TALK
+    ) {
       this.interactionElapsed += dt;
       const p = clamp(this.interactionElapsed / this.interactionDuration, 0, 1);
       const envelope = Math.sin(p * Math.PI);
 
       switch (this.activeInteraction) {
-        case CharacterAnimationState.TALK: {
-          isTalking = true;
-          const t = this.interactionElapsed;
-
-          // Initial excited pop when the bubble appears
-          const startPop = p < 0.16 ? Math.sin((p / 0.16) * Math.PI) : 0;
-
-          if (this.hasSpeechViseme) {
-            mouthOpenAmount = this.smoothedVisemeOpen;
-          } else {
-            const speechWindow =
-              smoothstep01(0.02, 0.08, p) * (1 - smoothstep01(0.86, 0.96, p));
-            const phraseGate = Math.sin(t * 3.8) > -0.58 ? 1 : 0;
-            const beatWave =
-              Math.sin(t * 26.0) * 0.65 + Math.sin(t * 14.5) * 0.35;
-            mouthOpenAmount =
-              phraseGate > 0
-                ? clamp((beatWave + 0.26) * 0.88 * speechWindow, 0, 1)
-                : 0;
-          }
-
-          const isOpenSyllable = mouthOpenAmount > 0.24;
-          const widthMod = this.hasSpeechViseme ? this.smoothedVisemeWidth : 1;
-          mouthScaleX =
-            widthMod *
-            (isOpenSyllable
-              ? 0.94 + mouthOpenAmount * 0.14
-              : 0.98 + mouthOpenAmount * 0.06);
-          mouthScaleY = isOpenSyllable
-            ? 0.66 + mouthOpenAmount * 0.48
-            : 0.96 + mouthOpenAmount * 0.12;
-          mouthY = -mouthOpenAmount * 1.25 * pxToWorld;
-          mouthRotZ = Math.sin(t * 7.2) * 0.024 * mouthOpenAmount;
-
-          // Expressive conversational head nods & tilts synced to spoken syllable intensity
-          const vocalEnergy = this.hasSpeechViseme
-            ? clamp(mouthOpenAmount * 1.15, 0, 1)
-            : 1;
-          const nodWave = Math.abs(Math.sin(t * 5.6)) * vocalEnergy;
-          const tiltWave =
-            (Math.sin(t * 3.2) * 0.038 + Math.cos(t * 1.8) * 0.022) *
-            envelope *
-            (0.35 + vocalEnergy * 0.65);
-
-          rootY += (startPop * 4.2 + nodWave * 1.6) * pxToWorld;
-          bodyY += (startPop * 2.2 + nodWave * 1.3) * pxToWorld;
-          bodyScaleY += startPop * 0.01 + nodWave * 0.005;
-          happyBounceScale = 1 + startPop * 0.009;
-
-          headRotZ += tiltWave;
-          headX += Math.sin(t * 3.2) * 1.8 * pxToWorld * envelope * vocalEnergy;
-          headY += (startPop * 2.8 + nodWave * 2.2) * pxToWorld;
-
-          hoodieRotZ += Math.sin(t * 3.2) * 0.009 * envelope * vocalEnergy;
-          armRightRotZ += (startPop * 0.03 + nodWave * 0.02) * envelope;
-          armLeftRotZ -= (startPop * 0.03 + nodWave * 0.02) * envelope;
-
-          // Secondary pendulum sway on hoodie drawstrings while speaking
-          stringLeftRotZ += Math.sin(t * 6.0) * 0.03 * envelope * vocalEnergy;
-          stringRightRotZ -= Math.sin(t * 6.0) * 0.03 * envelope * vocalEnergy;
-
-          // Expressive conversational blinks + lively eye engagement
-          if ((p > 0.14 && p < 0.22) || (p > 0.56 && p < 0.64)) {
-            const bp = p < 0.3 ? (p - 0.14) / 0.08 : (p - 0.56) / 0.08;
-            eyeScaleY = Math.min(eyeScaleY, 1 - Math.sin(bp * Math.PI) * 0.86);
-          } else {
-            eyeScaleY = Math.min(eyeScaleY, 1 - mouthOpenAmount * 0.06);
-          }
-          break;
-        }
         case CharacterAnimationState.HEAD_TILT: {
           const tiltCurve = easeOutBack(Math.sin(p * Math.PI), 1.15);
-          headRotZ += 0.082 * tiltCurve;
-          headX += -2.6 * pxToWorld * tiltCurve;
-          headY += 1.5 * pxToWorld * tiltCurve;
-          armRightRotZ += 0.035 * tiltCurve;
-          armLeftRotZ -= 0.035 * tiltCurve;
+          headRotZ += 0.065 * tiltCurve;
+          headX += -1.2 * pxToWorld * tiltCurve;
+          headY += 0.8 * pxToWorld * tiltCurve;
+          armRightRotZ += 0.028 * tiltCurve;
+          armLeftRotZ -= 0.028 * tiltCurve;
           break;
         }
         case CharacterAnimationState.HAPPY: {
           const bounce = Math.abs(Math.sin(p * Math.PI * 2));
-          rootY += bounce * 5.5 * pxToWorld * envelope;
-          bodyScaleY += bounce * 0.014 * envelope;
-          happyBounceScale = 1 + bounce * 0.012 * envelope;
-          headRotZ += Math.sin(p * Math.PI * 2) * 0.032 * envelope;
-          armRightY += bounce * 2.8 * pxToWorld * envelope;
-          armLeftY += bounce * 2.8 * pxToWorld * envelope;
-          armRightRotZ += bounce * 0.045 * envelope;
-          armLeftRotZ -= bounce * 0.045 * envelope;
+          const bounceOffset = bounce * 3.8 * pxToWorld * envelope;
+          rootY += bounceOffset;
+          bodyScaleY += bounce * 0.011 * envelope;
+          happyBounceScale = 1 + bounce * 0.01 * envelope;
+          headRotZ += Math.sin(p * Math.PI * 2) * 0.026 * envelope;
+          armRightY += bounce * 2.2 * pxToWorld * envelope;
+          armLeftY += bounce * 2.2 * pxToWorld * envelope;
+          armRightRotZ += bounce * 0.038 * envelope;
+          armLeftRotZ -= bounce * 0.038 * envelope;
           eyeScaleY = Math.min(eyeScaleY, 1 - envelope * 0.78);
           break;
         }
         case CharacterAnimationState.LOOK_LEFT: {
-          headRotZ += 0.06 * envelope;
-          headX -= 3.2 * pxToWorld * envelope;
+          headRotZ += 0.05 * envelope;
+          headX -= 1.5 * pxToWorld * envelope;
           break;
         }
         case CharacterAnimationState.LOOK_RIGHT: {
-          headRotZ -= 0.06 * envelope;
-          headX += 3.2 * pxToWorld * envelope;
+          headRotZ -= 0.05 * envelope;
+          headX += 1.5 * pxToWorld * envelope;
           break;
         }
         case CharacterAnimationState.LOOK_UP: {
-          headY += 3.5 * pxToWorld * envelope;
+          headY += 2.2 * pxToWorld * envelope;
           break;
         }
         case CharacterAnimationState.LOOK_DOWN: {
-          headY -= 3.5 * pxToWorld * envelope;
+          headY -= 2.2 * pxToWorld * envelope;
           break;
         }
         default:
@@ -438,17 +426,26 @@ export class AnimationController {
       }
     }
 
-    // 3b. Mouth Animation (ONLY active when speech bubble is visible, driven by live text visemes)
-    if (isBubbleActive && !isTalking) {
-      isTalking = true;
-      const t = this.elapsedTime;
-      if (this.hasSpeechViseme) {
-        mouthOpenAmount = this.smoothedVisemeOpen;
-      } else {
-        const phraseGate = Math.sin(t * 3.6) > -0.55 ? 1 : 0;
-        const beatWave = Math.sin(t * 26.0) * 0.65 + Math.sin(t * 14.5) * 0.35;
-        mouthOpenAmount =
-          phraseGate > 0 ? clamp((beatWave + 0.25) * 0.86, 0, 1) : 0;
+    // 3b. Unified Continuous Speaking Animation (Active whenever speech bubble is open or talking)
+    if (
+      isBubbleActive ||
+      this.activeInteraction === CharacterAnimationState.TALK ||
+      this.smoothedHeadTalkEnergy > 0.005
+    ) {
+      const t = this.talkElapsed;
+
+      if (isBubbleActive) {
+        if (this.hasSpeechViseme) {
+          mouthOpenAmount = this.smoothedVisemeOpen;
+          isTalking = this.speechVisemeActive || mouthOpenAmount > 0.02;
+        } else {
+          const phraseGate = Math.sin(t * 3.6) > -0.55 ? 1 : 0;
+          const beatWave =
+            Math.sin(t * 24.0) * 0.65 + Math.sin(t * 13.5) * 0.35;
+          mouthOpenAmount =
+            phraseGate > 0 ? clamp((beatWave + 0.25) * 0.86, 0, 1) : 0;
+          isTalking = true;
+        }
       }
 
       const isOpenSyllable = mouthOpenAmount > 0.24;
@@ -462,22 +459,60 @@ export class AnimationController {
         ? 0.66 + mouthOpenAmount * 0.48
         : 0.96 + mouthOpenAmount * 0.12;
       mouthY = -mouthOpenAmount * 1.2 * pxToWorld;
-      mouthRotZ = Math.sin(t * 6.4) * 0.024 * mouthOpenAmount;
+      mouthRotZ = Math.sin(t * 6.2) * 0.018 * mouthOpenAmount;
 
-      // Subtle conversational nod only while actively vocalizing syllables
-      const vocalEnergy = clamp(mouthOpenAmount * 1.15, 0, 1);
-      const nodWave = Math.abs(Math.sin(t * 4.8)) * vocalEnergy;
-      headRotZ += Math.sin(t * 2.8) * 0.022 * vocalEnergy;
-      headY += nodWave * 1.6 * pxToWorld;
+      // Soft initial greeting pop over the first 0.42s when a bubble opens
+      const popProgress = clamp(this.talkPopElapsed / 0.42, 0, 1);
+      const startPop =
+        popProgress < 1 && !reducedMotion ? Math.sin(popProgress * Math.PI) : 0;
+
+      const talkEnergy = this.smoothedHeadTalkEnergy;
+      const syllableNod = this.smoothedSyllableAccent;
+
+      // Smooth, natural phrase-cadence head tilt around the neck joint (~1.9 deg max, zero jitter)
+      const talkTiltWave =
+        (Math.sin(t * 2.15) * 0.022 + Math.cos(t * 1.25) * 0.011) * talkEnergy +
+        startPop * 0.014;
+
+      // Gentle zero-centered rhythmic head nod coupled with torso so the neck never stretches
+      const rhythmNod = Math.sin(t * 3.6) * talkEnergy;
+      const bodyTalkLift = (startPop * 1.4 + Math.abs(rhythmNod) * 0.55) * pxToWorld;
+
+      rootY += startPop * 1.2 * pxToWorld;
+      bodyY += bodyTalkLift;
+      bodyScaleY += startPop * 0.004 + Math.abs(rhythmNod) * 0.0025;
+      happyBounceScale = 1 + startPop * 0.004;
+
+      headRotZ += talkTiltWave;
+      // Keep neck pivot horizontally aligned with torso; rotation around neck pivot naturally arcs the head!
+      headX += Math.sin(t * 2.15) * 0.35 * pxToWorld * talkEnergy;
+      // Head rides smoothly on bodyY + gentle conversational nod + tiny downward jaw accent on vowels
+      headY =
+        bodyY +
+        secondaryWave * 0.4 * pxToWorld +
+        (rhythmNod * 0.65 - syllableNod * 0.35 + startPop * 0.5) * pxToWorld;
+
+      hoodieRotZ += Math.sin(t * 2.15) * 0.005 * talkEnergy;
+      armRightRotZ += (startPop * 0.018 + Math.abs(rhythmNod) * 0.012) * talkEnergy;
+      armLeftRotZ -= (startPop * 0.018 + Math.abs(rhythmNod) * 0.012) * talkEnergy;
+
+      // Gentle pendulum sway on hoodie drawstrings while speaking
+      stringLeftRotZ += Math.sin(t * 4.2) * 0.018 * talkEnergy;
+      stringRightRotZ -= Math.sin(t * 4.2) * 0.018 * talkEnergy;
+
+      if (!isBubbleActive && this.smoothedHeadTalkEnergy <= 0.01) {
+        this.activeInteraction = null;
+      }
     }
 
-    // 3c. Gentle Cozy Backsound Head/Body Groove (Mouth stays hidden/inactive unless speech bubble is open)
-    if (isCozyMode) {
+    // 3c. Gentle Cozy Backsound Head/Body Groove (Coordinated headY & bodyY so neck stays intact)
+    if (isCozyMode && !reducedMotion) {
       const t = this.elapsedTime;
-      const grooveBeat = Math.sin(t * 3.2);
-      headRotZ += grooveBeat * 0.018;
-      headY += Math.abs(grooveBeat) * 1.2 * pxToWorld;
-      bodyY += Math.abs(grooveBeat) * 0.8 * pxToWorld;
+      const grooveBeat = Math.sin(t * 3.0);
+      const grooveLift = Math.abs(grooveBeat) * 0.9 * pxToWorld;
+      headRotZ += grooveBeat * 0.016;
+      bodyY += grooveLift;
+      headY += grooveLift + Math.cos(t * 3.0) * 0.35 * pxToWorld;
     }
 
     // Slightly widen X as Y closes so closed eyes form a crisp horizontal anime eyelid line

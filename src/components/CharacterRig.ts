@@ -136,6 +136,11 @@ export class CharacterRig {
   private hoverBlend = 0;
   private lastTouchTime = 0;
 
+  // Smoothed HEAD bone state to prevent any frame discontinuities on state transitions
+  private smoothedHeadX = 0;
+  private smoothedHeadY = 0;
+  private smoothedHeadRotZ = 0;
+
   // Glasses 30-60ms lag state (Section 10)
   private glassesLagX = 0;
   private glassesLagY = 0;
@@ -668,49 +673,44 @@ export class CharacterRig {
       const u = x0 / W + 0.5;
       const v = 0.5 - y0 / H;
 
-      // Smooth Head vs Body transition across neck & collar (v = 0.685 .. 0.755) so mouth (v = 0.659) has 100% wHead
-      const wHead = 1 - smoothstep(0.685, 0.755, v);
+      // Smooth Head vs Body transition below the chin/jawline so the mouth (v = 0.659) and chin (v <= 0.72) have 100% rigid wHead
+      const chinDistU = (u - 0.485) / 0.18;
+      const chinCurveOffset = Math.max(0, 1 - chinDistU * chinDistU) * 0.018;
+      const neckStartV = 0.708 + chinCurveOffset;
+      const neckEndV = 0.768 + chinCurveOffset * 0.5;
+      const wHead = 1 - smoothstep(neckStartV, neckEndV, v);
       const wBody = 1 - wHead;
 
       // Subtle left & right shoulder weights integrated into the hoodie body
-      const armBandV = smoothstep(0.70, 0.77, v);
+      const armBandV = smoothstep(0.71, 0.775, v);
       const wArmLeft = clamp((1 - smoothstep(0.24, 0.345, u)) * armBandV, 0, 1);
       const wArmRight = clamp(smoothstep(0.605, 0.71, u) * armBandV, 0, 1);
 
       // Anchor bottom hem so the character stays flush on the horizon line
       const wBottomAnchor = smoothstep(0.92, 1.0, v);
 
-      // Protect the glasses, eye, cheek & mouth region (u: 0.22..0.75, v: 0.34..0.70) from hair/cable warping
-      const inFaceCoreU = 1 - smoothstep(0.22, 0.12, u) - smoothstep(0.74, 0.84, u);
-      const inFaceCoreV = smoothstep(0.32, 0.41, v) * (1 - smoothstep(0.66, 0.71, v));
+      // Protect the entire face, glasses, eye, cheek, mouth & forehead cranium (u: 0.20..0.77, v: 0.25..0.72) from secondary hair/cable warping
+      const inFaceCoreU = 1 - smoothstep(0.20, 0.11, u) - smoothstep(0.76, 0.85, u);
+      const inFaceCoreV = smoothstep(0.23, 0.34, v) * (1 - smoothstep(0.69, 0.74, v));
       const faceRigidityMask = clamp(inFaceCoreU * inFaceCoreV, 0, 1);
 
-      // Front & top hair crown spring weight (v < 0.39)
-      const topHairBand = 1 - smoothstep(0.24, 0.39, v);
-      const wHairFront = clamp(topHairBand * (1 - faceRigidityMask), 0, 1);
+      // Gentle outer hair crown spring weight only at the top hair tips (v < 0.27)
+      const topHairBand = 1 - smoothstep(0.14, 0.27, v);
+      const wHairFront = clamp(topHairBand * 0.45 * (1 - faceRigidityMask), 0, 0.45);
 
-      // Outer side hair spikes & back hair volume
+      // Outer side hair spikes & top crown tip (unified direction with wHairFront so the head never shears)
       const sideSpikeMask =
-        (1 - smoothstep(0.12, 0.24, u) + smoothstep(0.73, 0.85, u)) *
-        (1 - smoothstep(0.42, 0.54, v));
-      const topCrownTip = 1 - smoothstep(0.04, 0.16, v);
+        (1 - smoothstep(0.11, 0.21, u) + smoothstep(0.76, 0.86, u)) *
+        (1 - smoothstep(0.36, 0.48, v));
+      const topCrownTip = 1 - smoothstep(0.04, 0.15, v);
       const wHairBack = clamp(
-        (sideSpikeMask * 0.85 + topCrownTip * 0.65) * (1 - faceRigidityMask),
+        (sideSpikeMask * 0.45 + topCrownTip * 0.35) * (1 - faceRigidityMask),
         0,
-        1
+        0.45
       );
 
-      // Subtle glasses lag weight outside the eye pupil sockets
-      const dLeftPupil = Math.hypot(u - 0.3375, v - 0.522);
-      const dRightPupil = Math.hypot(u - 0.6024, v - 0.5118);
-      const pupilProtection =
-        smoothstep(0.045, 0.088, dLeftPupil) * smoothstep(0.045, 0.088, dRightPupil);
-      const dLeftLens = Math.hypot(u - 0.32, v - 0.505);
-      const dRightLens = Math.hypot(u - 0.6, v - 0.505);
-      const glassesRegion =
-        Math.exp(-(dLeftLens * dLeftLens) / 0.012) +
-        Math.exp(-(dRightLens * dRightLens) / 0.012);
-      const wGlasses = clamp(glassesRegion * 0.35 * pupilProtection, 0, 0.35);
+      // Keep drawn glasses frames 100% rigid with the head cranium so lenses never warp during speech
+      const wGlasses = 0;
 
       // Left & Right Earphone Cable secondary sway weights outside the jawline (u ~ 0.215 and u ~ 0.765)
       const cableBandV = smoothstep(0.58, 0.66, v) * (1 - smoothstep(0.8, 0.9, v));
@@ -1079,53 +1079,75 @@ export class CharacterRig {
     );
 
     const pxToWorld = this.planeHeight / 420;
-    const hoverBoost = 1 + this.hoverBlend * 0.2;
+    const hoverBoost = 1 + this.hoverBlend * 0.15;
+    // Soften cursor head-tracking pull while actively speaking so conversational head nods take center stage cleanly
+    const talkTrackScale = pose.isTalking ? 0.55 : 1.0;
 
-    // Section 6: Head Tracking (Max head rotation ±5.5 degrees -> well within ±5-8 deg)
-    const maxHeadRotRad = THREE.MathUtils.degToRad(5.2);
+    // Section 6: Head Tracking around anatomical neck pivot (rotation naturally arcs the face without shearing the neck)
+    const maxHeadRotRad = THREE.MathUtils.degToRad(4.4);
     const trackHeadRotZ =
-      -mx * maxHeadRotRad * hoverBoost + this.hoverBlend * 0.018;
-    const trackHeadX = mx * 4.5 * pxToWorld * (1 + LAYER_DEPTH.FACE);
-    const trackHeadY = my * 3.4 * pxToWorld * (1 + LAYER_DEPTH.FACE);
+      (-mx * maxHeadRotRad * hoverBoost + this.hoverBlend * 0.012) *
+      talkTrackScale;
+    const trackHeadX = mx * 1.4 * pxToWorld * talkTrackScale;
+    const trackHeadY = my * 1.3 * pxToWorld * talkTrackScale;
 
-    const totalHeadX = pose.headX + trackHeadX;
-    const totalHeadY = pose.headY + trackHeadY;
-    const totalHeadRotZ = clamp(
+    const targetHeadX = pose.headX + trackHeadX;
+    const targetHeadY = pose.headY + trackHeadY;
+    const targetHeadRotZ = clamp(
       pose.headRotZ + trackHeadRotZ,
-      -THREE.MathUtils.degToRad(7.5),
-      THREE.MathUtils.degToRad(7.5)
+      -THREE.MathUtils.degToRad(6.2),
+      THREE.MathUtils.degToRad(6.2)
     );
 
-    // Section 6: Body Counter-Movement & Depth Parallax (depth = 0.05)
-    const bodyCounterX = -mx * 1.4 * pxToWorld;
-    const bodyCounterRotZ = mx * 0.009;
+    if (this.reducedMotion) {
+      this.smoothedHeadX = targetHeadX;
+      this.smoothedHeadY = targetHeadY;
+      this.smoothedHeadRotZ = targetHeadRotZ;
+    } else {
+      this.smoothedHeadX = damp(this.smoothedHeadX, targetHeadX, 16, delta);
+      this.smoothedHeadY = damp(this.smoothedHeadY, targetHeadY, 16, delta);
+      this.smoothedHeadRotZ = damp(
+        this.smoothedHeadRotZ,
+        targetHeadRotZ,
+        16,
+        delta
+      );
+    }
 
-    // Section 9: Hair Secondary Motion (Spring-like interpolation)
+    const totalHeadX = this.smoothedHeadX;
+    const totalHeadY = this.smoothedHeadY;
+    const totalHeadRotZ = this.smoothedHeadRotZ;
+
+    // Section 6: Subtle Body Parallax Follow (aligned with neck so the collar seam never shears)
+    const bodyCounterX = mx * 0.65 * pxToWorld * talkTrackScale;
+    const bodyCounterRotZ = -mx * 0.004 * talkTrackScale;
+
+    // Section 9: Unified Hair Secondary Motion (coherent direction so front & back hair tips never shear against each other)
     const hairBackX = this.reducedMotion
       ? 0
       : stepSpring(
           this.hairBackSpringX,
-          -mx * 2.8 * pxToWorld * hoverBoost,
+          mx * 1.1 * pxToWorld * hoverBoost,
           95,
-          11,
+          12,
           delta
         );
     const hairBackY = this.reducedMotion
       ? 0
       : stepSpring(
           this.hairBackSpringY,
-          -my * 2.0 * pxToWorld,
+          my * 0.8 * pxToWorld,
           95,
-          11,
+          12,
           delta
         );
     const hairBackRot = this.reducedMotion
       ? 0
       : stepSpring(
           this.hairBackSpringRot,
-          -totalHeadRotZ * 0.22,
-          85,
-          10,
+          totalHeadRotZ * 0.06,
+          90,
+          12,
           delta
         );
 
@@ -1133,51 +1155,51 @@ export class CharacterRig {
       ? 0
       : stepSpring(
           this.hairFrontSpringX,
-          mx * 3.2 * pxToWorld * hoverBoost,
-          135,
-          11,
+          mx * 1.3 * pxToWorld * hoverBoost,
+          120,
+          12,
           delta
         );
     const hairFrontY = this.reducedMotion
       ? 0
       : stepSpring(
           this.hairFrontSpringY,
-          my * 2.2 * pxToWorld * hoverBoost,
-          135,
-          11,
+          my * 0.9 * pxToWorld * hoverBoost,
+          120,
+          12,
           delta
         );
     const hairFrontRot = this.reducedMotion
       ? 0
       : stepSpring(
           this.hairFrontSpringRot,
-          totalHeadRotZ * 0.26 * hoverBoost,
-          130,
-          10.5,
+          totalHeadRotZ * 0.075,
+          115,
+          12,
           delta
         );
 
-    // Section 10: Glasses follow HEAD with 30-60ms natural delay (lambda = 22 => ~45ms time constant)
-    const glassesTargetX = mx * 2.2 * pxToWorld;
-    const glassesTargetY = my * 1.8 * pxToWorld;
-    const glassesTargetRotZ = totalHeadRotZ * 0.14;
+    // Section 10: Glasses follow HEAD cleanly
+    const glassesTargetX = mx * 0.6 * pxToWorld;
+    const glassesTargetY = my * 0.5 * pxToWorld;
+    const glassesTargetRotZ = totalHeadRotZ * 0.04;
 
     this.glassesLagX = damp(this.glassesLagX, glassesTargetX, 22, delta);
     this.glassesLagY = damp(this.glassesLagY, glassesTargetY, 22, delta);
     this.glassesLagRotZ = damp(this.glassesLagRotZ, glassesTargetRotZ, 22, delta);
 
     // Section 11: Earphone & Cable Secondary Movement
-    const cableTargetRot = -totalHeadRotZ * 0.32 - mx * 0.02;
+    const cableTargetRot = -totalHeadRotZ * 0.18 - mx * 0.012;
     const cableLeftRot = this.reducedMotion
       ? 0
-      : stepSpring(this.cableLeftSpringRot, cableTargetRot, 90, 10, delta);
+      : stepSpring(this.cableLeftSpringRot, cableTargetRot, 90, 11, delta);
     const cableRightRot = this.reducedMotion
       ? 0
-      : stepSpring(this.cableRightSpringRot, cableTargetRot * 0.92, 85, 10, delta);
+      : stepSpring(this.cableRightSpringRot, cableTargetRot * 0.92, 85, 11, delta);
 
     // Section 6 & 13: Eye Cursor Tracking & Blink Scale (clamped safely inside glasses lenses)
-    const eyeTrackX = clamp(mx * (3.8 + this.hoverBlend * 1.2), -5.0, 5.0) * pxToWorld;
-    const eyeTrackY = clamp(my * (2.6 + this.hoverBlend * 0.8), -3.6, 3.6) * pxToWorld;
+    const eyeTrackX = clamp(mx * (3.6 + this.hoverBlend * 1.0), -4.8, 4.8) * pxToWorld;
+    const eyeTrackY = clamp(my * (2.4 + this.hoverBlend * 0.7), -3.4, 3.4) * pxToWorld;
 
     // Update all hierarchical RigBones via animatePart()
     animatePart(this.parts.ROOT, {
@@ -1230,8 +1252,8 @@ export class CharacterRig {
     });
 
     animatePart(this.parts.FACE, {
-      x: mx * 0.9 * pxToWorld,
-      y: my * 0.7 * pxToWorld,
+      x: 0,
+      y: 0,
     });
 
     // Crossfade Cozy closed-eyes expression when Cozy ASMR soundscape is playing
