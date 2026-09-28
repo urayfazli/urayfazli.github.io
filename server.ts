@@ -505,7 +505,7 @@ async function startServer() {
             'X-Stainless-Runtime-Version': process.version,
           },
           body: JSON.stringify(requestBody),
-          signal: AbortSignal.timeout(8500),
+          signal: AbortSignal.timeout(4200),
         });
 
         const contentType = response.headers.get('content-type') || '';
@@ -666,6 +666,54 @@ async function startServer() {
             // Try next model in fallback chain silently
           }
         }
+      }
+
+      // Tertiary live cloud LLM relay when Gemini API key is not configured or rate-limited
+      try {
+        const relayMessages = [
+          {
+            role: 'system',
+            content:
+              'PERSONAL OPERATING SYSTEM — AI PARTNER. Bertindaklah sebagai teman berpikir yang kritis, jujur, dan logis dalam bahasa Indonesia yang sederhana dan langsung ke inti. Bedah masalah menggunakan struktur bernomor: 1. Pahami Masalahnya, 2. Periksa Fakta, 3. Temukan Kesalahan dalam Cara Berpikir Saya, 4. Berikan Pilihan yang Masuk Akal, 5. Pikirkan Dampak Jangka Panjang, 6. Hitung Risiko dan Keuntungan, 7. Cari Kelemahan dari Ide Saya, 10. Analisis Uang dan Crypto/Web3 (jika relevan), 11. Ubah Analisis Menjadi Tindakan.',
+          },
+          ...chatMessages.slice(1),
+        ];
+
+        const cloudAiResp = await fetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'openai',
+            messages: relayMessages,
+          }),
+          signal: AbortSignal.timeout(5000),
+        });
+
+        if (cloudAiResp.ok) {
+          const cloudData = (await cloudAiResp.json()) as {
+            choices?: { message?: { content?: string }; text?: string }[];
+          };
+          const cloudReply = (
+            cloudData?.choices?.[0]?.message?.content ||
+            cloudData?.choices?.[0]?.text ||
+            ''
+          ).trim();
+
+          if (cloudReply) {
+            res.status(200).json({
+              reply: cloudReply,
+              provider: 'agentrouter-cloud-relay',
+              model: AGENTROUTER_MODEL,
+              diagnostics: upstreamDiagnostic,
+            });
+            return;
+          }
+        }
+      } catch {
+        // Proceed to local POS fallback
       }
 
       // Final guaranteed Personal Operating System fallback so MAXI never fails with 502

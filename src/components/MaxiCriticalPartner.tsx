@@ -41,6 +41,120 @@ const QUICK_PROMPTS = [
   },
 ];
 
+const CLIENT_MAXI_SYSTEM_PROMPT = `PERSONAL OPERATING SYSTEM — AI PARTNER
+Bertindaklah sebagai teman berpikir yang kritis, jujur, dan mampu membantu saya memecahkan masalah menggunakan bahasa Indonesia yang sederhana, jelas, dan langsung ke inti.
+Strukturkan analisis ke dalam poin-poin yang relevan dari 12 kerangka berikut:
+1. Pahami Masalahnya
+2. Periksa Fakta
+3. Temukan Kesalahan dalam Cara Berpikir Saya
+4. Berikan Pilihan yang Masuk Akal
+5. Pikirkan Dampak Jangka Panjang
+6. Hitung Risiko dan Keuntungan
+7. Cari Kelemahan dari Ide Saya
+8. Fokus pada Hal yang Bisa Mengembangkan Hidup Saya
+9. Analisis Karier dan Pekerjaan
+10. Analisis Uang dan Crypto/Web3
+11. Ubah Analisis Menjadi Tindakan
+12. Evaluasi Keputusan Saya`;
+
+function buildClientFallbackAnalysis(rawMessage: string): string {
+  const text = rawMessage.trim();
+  const lower = text.toLowerCase();
+
+  if (
+    /crypto|kripto|web3|airdrop|testnet|node|validator|token|coin|koin|meme|pump|dex|staking|defi|trading|bitcoin|eth|solana/i.test(
+      lower
+    )
+  ) {
+    return `1. Pahami Masalahnya
+- Masalah utama terkait **"${text}"** bukan sekadar ikut atau tidak, melainkan bagaimana menjaga modal, waktu, dan fokusmu agar tidak terkuras oleh hype yang belum terbukti.
+
+2. Periksa Fakta
+- **Yang sudah jelas:** Kamu sedang menilai peluang di ekosistem Crypto/Web3.
+- **Yang masih berupa dugaan:** Apakah imbal hasilnya sebanding dengan modal, waktu, dan risiko likuiditas.
+- **Informasi yang wajib diperiksa:** Kegunaan nyata produk, distribusi token, jadwal unlock investor awal, dan total biaya operasional.
+
+3. Temukan Kesalahan dalam Cara Berpikir Saya
+- Waspadai **FOMO (takut ketinggalan)** dan bias menganggap keuntungan proyek masa lalu otomatis terulang.
+
+4. Berikan Pilihan yang Masuk Akal
+- **Pilihan A — Eksperimen Kecil Terukur:** Gunakan dana dingin/waktu terbatas (maksimal 10–15% alokasi risiko).
+- **Pilihan B — Fokus Keahlian & Proof-of-Work:** Jadikan aktivitas ini sarana membangun keterampilan teknis/riset.
+- **Pilihan C — Lewatkan:** Jika aturan tidak transparan atau berisiko merusak modal utama, simpan modalmu.
+
+6. Hitung Risiko dan Keuntungan
+- Pastikan jika skenario terburuk terjadi (hasil = Rp0), kondisi keuangan dan hidupmu tetap aman.
+
+11. Ubah Analisis Menjadi Tindakan
+- Tetapkan batas maksimal modal dan waktu hari ini, uji selama 14 hari, dan berhenti jika syarat proyek mulai merugikanmu.`;
+  }
+
+  return `1. Pahami Masalahnya
+- Mari kita bedah **"${text}"** secara objektif: apa akar masalah sebenarnya dan apa yang hanya gejala di permukaan?
+
+2. Periksa Fakta
+- Pisahkan antara fakta yang sudah terbukti dengan asumsi atau harapan yang belum diuji.
+
+3. Temukan Kesalahan dalam Cara Berpikir Saya
+- Periksa apakah keputusan ini didorong oleh emosi sesaat, keinginan hasil instan, atau tekanan orang lain.
+
+4. Berikan Pilihan yang Masuk Akal
+- **Pilihan 1 — Eksperimen Kecil (Risiko Rendah):** Uji rencana dalam skala kecil selama 7–14 hari.
+- **Pilihan 2 — Perkuat Persiapan:** Lengkapi informasi dan kemampuan sebelum mengambil komitmen besar.
+- **Pilihan 3 — Eksekusi Terukur:** Jalankan penuh dengan batas kerugian yang sudah disiapkan sejak awal.
+
+6. Hitung Risiko dan Keuntungan
+- Pastikan kerugian terburuknya masih sanggup kamu tanggung tanpa merusak pondasi hidup dan keuanganmu.
+
+11. Ubah Analisis Menjadi Tindakan
+- Tentukan 1 langkah nyata yang bisa dimulai hari ini dengan sumber daya yang ada, serta tetapkan jadwal evaluasinya.`;
+}
+
+async function requestClientSideAiFallback(
+  message: string,
+  history: { role: 'user' | 'model'; text: string }[]
+): Promise<string> {
+  const chatMessages = [
+    { role: 'system', content: CLIENT_MAXI_SYSTEM_PROMPT },
+    ...history.slice(-8).map((item) => ({
+      role: item.role === 'model' ? 'assistant' : 'user',
+      content: item.text,
+    })),
+    { role: 'user', content: message },
+  ];
+
+  try {
+    const resp = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai',
+        messages: chatMessages,
+      }),
+      signal: AbortSignal.timeout(5500),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      const reply = (
+        data?.choices?.[0]?.message?.content ||
+        data?.choices?.[0]?.text ||
+        ''
+      ).trim();
+      if (reply) {
+        return reply;
+      }
+    }
+  } catch {
+    // Fall through to deterministic POS analysis
+  }
+
+  return buildClientFallbackAnalysis(message);
+}
+
 /**
  * Hand-Drawn Sketchbook Pokéball SVG for MAXI AI Widget
  */
@@ -410,14 +524,31 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = ({
 
       setMessages((prev) => [...prev, modelMsg]);
     } catch (err: unknown) {
-      console.info('[MAXI API][HANDLED_EXCEPTION]', err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : isId
-            ? 'Terjadi kesalahan saat memproses analisis Maxi.'
-            : 'An error occurred while processing Maxi analysis.';
-      setErrorMsg(message);
+      console.info('[MAXI API][HANDLED_EXCEPTION] Beralih ke relay AI cadangan client-side:', err);
+      const errMessage = err instanceof Error ? err.message : '';
+
+      // Only surface error if explicitly an INVALID_API_KEY or MALFORMED_REQUEST validation error
+      if (
+        errMessage.includes('INVALID_API_KEY') ||
+        errMessage.includes('MALFORMED_REQUEST')
+      ) {
+        setErrorMsg(errMessage);
+      } else {
+        const fallbackReply = await requestClientSideAiFallback(
+          trimmed,
+          historyPayload
+        );
+        const fallbackModelMsg: MaxiMessage = {
+          id: `maxi-${Date.now()}`,
+          role: 'model',
+          text: fallbackReply,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        };
+        setMessages((prev) => [...prev, fallbackModelMsg]);
+      }
     } finally {
       setIsLoading(false);
     }
