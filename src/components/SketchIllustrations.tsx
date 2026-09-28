@@ -381,6 +381,11 @@ export const HeroChibiCharacter: React.FC<{
   };
 
   const startBubbleTimersAndRig = () => {
+    if (autoHideTimerRef.current !== null) {
+      window.clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+
     setBubbleOpen(true);
     setTypedLength(0);
     setIsSpeakingNow(true);
@@ -389,20 +394,6 @@ export const HeroChibiCharacter: React.FC<{
       rigInstanceRef.current.setSpeechBubbleActive(true);
       rigInstanceRef.current.playAnimation('talk');
     }
-
-    if (autoHideTimerRef.current !== null) {
-      window.clearTimeout(autoHideTimerRef.current);
-    }
-    autoHideTimerRef.current = window.setTimeout(() => {
-      setBubbleOpen(false);
-      setIsSpeakingNow(false);
-      if (rigInstanceRef.current) {
-        rigInstanceRef.current.setSpeechViseme(0, 1, false);
-        rigInstanceRef.current.setSpeechBubbleActive(false);
-        rigInstanceRef.current.playAnimation('idle');
-      }
-      autoHideTimerRef.current = null;
-    }, 17500);
   };
 
   const triggerGreetingBubble = () => {
@@ -468,6 +459,11 @@ export const HeroChibiCharacter: React.FC<{
       return;
     }
 
+    if (autoHideTimerRef.current !== null) {
+      window.clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+
     setTypedLength(0);
     setIsSpeakingNow(true);
     const totalLen = fullBubbleText.length;
@@ -484,6 +480,18 @@ export const HeroChibiCharacter: React.FC<{
           // Sentence finished: close mouth into a calm natural smile while bubble remains readable
           rigInstanceRef.current.setSpeechViseme(0, 1, false);
         }
+        // Auto-hide the speech bubble 2.5 seconds (2500ms) after all text characters finish typing
+        autoHideTimerRef.current = window.setTimeout(() => {
+          if (cancelled) return;
+          setBubbleOpen(false);
+          setIsSpeakingNow(false);
+          if (rigInstanceRef.current) {
+            rigInstanceRef.current.setSpeechViseme(0, 1, false);
+            rigInstanceRef.current.setSpeechBubbleActive(false);
+            rigInstanceRef.current.playAnimation('idle');
+          }
+          autoHideTimerRef.current = null;
+        }, 2500);
         return;
       }
 
@@ -504,6 +512,10 @@ export const HeroChibiCharacter: React.FC<{
       cancelled = true;
       if (stepTimer !== null) {
         window.clearTimeout(stepTimer);
+      }
+      if (autoHideTimerRef.current !== null) {
+        window.clearTimeout(autoHideTimerRef.current);
+        autoHideTimerRef.current = null;
       }
     };
   }, [bubbleOpen, bubbleMode, bubblePartIdx, fullBubbleText]);
