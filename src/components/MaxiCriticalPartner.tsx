@@ -110,10 +110,6 @@ function buildClientFallbackAnalysis(rawMessage: string): string {
 - Tentukan 1 langkah nyata yang bisa dimulai hari ini dengan sumber daya yang ada, serta tetapkan jadwal evaluasinya.`;
 }
 
-const VIKEY_BASE_URL = 'https://api.vikey.ai/v1/chat/completions';
-const VIKEY_API_KEY = 'vk-179196ad-1744-4aa9-8fde-cd646e1a05c8';
-const VIKEY_MODEL = 'deepseek/deepseek-v4.1-flash';
-
 async function requestClientSideAiFallback(
   message: string,
   history: { role: 'user' | 'model'; text: string }[]
@@ -129,41 +125,6 @@ async function requestClientSideAiFallback(
     })),
     { role: 'user', content: message },
   ];
-
-  // Primary direct client-side attempt to Vikey AI (deepseek/deepseek-v4.1-flash)
-  try {
-    const vikeyResp = await fetch(VIKEY_BASE_URL, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${VIKEY_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: VIKEY_MODEL,
-        messages: chatMessages,
-        temperature: 0.35,
-        top_p: 0.9,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(25000),
-    });
-
-    if (vikeyResp.ok) {
-      const vikeyData = await vikeyResp.json();
-      const vikeyReply = (
-        vikeyData?.choices?.[0]?.message?.content ||
-        vikeyData?.choices?.[0]?.message?.reasoning_content ||
-        vikeyData?.choices?.[0]?.text ||
-        ''
-      ).trim();
-      if (vikeyReply) {
-        return vikeyReply;
-      }
-    }
-  } catch {
-    // Fall through to secondary cloud relay if CORS/network prevents direct browser fetch
-  }
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {

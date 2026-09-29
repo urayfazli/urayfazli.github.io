@@ -7,7 +7,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DEFAULT_VIKEY_BASE_URL = 'https://api.vikey.ai/v1/chat/completions';
-const DEFAULT_VIKEY_API_KEY = 'vk-179196ad-1744-4aa9-8fde-cd646e1a05c8';
 const DEFAULT_VIKEY_MODEL = 'deepseek/deepseek-v4.1-flash';
 
 function resolveChatCompletionsEndpoint(rawBaseUrl?: string): string {
@@ -18,11 +17,37 @@ function resolveChatCompletionsEndpoint(rawBaseUrl?: string): string {
   return `${cleaned}/chat/completions`;
 }
 
-const MAXI_BASE_URL = resolveChatCompletionsEndpoint(
-  process.env.VIKEY_BASE_URL || process.env.MAXI_BASE_URL || DEFAULT_VIKEY_BASE_URL
-);
-const MAXI_MODEL =
-  process.env.VIKEY_MODEL || process.env.MAXI_MODEL || DEFAULT_VIKEY_MODEL;
+function getMaxiEnvConfig() {
+  const apiKey = (
+    process.env.VIKEY_API_KEY ||
+    process.env.MAXI_API_KEY ||
+    process.env.AI_API_KEY ||
+    process.env.API_KEY ||
+    process.env.AGENTROUTER_API_KEY ||
+    process.env.VITE_VIKEY_API_KEY ||
+    process.env.VITE_MAXI_API_KEY ||
+    ''
+  ).trim();
+
+  const baseUrl = resolveChatCompletionsEndpoint(
+    process.env.VIKEY_BASE_URL ||
+      process.env.MAXI_BASE_URL ||
+      process.env.BASE_URL ||
+      process.env.AGENTROUTER_BASE_URL ||
+      DEFAULT_VIKEY_BASE_URL
+  );
+
+  const model = (
+    process.env.VIKEY_MODEL ||
+    process.env.MAXI_MODEL ||
+    process.env.MODEL ||
+    process.env.AGENTROUTER_MODEL ||
+    DEFAULT_VIKEY_MODEL
+  ).trim();
+
+  return { apiKey, baseUrl, model };
+}
+
 const MAX_MESSAGE_LENGTH = 4000;
 
 export const MAXI_SYSTEM_INSTRUCTION = `PERSONAL OPERATING SYSTEM — AI PARTNER
@@ -404,11 +429,7 @@ async function startServer() {
 
   app.post('/api/maxi', async (req, res) => {
     try {
-      const apiKey = (
-        process.env.VIKEY_API_KEY ||
-        process.env.MAXI_API_KEY ||
-        DEFAULT_VIKEY_API_KEY
-      ).trim();
+      const { apiKey, baseUrl: MAXI_BASE_URL, model: MAXI_MODEL } = getMaxiEnvConfig();
 
       if (apiKey && !apiKey.startsWith('vk-') && !apiKey.startsWith('sk-')) {
         res.status(401).json({
