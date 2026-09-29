@@ -6,10 +6,23 @@ import { GoogleGenAI } from '@google/genai';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const AGENTROUTER_BASE_URL = (
-  process.env.AGENTROUTER_BASE_URL || 'https://agentrouter.org/v1'
-).replace(/\/+$/, '');
-const AGENTROUTER_MODEL = process.env.AGENTROUTER_MODEL || 'deepseek-v4-flash';
+const DEFAULT_VIKEY_BASE_URL = 'https://api.vikey.ai/v1/chat/completions';
+const DEFAULT_VIKEY_API_KEY = 'vk-179196ad-1744-4aa9-8fde-cd646e1a05c8';
+const DEFAULT_VIKEY_MODEL = 'deepseek/deepseek-v4.1-flash';
+
+function resolveChatCompletionsEndpoint(rawBaseUrl?: string): string {
+  const cleaned = (rawBaseUrl || DEFAULT_VIKEY_BASE_URL).trim().replace(/\/+$/, '');
+  if (cleaned.endsWith('/chat/completions')) {
+    return cleaned;
+  }
+  return `${cleaned}/chat/completions`;
+}
+
+const MAXI_BASE_URL = resolveChatCompletionsEndpoint(
+  process.env.VIKEY_BASE_URL || process.env.MAXI_BASE_URL || DEFAULT_VIKEY_BASE_URL
+);
+const MAXI_MODEL =
+  process.env.VIKEY_MODEL || process.env.MAXI_MODEL || DEFAULT_VIKEY_MODEL;
 const MAX_MESSAGE_LENGTH = 4000;
 
 export const MAXI_SYSTEM_INSTRUCTION = `PERSONAL OPERATING SYSTEM — AI PARTNER
@@ -391,11 +404,15 @@ async function startServer() {
 
   app.post('/api/maxi', async (req, res) => {
     try {
-      const apiKey = (process.env.AGENTROUTER_API_KEY || '').trim();
+      const apiKey = (
+        process.env.VIKEY_API_KEY ||
+        process.env.MAXI_API_KEY ||
+        DEFAULT_VIKEY_API_KEY
+      ).trim();
 
-      if (apiKey && !apiKey.startsWith('sk-')) {
+      if (apiKey && !apiKey.startsWith('vk-') && !apiKey.startsWith('sk-')) {
         res.status(401).json({
-          error: 'API Key AgentRouter tidak valid (harus diawali sk-).',
+          error: 'API Key Maxi tidak valid (harus diawali vk- atau sk-).',
           code: 'INVALID_API_KEY',
         });
         return;
@@ -487,9 +504,9 @@ async function startServer() {
 
       if (apiKey) {
         try {
-          const endpoint = `${AGENTROUTER_BASE_URL}/chat/completions`;
+          const endpoint = MAXI_BASE_URL;
           const requestBody = {
-            model: AGENTROUTER_MODEL,
+            model: MAXI_MODEL,
             messages: chatMessages,
             temperature: 0.35,
             top_p: 0.9,
@@ -502,25 +519,15 @@ async function startServer() {
               Accept: 'application/json',
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiKey}`,
-              'HTTP-Referer': 'https://github.com/RooVetGit/Roo-Cline',
-              'X-Title': 'Roo Code',
-              'User-Agent': 'RooCode/3.54.0',
-              'X-Stainless-Arch': 'x64',
-              'X-Stainless-Lang': 'js',
-              'X-Stainless-OS': 'Linux',
-              'X-Stainless-Package-Version': '5.12.2',
-              'X-Stainless-Retry-Count': '0',
-              'X-Stainless-Runtime': 'node',
-              'X-Stainless-Runtime-Version': process.version,
             },
             body: JSON.stringify(requestBody),
-            signal: AbortSignal.timeout(4200),
+            signal: AbortSignal.timeout(25000),
           });
 
           const contentType = response.headers.get('content-type') || '';
           const rawText = await response.text();
 
-          // Detect Aliyun WAF HTML challenge page disguised as HTTP 200 OK
+          // Detect WAF HTML challenge page disguised as HTTP 200 OK
           if (
             contentType.includes('text/html') ||
             rawText.includes('aliyun_waf') ||
@@ -531,7 +538,7 @@ async function startServer() {
               status: response.status,
               contentType,
               reason:
-                'AgentRouter mengembalikan halaman proteksi Aliyun WAF untuk IP cloud server; mengalihkan otomatis ke mesin cadangan.',
+                'Upstream mengembalikan halaman proteksi WAF; mengalihkan otomatis ke mesin cadangan.',
             };
           } else {
             let parsedData: {
@@ -554,7 +561,7 @@ async function startServer() {
                 category: 'MALFORMED_RESPONSE',
                 status: response.status,
                 contentType,
-                reason: 'Respons dari AgentRouter bukan JSON yang valid.',
+                reason: 'Respons dari Vikey AI bukan JSON yang valid.',
               };
             }
 
@@ -565,7 +572,7 @@ async function startServer() {
                     ? parsedData.error
                     : parsedData.error?.message ||
                       parsedData.msg ||
-                      `AgentRouter HTTP ${response.status}`;
+                      `Vikey AI HTTP ${response.status}`;
 
                 const isAuthErr =
                   response.status === 401 ||
@@ -600,8 +607,8 @@ async function startServer() {
                 if (extractedReply) {
                   res.status(200).json({
                     reply: extractedReply,
-                    provider: 'agentrouter',
-                    model: AGENTROUTER_MODEL,
+                    provider: 'vikey-ai',
+                    model: MAXI_MODEL,
                   });
                   return;
                 }
@@ -611,7 +618,7 @@ async function startServer() {
                   status: response.status,
                   contentType,
                   reason:
-                    'JSON AgentRouter berhasil dibaca, tetapi field choices[0].message.content kosong.',
+                    'JSON Vikey AI berhasil dibaca, tetapi field choices[0].message.content kosong.',
                 };
               }
             }
@@ -620,10 +627,10 @@ async function startServer() {
           const netMsg =
             fetchErr instanceof Error
               ? fetchErr.message
-              : 'Koneksi jaringan ke AgentRouter gagal.';
+              : 'Koneksi jaringan ke Vikey AI gagal.';
           upstreamDiagnostic = {
             category: 'NETWORK_ERROR',
-            reason: `Gagal menghubungi ${AGENTROUTER_BASE_URL}: ${netMsg}`,
+            reason: `Gagal menghubungi ${MAXI_BASE_URL}: ${netMsg}`,
           };
         }
       }
@@ -716,8 +723,8 @@ async function startServer() {
           ) {
             res.status(200).json({
               reply: cloudReply,
-              provider: 'agentrouter-cloud-relay',
-              model: AGENTROUTER_MODEL,
+              provider: 'vikey-cloud-relay',
+              model: MAXI_MODEL,
               diagnostics: upstreamDiagnostic,
             });
             return;
