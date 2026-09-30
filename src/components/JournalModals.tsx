@@ -898,6 +898,8 @@ export interface CollaborationNote {
 
 const COLLAB_NOTES_COLLECTION = 'collaboration_notes';
 const COLLAB_AUTHOR_TOKEN_KEY = 'uray_collab_author_token_v1';
+const COLLAB_NOTES_STORAGE_KEY = 'uray_collab_notes_board_v1';
+const COLLAB_DELETED_IDS_KEY = 'uray_collab_deleted_ids_v1';
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000; // 30 Days (1 Month) Auto-Deletion TTL
 
 function getOrCreateAuthorToken(): string {
@@ -909,6 +911,27 @@ function getOrCreateAuthorToken(): string {
     return generated;
   } catch {
     return 'anonymous-explorer';
+  }
+}
+
+function getDeletedNoteIds(): Set<string> {
+  try {
+    const raw = window.localStorage.getItem(COLLAB_DELETED_IDS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? new Set(parsed.map(String)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markNoteIdDeleted(noteId: string): void {
+  try {
+    const set = getDeletedNoteIds();
+    set.add(noteId);
+    window.localStorage.setItem(COLLAB_DELETED_IDS_KEY, JSON.stringify(Array.from(set).slice(-100)));
+  } catch {
+    // Ignore storage quota errors
   }
 }
 
@@ -944,6 +967,92 @@ const DEFAULT_COLLAB_NOTES: CollaborationNote[] = [
   },
 ];
 
+function loadCachedCollabNotes(myAuthorToken: string): CollaborationNote[] {
+  const now = Date.now();
+  const deletedIds = getDeletedNoteIds();
+  try {
+    const raw = window.localStorage.getItem(COLLAB_NOTES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const valid = parsed
+          .filter(
+            (n: Partial<CollaborationNote>) =>
+              n &&
+              typeof n.id === 'string' &&
+              !deletedIds.has(n.id) &&
+              typeof n.senderName === 'string' &&
+              n.senderName.trim() &&
+              typeof n.message === 'string' &&
+              n.message.trim() &&
+              typeof n.expiresAtMs === 'number' &&
+              now < n.expiresAtMs
+          )
+          .map((n: CollaborationNote) => ({
+            ...n,
+            isOwn: Boolean(n.isOwn || (n.authorToken && n.authorToken === myAuthorToken)),
+          }));
+        if (valid.length > 0) {
+          return valid;
+        }
+      }
+    }
+  } catch {
+    // Fallback to default seed notes
+  }
+  return DEFAULT_COLLAB_NOTES.filter((n) => !deletedIds.has(n.id));
+}
+
+function saveCachedCollabNotes(notesList: CollaborationNote[]): void {
+  try {
+    window.localStorage.setItem(
+      COLLAB_NOTES_STORAGE_KEY,
+      JSON.stringify(notesList.slice(0, 30))
+    );
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function mergeCollaborationNotes(
+  incoming: CollaborationNote[],
+  existing: CollaborationNote[],
+  myAuthorToken: string
+): CollaborationNote[] {
+  const now = Date.now();
+  const deletedIds = getDeletedNoteIds();
+  const map = new Map<string, CollaborationNote>();
+
+  // Keep user's own locally saved notes and merge with incoming server/Firestore notes
+  for (const item of [...incoming, ...existing]) {
+    if (!item || !item.id || deletedIds.has(item.id)) continue;
+    if (!item.senderName?.trim() || !item.message?.trim()) continue;
+    if (item.expiresAtMs && now >= item.expiresAtMs) continue;
+
+    const prev = map.get(item.id);
+    const isOwn = Boolean(
+      item.isOwn ||
+        prev?.isOwn ||
+        (item.authorToken && item.authorToken === myAuthorToken) ||
+        (prev?.authorToken && prev.authorToken === myAuthorToken)
+    );
+    const authorToken = item.authorToken || prev?.authorToken;
+
+    map.set(item.id, {
+      ...item,
+      ...(authorToken ? { authorToken } : {}),
+      isOwn,
+    });
+  }
+
+  const merged = Array.from(map.values())
+    .sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0))
+    .slice(0, 24);
+
+  saveCachedCollabNotes(merged);
+  return merged;
+}
+
 interface ConnectModalProps {
   isOpen: boolean;
   lang?: Language;
@@ -966,12 +1075,16 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmittedNote, setLastSubmittedNote] = useState<CollaborationNote | null>(null);
-  const [notes, setNotes] = useState<CollaborationNote[]>(DEFAULT_COLLAB_NOTES);
+  const [notes, setNotes] = useState<CollaborationNote[]>(() =>
+    loadCachedCollabNotes(getOrCreateAuthorToken())
+  );
   const hasSeededFirestoreRef = useRef(false);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const isId = lang === 'id';
 
-  // Real-Time Firebase Firestore subscription + automatic 1-month expiration cleanup
+  // Real-Time Firebase Firestore subscription / Backend API sync + automatic 1-month expiration cleanup
   useEffect(() => {
     if (!isOpen) {
       setFormError(null);
@@ -980,13 +1093,18 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
 
     const myAuthorToken = getOrCreateAuthorToken();
     const fetchNotesFromApi = () => {
-      fetch('/api/notes')
+      fetch(`/api/notes?authorToken=${encodeURIComponent(myAuthorToken)}`, {
+        headers: {
+          Accept: 'application/json',
+          'X-Author-Token': myAuthorToken,
+        },
+      })
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
           if (Array.isArray(data?.notes) && data.notes.length > 0) {
             const now = Date.now();
-            setNotes(
-              data.notes.map((n: Partial<CollaborationNote>, idx: number) => {
+            const incomingNotes: CollaborationNote[] = data.notes.map(
+              (n: Partial<CollaborationNote>, idx: number) => {
                 const createdMs =
                   typeof n.createdAtMs === 'number'
                     ? n.createdAtMs
@@ -1004,10 +1122,13 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                       ? n.expiresAtMs
                       : createdMs + ONE_MONTH_MS,
                   authorToken: n.authorToken,
-                  isOwn: Boolean(n.authorToken && n.authorToken === myAuthorToken),
+                  isOwn: Boolean(
+                    n.isOwn || (n.authorToken && n.authorToken === myAuthorToken)
+                  ),
                 };
-              })
+              }
             );
+            setNotes((prev) => mergeCollaborationNotes(incomingNotes, prev, myAuthorToken));
           }
         })
         .catch(() => {});
@@ -1041,7 +1162,11 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
             // Automatic 1-Month (30-Day) Deletion: Purge expired notes from Firestore immediately
             if (now >= expiresAtMs || now - createdAtMs >= ONE_MONTH_MS) {
               deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, docSnap.id)).catch((err) => {
-                handleFirestoreError(err, OperationType.DELETE, `${COLLAB_NOTES_COLLECTION}/${docSnap.id}`);
+                handleFirestoreError(
+                  err,
+                  OperationType.DELETE,
+                  `${COLLAB_NOTES_COLLECTION}/${docSnap.id}`
+                );
               });
               return;
             }
@@ -1086,14 +1211,18 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                 expiresAt: Timestamp.fromMillis(seed.expiresAtMs),
                 authorToken: 'seed-community',
               }).catch((err) => {
-                handleFirestoreError(err, OperationType.CREATE, `${COLLAB_NOTES_COLLECTION}/${seed.id}`);
+                handleFirestoreError(
+                  err,
+                  OperationType.CREATE,
+                  `${COLLAB_NOTES_COLLECTION}/${seed.id}`
+                );
               });
             });
-            setNotes(freshSeeds);
+            setNotes((prev) => mergeCollaborationNotes(freshSeeds, prev, myAuthorToken));
             return;
           }
 
-          setNotes(validNotes);
+          setNotes((prev) => mergeCollaborationNotes(validNotes, prev, myAuthorToken));
         },
         (error) => {
           handleFirestoreError(error, OperationType.LIST, COLLAB_NOTES_COLLECTION);
@@ -1105,8 +1234,8 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     // Periodic check while modal remains open to purge any note that crosses the 1-month mark
     const expiryCheckInterval = window.setInterval(() => {
       const now = Date.now();
-      setNotes((prev) =>
-        prev.filter((note) => {
+      setNotes((prev) => {
+        const filtered = prev.filter((note) => {
           if (now >= note.expiresAtMs) {
             if (isFirebaseClientConfigured) {
               deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, note.id)).catch(() => {});
@@ -1114,12 +1243,16 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
             return false;
           }
           return true;
-        })
-      );
+        });
+        if (filtered.length !== prev.length) {
+          saveCachedCollabNotes(filtered);
+        }
+        return filtered;
+      });
     }, 60000);
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -1127,7 +1260,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
       window.clearInterval(expiryCheckInterval);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   const formatTopicLabel = (rawTopic: string) => {
     if (!isId) return rawTopic;
@@ -1151,25 +1284,76 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
       : `Hello Uray Fazli Alman! 👋\n\n[Web3 Collaboration Note - ${note.topic}]\nFrom: ${note.senderName} (${note.senderHandle})\nMessage: ${note.message}`;
   };
 
+  const handleDeleteNote = async (noteId: string) => {
+    const myAuthorToken = getOrCreateAuthorToken();
+    markNoteIdDeleted(noteId);
+
+    setNotes((prev) => {
+      const updated = prev.filter((n) => n.id !== noteId);
+      saveCachedCollabNotes(updated);
+      return updated;
+    });
+
+    if (lastSubmittedNote?.id === noteId) {
+      setLastSubmittedNote(null);
+    }
+
+    try {
+      await fetch('/api/notes', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Author-Token': myAuthorToken,
+        },
+        body: JSON.stringify({
+          id: noteId,
+          authorToken: myAuthorToken,
+        }),
+      });
+    } catch {
+      // Local deletion already persisted
+    }
+
+    if (onToast) {
+      onToast(
+        isId
+          ? 'Catatan kolaborasi berhasil dihapus.'
+          : 'Collaboration note deleted.'
+      );
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanName = senderName.trim();
-    const cleanHandle = senderHandle.trim();
-    const cleanMessage = message.trim();
+    const sanitizeInput = (val: string, maxLen: number) =>
+      val
+        .replace(/<\s*\/?\s*script[^>]*>/gi, '')
+        .replace(/javascript\s*:/gi, '')
+        .replace(/on(error|load|click|mouseover)\s*=/gi, '')
+        .trim()
+        .slice(0, maxLen);
 
-    if (!cleanName) {
+    const safeName = sanitizeInput(senderName, 60);
+    const safeHandle = sanitizeInput(
+      senderHandle.trim() || (isId ? 'Explorer Web3' : 'Web3 Explorer'),
+      80
+    );
+    const safeTopic = sanitizeInput(topic, 60);
+    const safeMessage = sanitizeInput(message, 500);
+
+    if (!safeName) {
       setFormError(
         isId
-          ? 'Mohon isi Nama / Alias Anda terlebih dahulu.'
-          : 'Please enter your Name / Alias first.'
+          ? 'Mohon isi Nama / Alias yang valid terlebih dahulu.'
+          : 'Please enter a valid Name / Alias first.'
       );
       return;
     }
-    if (!cleanMessage) {
+    if (!safeMessage) {
       setFormError(
         isId
-          ? 'Mohon tulis isi catatan kolaborasi Anda.'
-          : 'Please write your collaboration note message.'
+          ? 'Mohon tulis isi catatan kolaborasi yang valid.'
+          : 'Please write a valid collaboration note message.'
       );
       return;
     }
@@ -1181,40 +1365,33 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     const expiresAtMs = nowMs + ONE_MONTH_MS;
     const createdAtIso = new Date(nowMs).toISOString();
     const authorToken = getOrCreateAuthorToken();
-    const sanitizeInput = (val: string, maxLen: number) =>
-      val
-        .replace(/<\s*\/?\s*script[^>]*>/gi, '')
-        .replace(/javascript\s*:/gi, '')
-        .trim()
-        .slice(0, maxLen);
-
-    const safeName = sanitizeInput(cleanName, 60);
-    const safeHandle = sanitizeInput(
-      cleanHandle || (isId ? 'Explorer Web3' : 'Web3 Explorer'),
-      80
-    );
-    const safeTopic = sanitizeInput(topic, 60);
-    const safeMessage = sanitizeInput(cleanMessage, 500);
 
     try {
-      let noteId = `local-${nowMs}`;
+      let noteId = `note-${nowMs}-${Math.random().toString(36).slice(2, 7)}`;
       const submitViaApiFallback = async () => {
-        const apiRes = await fetch('/api/notes', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            senderName: safeName,
-            senderHandle: safeHandle,
-            topic: safeTopic,
-            message: safeMessage,
-            authorToken,
-          }),
-        });
-        if (apiRes.ok) {
-          const apiData = await apiRes.json();
-          if (apiData?.note?.id) {
-            noteId = String(apiData.note.id);
+        try {
+          const apiRes = await fetch('/api/notes', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Author-Token': authorToken,
+            },
+            body: JSON.stringify({
+              senderName: safeName,
+              senderHandle: safeHandle,
+              topic: safeTopic,
+              message: safeMessage,
+              authorToken,
+            }),
+          });
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (apiData?.note?.id) {
+              noteId = String(apiData.note.id);
+            }
           }
+        } catch {
+          // Keep locally generated noteId when offline or static host
         }
       };
 
@@ -1253,9 +1430,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
         isOwn: true,
       };
 
-      setNotes((prev) =>
-        prev.some((n) => n.id === savedNote.id) ? prev : [savedNote, ...prev]
-      );
+      setNotes((prev) => mergeCollaborationNotes([savedNote], prev, authorToken));
       setLastSubmittedNote(savedNote);
       setSenderName('');
       setSenderHandle('');
@@ -1493,6 +1668,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                           id="collab-sender-name"
                           type="text"
                           required
+                          maxLength={60}
                           value={senderName}
                           onChange={(e) => {
                             setSenderName(e.target.value);
@@ -1513,6 +1689,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                         <input
                           id="collab-sender-handle"
                           type="text"
+                          maxLength={80}
                           value={senderHandle}
                           onChange={(e) => setSenderHandle(e.target.value)}
                           placeholder="@username / email"
@@ -1548,16 +1725,22 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                     </div>
 
                     <div>
-                      <label
-                        htmlFor="collab-message"
-                        className="mb-1 block font-journal text-[11px] font-bold text-[#091526]"
-                      >
-                        {isId ? 'Pesan / Ide Kolaborasi *' : 'Collaboration Message / Pitch *'}
-                      </label>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label
+                          htmlFor="collab-message"
+                          className="block font-journal text-[11px] font-bold text-[#091526]"
+                        >
+                          {isId ? 'Pesan / Ide Kolaborasi *' : 'Collaboration Message / Pitch *'}
+                        </label>
+                        <span className="font-mono-num text-[10.5px] font-semibold text-[#233F6B]">
+                          {message.length}/500
+                        </span>
+                      </div>
                       <textarea
                         id="collab-message"
                         rows={2}
                         required
+                        maxLength={500}
                         value={message}
                         onChange={(e) => {
                           setMessage(e.target.value);
@@ -1575,10 +1758,10 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                       <span className="font-journal text-[11px] font-semibold text-[#233F6B]">
                         {isId
-                          ? '✨ Tersimpan real-time di Firebase & otomatis terhapus setelah 1 bulan (30 hari)'
-                          : '✨ Saved real-time to Firebase & automatically deleted after 1 month (30 days)'}
+                          ? '✨ Tersimpan real-time & otomatis terhapus setelah 1 bulan (30 hari)'
+                          : '✨ Saved real-time & automatically deleted after 1 month (30 days)'}
                       </span>
-                      <div className="flex items-center justify-end gap-2.5 ml-auto">
+                      <div className="ml-auto flex items-center justify-end gap-2.5">
                         <button
                           type="button"
                           onClick={onClose}
@@ -1613,8 +1796,8 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                       ? `Papan Catatan Kolaborasi (${notes.length})`
                       : `Collaboration Notes Board (${notes.length})`}
                   </h5>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-[#091526]/30 bg-[#FFFDF7] px-2.5 py-0.5 font-journal text-[10.5px] font-bold text-[#233F6B]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]" aria-hidden="true" />
+                  <span className="inline-flex items-center gap-1.5 font-journal text-[11px] font-bold text-[#233F6B]">
+                    <span className="h-2 w-2 rounded-full bg-[#22C55E]" aria-hidden="true" />
                     <span>
                       {isId
                         ? 'Auto-hapus 1 Bulan'
@@ -1623,75 +1806,100 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                  {notes.slice(0, 12).map((item) => {
-                    const daysLeft = getRemainingDays(item.expiresAtMs);
-                    return (
-                      <div
-                        key={item.id}
-                        className="sketch-note-card flex flex-col justify-between p-3 text-[#091526]"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <span className="block truncate font-journal text-xs font-bold text-[#091526]">
-                                {item.senderName}
-                              </span>
-                              <span className="block truncate font-mono-num text-[10.5px] text-[#233F6B]">
-                                {item.senderHandle}
+                {notes.length === 0 ? (
+                  <div className="sketch-note-card p-5 text-center font-journal text-xs text-[#233F6B]">
+                    {isId
+                      ? 'Belum ada catatan kolaborasi. Jadilah yang pertama meninggalkan pesan di atas!'
+                      : 'No collaboration notes yet. Be the first to leave a note above!'}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {notes.map((item) => {
+                      const daysLeft = getRemainingDays(item.expiresAtMs);
+                      return (
+                        <div
+                          key={item.id}
+                          className="sketch-note-card flex flex-col justify-between p-3 text-[#091526]"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="block truncate font-journal text-xs font-bold text-[#091526]">
+                                    {item.senderName}
+                                  </span>
+                                  {item.isOwn && (
+                                    <span className="shrink-0 font-journal text-[10px] font-bold text-[#8C4F04]">
+                                      · {isId ? 'Anda' : 'You'}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="block truncate font-mono-num text-[10.5px] text-[#233F6B]">
+                                  {item.senderHandle}
+                                </span>
+                              </div>
+                              <span className="shrink-0 font-journal text-[10px] font-bold text-[#1B365C]">
+                                {formatTopicLabel(item.topic)}
                               </span>
                             </div>
-                            <span className="shrink-0 font-journal text-[10px] font-bold text-[#1B365C]">
-                              {formatTopicLabel(item.topic)}
-                            </span>
+                            <p className="mt-1.5 break-words font-journal text-xs leading-snug text-[#102136]">
+                              &ldquo;{item.message}&rdquo;
+                            </p>
                           </div>
-                          <p className="mt-1.5 font-journal text-xs leading-snug text-[#102136]">
-                            &ldquo;{item.message}&rdquo;
-                          </p>
-                        </div>
 
-                        <div className="mt-2 flex flex-wrap items-center justify-between gap-1 border-t border-dashed border-[#091526]/20 pt-1.5 text-[10px] text-[#233F6B]">
-                          <div className="flex items-center gap-1.5">
-                            <span>
-                              {new Date(item.createdAt).toLocaleDateString(
-                                isId ? 'id-ID' : 'en-US',
-                                {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-1 border-t border-dashed border-[#091526]/20 pt-1.5 text-[10px] text-[#233F6B]">
+                            <div className="flex items-center gap-1.5">
+                              <span>
+                                {new Date(item.createdAt).toLocaleDateString(
+                                  isId ? 'id-ID' : 'en-US',
+                                  {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  }
+                                )}
+                              </span>
+                              <span aria-hidden="true">·</span>
+                              <span
+                                className="font-journal text-[10px] font-bold text-[#8C4F04]"
+                                title={
+                                  isId
+                                    ? 'Otomatis terhapus setelah 1 bulan'
+                                    : 'Automatically deleted after 1 month'
                                 }
+                              >
+                                ⏳ {isId ? `${daysLeft} hari lagi` : `${daysLeft}d left`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onCopyText(
+                                    item.senderName,
+                                    `${item.senderName} (${item.senderHandle}) - ${item.message}`
+                                  )
+                                }
+                                className="cursor-pointer font-journal font-bold text-[#091526] underline hover:text-[#233F6B]"
+                              >
+                                {isId ? 'Salin' : 'Copy'}
+                              </button>
+                              {item.isOwn && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteNote(item.id)}
+                                  className="cursor-pointer font-journal font-bold text-[#991B1B] underline hover:text-[#7F1D1D]"
+                                >
+                                  {isId ? 'Hapus' : 'Delete'}
+                                </button>
                               )}
-                            </span>
-                            <span
-                              className="rounded bg-[#F5D78E]/45 px-1.5 py-0.2 font-journal text-[9.5px] font-bold text-[#8C4F04]"
-                              title={
-                                isId
-                                  ? 'Otomatis terhapus dari Firebase setelah 1 bulan'
-                                  : 'Automatically deleted from Firebase after 1 month'
-                              }
-                            >
-                              ⏳ {isId ? `${daysLeft} hari lagi` : `${daysLeft}d left`}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onCopyText(
-                                  item.senderName,
-                                  `${item.senderName} (${item.senderHandle}) - ${item.message}`
-                                )
-                              }
-                              className="cursor-pointer font-journal font-bold text-[#091526] underline hover:text-[#233F6B]"
-                            >
-                              {isId ? 'Salin' : 'Copy'}
-                            </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </JournalPageOpenShell>
