@@ -925,16 +925,6 @@ function getDeletedNoteIds(): Set<string> {
   }
 }
 
-function markNoteIdDeleted(noteId: string): void {
-  try {
-    const set = getDeletedNoteIds();
-    set.add(noteId);
-    window.localStorage.setItem(COLLAB_DELETED_IDS_KEY, JSON.stringify(Array.from(set).slice(-100)));
-  } catch {
-    // Ignore storage quota errors
-  }
-}
-
 function getRemainingDays(expiresAtMs: number): number {
   const diff = expiresAtMs - Date.now();
   if (diff <= 0) return 0;
@@ -1282,45 +1272,6 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     return isId
       ? `Halo Uray Fazli Alman! 👋\n\n[Catatan Kolaborasi Web3 - ${formatTopicLabel(note.topic)}]\nDari: ${note.senderName} (${note.senderHandle})\nPesan: ${note.message}`
       : `Hello Uray Fazli Alman! 👋\n\n[Web3 Collaboration Note - ${note.topic}]\nFrom: ${note.senderName} (${note.senderHandle})\nMessage: ${note.message}`;
-  };
-
-  const handleDeleteNote = async (noteId: string) => {
-    const myAuthorToken = getOrCreateAuthorToken();
-    markNoteIdDeleted(noteId);
-
-    setNotes((prev) => {
-      const updated = prev.filter((n) => n.id !== noteId);
-      saveCachedCollabNotes(updated);
-      return updated;
-    });
-
-    if (lastSubmittedNote?.id === noteId) {
-      setLastSubmittedNote(null);
-    }
-
-    try {
-      await fetch('/api/notes', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Author-Token': myAuthorToken,
-        },
-        body: JSON.stringify({
-          id: noteId,
-          authorToken: myAuthorToken,
-        }),
-      });
-    } catch {
-      // Local deletion already persisted
-    }
-
-    if (onToast) {
-      onToast(
-        isId
-          ? 'Catatan kolaborasi berhasil dihapus.'
-          : 'Collaboration note deleted.'
-      );
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1871,7 +1822,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                                 ⏳ {isId ? `${daysLeft} hari lagi` : `${daysLeft}d left`}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() =>
@@ -1884,15 +1835,6 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
                               >
                                 {isId ? 'Salin' : 'Copy'}
                               </button>
-                              {item.isOwn && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteNote(item.id)}
-                                  className="cursor-pointer font-journal font-bold text-[#991B1B] underline hover:text-[#7F1D1D]"
-                                >
-                                  {isId ? 'Hapus' : 'Delete'}
-                                </button>
-                              )}
                             </div>
                           </div>
                         </div>
