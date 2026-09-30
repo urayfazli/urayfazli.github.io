@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="#091526" stroke="#F5D78E" stroke-width="3.5"/>
+  <!-- Hand-drawn Web3 Hexagonal Node Cube -->
+  <path d="M32 13L49 22.8V41.2L32 51L15 41.2V22.8L32 13Z" fill="#132847" stroke="#F5D78E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M15 22.8L32 32.5L49 22.8" stroke="#F5D78E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 32.5V51" stroke="#F5D78E" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Center Glowing Core & Nodes -->
+  <circle cx="32" cy="32.5" r="4.2" fill="#F5D78E" stroke="#091526" stroke-width="2"/>
+  <circle cx="32" cy="13" r="3" fill="#FAF6EE" stroke="#091526" stroke-width="1.8"/>
+  <circle cx="49" cy="22.8" r="3" fill="#FAF6EE" stroke="#091526" stroke-width="1.8"/>
+  <circle cx="15" cy="22.8" r="3" fill="#FAF6EE" stroke="#091526" stroke-width="1.8"/>
+</svg>
