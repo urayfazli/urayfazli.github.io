@@ -17,15 +17,21 @@ function resolveChatCompletionsEndpoint(rawBaseUrl?: string): string {
   return `${cleaned}/chat/completions`;
 }
 
+function redactSecrets(input?: string): string {
+  return String(input || '')
+    .replace(/\b(vk|sk)-[a-zA-Z0-9_-]{6,}\b/gi, '[REDACTED_KEY]')
+    .replace(/\bAIza[a-zA-Z0-9_-]{10,}\b/g, '[REDACTED_KEY]')
+    .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [REDACTED]');
+}
+
 function getMaxiEnvConfig() {
+  // Strictly server-only environment variables (never use VITE_ prefix so Vite never bundles keys into frontend)
   const apiKey = (
     process.env.VIKEY_API_KEY ||
     process.env.MAXI_API_KEY ||
     process.env.AI_API_KEY ||
     process.env.API_KEY ||
     process.env.AGENTROUTER_API_KEY ||
-    process.env.VITE_VIKEY_API_KEY ||
-    process.env.VITE_MAXI_API_KEY ||
     ''
   ).trim();
 
@@ -430,14 +436,8 @@ async function startServer() {
   app.post('/api/maxi', async (req, res) => {
     try {
       const { apiKey, baseUrl: MAXI_BASE_URL, model: MAXI_MODEL } = getMaxiEnvConfig();
-
-      if (apiKey && !apiKey.startsWith('vk-') && !apiKey.startsWith('sk-')) {
-        res.status(401).json({
-          error: 'API Key Maxi tidak valid (harus diawali vk- atau sk-).',
-          code: 'INVALID_API_KEY',
-        });
-        return;
-      }
+      const hasValidPrimaryKey =
+        Boolean(apiKey) && (apiKey.startsWith('vk-') || apiKey.startsWith('sk-'));
 
       const { message, history } = (req.body || {}) as {
         message?: unknown;
@@ -523,7 +523,7 @@ async function startServer() {
         reason: string;
       } | null = null;
 
-      if (apiKey) {
+      if (hasValidPrimaryKey) {
         try {
           const endpoint = MAXI_BASE_URL;
           const requestBody = {
@@ -588,12 +588,13 @@ async function startServer() {
 
             if (parsedData && !upstreamDiagnostic) {
               if (!response.ok || parsedData.code === 401 || parsedData.error) {
-                const errDetail =
+                const rawErrDetail =
                   typeof parsedData.error === 'string'
                     ? parsedData.error
                     : parsedData.error?.message ||
                       parsedData.msg ||
-                      `Vikey AI HTTP ${response.status}`;
+                      `Upstream HTTP ${response.status}`;
+                const errDetail = redactSecrets(rawErrDetail);
 
                 const isAuthErr =
                   response.status === 401 ||
@@ -647,11 +648,11 @@ async function startServer() {
         } catch (fetchErr: unknown) {
           const netMsg =
             fetchErr instanceof Error
-              ? fetchErr.message
-              : 'Koneksi jaringan ke Vikey AI gagal.';
+              ? redactSecrets(fetchErr.message)
+              : 'Koneksi jaringan ke upstream AI gagal.';
           upstreamDiagnostic = {
             category: 'NETWORK_ERROR',
-            reason: `Gagal menghubungi ${MAXI_BASE_URL}: ${netMsg}`,
+            reason: netMsg,
           };
         }
       }
@@ -692,7 +693,6 @@ async function startServer() {
                 reply: fallbackText,
                 provider: 'fallback-ai',
                 model: modelName,
-                diagnostics: upstreamDiagnostic,
               });
               return;
             }
@@ -746,7 +746,6 @@ async function startServer() {
               reply: cloudReply,
               provider: 'vikey-cloud-relay',
               model: MAXI_MODEL,
-              diagnostics: upstreamDiagnostic,
             });
             return;
           }
@@ -761,7 +760,6 @@ async function startServer() {
         reply: localPartnerReply,
         provider: 'maxi-pos-engine',
         model: 'deepseek-v4-flash-pos',
-        diagnostics: upstreamDiagnostic,
       });
     } catch (error: unknown) {
       const fallbackReply = generateResilientMaxiReply(

@@ -1247,46 +1247,22 @@ export const MaxiCriticalPartner: React.FC<MaxiCriticalPartnerProps> = React.mem
       }
 
       // Log upstream AgentRouter diagnostics cleanly via console.info
-      if (data?.diagnostics) {
-        console.info(
-          `[MAXI API][DIAGNOSTICS][${data.diagnostics.category || 'INFO'}]`,
-          {
-            activeProvider: data.provider,
-            activeModel: data.model,
-            upstreamDiagnostics: data.diagnostics,
-          }
-        );
-      }
-
       if (!response.ok) {
         const errCategory =
           data?.code ||
-          (response.status === 401 || response.status === 403
-            ? 'INVALID_API_KEY'
-            : response.status === 400 || response.status === 422
-              ? 'MALFORMED_REQUEST'
-              : 'UPSTREAM_ERROR');
-
-        console.info(`[MAXI API][${errCategory}] Status HTTP ${response.status}:`, {
-          status: response.status,
-          category: errCategory,
-          detail: data?.error,
-          diagnostics: data?.diagnostics,
-        });
+          (response.status === 400 || response.status === 422
+            ? 'MALFORMED_REQUEST'
+            : 'UPSTREAM_ERROR');
 
         const formattedError =
-          errCategory === 'INVALID_API_KEY'
+          errCategory === 'MALFORMED_REQUEST'
             ? isId
-              ? `API Key Tidak Valid (INVALID_API_KEY): ${data?.error || 'Periksa VIKEY_API_KEY Anda.'}`
-              : `Invalid API Key (INVALID_API_KEY): ${data?.error || 'Check your VIKEY_API_KEY.'}`
-            : errCategory === 'MALFORMED_REQUEST'
-              ? isId
-                ? `Struktur Request Bermasalah (MALFORMED_REQUEST): ${data?.error || 'Format pesan/history ditolak.'}`
-                : `Malformed Request (MALFORMED_REQUEST): ${data?.error || 'Invalid message/history payload.'}`
-              : data?.error ||
-                (isId
-                  ? `Gagal menghubungi otak AI pada Maxi (HTTP ${response.status}).`
-                  : `Failed to reach Maxi AI brain (HTTP ${response.status}).`);
+              ? `Struktur Request Bermasalah (MALFORMED_REQUEST): ${data?.error || 'Format pesan/history ditolak.'}`
+              : `Malformed Request (MALFORMED_REQUEST): ${data?.error || 'Invalid message/history payload.'}`
+            : data?.error ||
+              (isId
+                ? `Gagal menghubungi otak AI pada Maxi (HTTP ${response.status}).`
+                : `Failed to reach Maxi AI brain (HTTP ${response.status}).`);
 
         throw new Error(formattedError);
       }

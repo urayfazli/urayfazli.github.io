@@ -13,15 +13,21 @@ function resolveChatCompletionsEndpoint(rawBaseUrl) {
   return `${cleaned}/chat/completions`;
 }
 
+function redactSecrets(input) {
+  return String(input || '')
+    .replace(/\b(vk|sk)-[a-zA-Z0-9_-]{6,}\b/gi, '[REDACTED_KEY]')
+    .replace(/\bAIza[a-zA-Z0-9_-]{10,}\b/g, '[REDACTED_KEY]')
+    .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [REDACTED]');
+}
+
 function getMaxiEnvConfig() {
+  // Strictly server-only environment variables (never use VITE_ prefix so Vite never bundles keys into frontend)
   const apiKey = (
     process.env.VIKEY_API_KEY ||
     process.env.MAXI_API_KEY ||
     process.env.AI_API_KEY ||
     process.env.API_KEY ||
     process.env.AGENTROUTER_API_KEY ||
-    process.env.VITE_VIKEY_API_KEY ||
-    process.env.VITE_MAXI_API_KEY ||
     ''
   ).trim();
 
@@ -375,14 +381,8 @@ export default async function handler(req, res) {
 
   try {
     const { apiKey, baseUrl: MAXI_BASE_URL, model: MAXI_MODEL } = getMaxiEnvConfig();
-
-    if (apiKey && !apiKey.startsWith('vk-') && !apiKey.startsWith('sk-')) {
-      res.status(401).json({
-        error: 'API Key Maxi tidak valid (harus diawali vk- atau sk-).',
-        code: 'INVALID_API_KEY',
-      });
-      return;
-    }
+    const hasValidPrimaryKey =
+      Boolean(apiKey) && (apiKey.startsWith('vk-') || apiKey.startsWith('sk-'));
 
     const { message, history } = parsedBody || {};
     if (!message || typeof message !== 'string' || !message.trim()) {
@@ -444,7 +444,7 @@ export default async function handler(req, res) {
     let upstreamDiagnostic = null;
 
     // 1. Primary AI Brain: Vikey AI (deepseek/deepseek-v4.1-flash)
-    if (apiKey) {
+    if (hasValidPrimaryKey) {
       try {
         const response = await fetch(MAXI_BASE_URL, {
           method: 'POST',
@@ -474,9 +474,6 @@ export default async function handler(req, res) {
           upstreamDiagnostic = {
             category: 'UPSTREAM_FIREWALL_INTERCEPT',
             status: response.status,
-            contentType,
-            reason:
-              'Upstream mengembalikan halaman proteksi WAF; mengalihkan otomatis ke mesin AI cadangan.',
           };
         } else {
           let parsedData = null;
@@ -486,19 +483,18 @@ export default async function handler(req, res) {
             upstreamDiagnostic = {
               category: 'MALFORMED_RESPONSE',
               status: response.status,
-              contentType,
-              reason: 'Respons dari Vikey AI bukan JSON yang valid.',
             };
           }
 
           if (parsedData && !upstreamDiagnostic) {
             if (!response.ok || parsedData.code === 401 || parsedData.error) {
-              const errDetail =
+              const rawErrDetail =
                 typeof parsedData.error === 'string'
                   ? parsedData.error
                   : parsedData.error?.message ||
                     parsedData.msg ||
-                    `Vikey AI HTTP ${response.status}`;
+                    `Upstream HTTP ${response.status}`;
+              const errDetail = redactSecrets(rawErrDetail);
 
               const isAuthErr =
                 response.status === 401 ||
@@ -518,8 +514,6 @@ export default async function handler(req, res) {
                     ? 'MALFORMED_REQUEST'
                     : 'UPSTREAM_ERROR',
                 status: response.status,
-                contentType,
-                reason: errDetail,
               };
             } else {
               const firstChoice = parsedData.choices?.[0];
@@ -542,21 +536,13 @@ export default async function handler(req, res) {
               upstreamDiagnostic = {
                 category: 'MALFORMED_RESPONSE',
                 status: response.status,
-                contentType,
-                reason:
-                  'JSON Vikey AI berhasil dibaca, tetapi field choices[0].message.content kosong.',
               };
             }
           }
         }
-      } catch (fetchErr) {
-        const netMsg =
-          fetchErr instanceof Error
-            ? fetchErr.message
-            : 'Koneksi jaringan ke Vikey AI gagal.';
+      } catch {
         upstreamDiagnostic = {
           category: 'NETWORK_ERROR',
-          reason: `Gagal menghubungi ${MAXI_BASE_URL}: ${netMsg}`,
         };
       }
     }
@@ -596,7 +582,6 @@ export default async function handler(req, res) {
               reply: fallbackText,
               provider: 'fallback-gemini',
               model: modelName,
-              diagnostics: upstreamDiagnostic,
             });
             return;
           }
@@ -606,7 +591,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 3. Zero-Config Cloud LLM Relay (Works on Vercel without extra API keys when AgentRouter WAF blocks AWS IPs)
+    // 3. Zero-Config Cloud LLM Relay
     try {
       const relayMessages = [
         {
@@ -653,7 +638,6 @@ export default async function handler(req, res) {
                 reply: cloudReply,
                 provider: 'vikey-cloud-relay',
                 model: MAXI_MODEL,
-                diagnostics: upstreamDiagnostic,
               });
               return;
             }
@@ -672,7 +656,6 @@ export default async function handler(req, res) {
       reply: localPartnerReply,
       provider: 'maxi-pos-engine',
       model: 'deepseek-v4-flash-pos',
-      diagnostics: upstreamDiagnostic,
     });
   } catch {
     const fallbackReply = generateResilientMaxiReply(
