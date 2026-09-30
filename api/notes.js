@@ -4,6 +4,25 @@
 
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 const SEED_TIME_MS = Date.now();
+const DEFAULT_FIREBASE_PROJECT_ID = 'gen-lang-client-0789777076';
+const DEFAULT_FIRESTORE_DB_ID =
+  'ai-studio-urayfazlialmanwe-65462674-8187-4b73-aed0-324c8f7c007e';
+
+function getServerFirebaseConfig() {
+  const apiKey = (process.env.FIREBASE_API_KEY || '').trim();
+  const projectId = (
+    process.env.FIREBASE_PROJECT_ID || DEFAULT_FIREBASE_PROJECT_ID
+  ).trim();
+  const databaseId = (
+    process.env.FIREBASE_DATABASE_ID || DEFAULT_FIRESTORE_DB_ID
+  ).trim();
+  return {
+    apiKey,
+    projectId,
+    databaseId,
+    enabled: Boolean(apiKey && apiKey.startsWith('AIza') && projectId && databaseId),
+  };
+}
 
 const INITIAL_NOTES = [
   {
@@ -51,8 +70,55 @@ export default async function handler(req, res) {
 
   const now = Date.now();
   memoryNotes = memoryNotes.filter((n) => !n.expiresAtMs || now < n.expiresAtMs);
+  const fbConfig = getServerFirebaseConfig();
+  const baseCollectionUrl = fbConfig.enabled
+    ? `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(fbConfig.projectId)}/databases/${encodeURIComponent(fbConfig.databaseId)}/documents/collaboration_notes`
+    : '';
 
   if (req.method === 'GET') {
+    if (fbConfig.enabled) {
+      try {
+        const resp = await fetch(
+          `${baseCollectionUrl}?pageSize=25&key=${encodeURIComponent(fbConfig.apiKey)}`,
+          { signal: AbortSignal.timeout(4500) }
+        );
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data?.documents) && data.documents.length > 0) {
+            const firestoreNotes = data.documents
+              .map((docItem) => {
+                const fields = docItem.fields || {};
+                const docId = String(docItem.name || '').split('/').pop() || `note-${now}`;
+                const createdAtMs = Number(fields.createdAtMs?.integerValue || now);
+                const expiresAtMs = Number(
+                  fields.expiresAtMs?.integerValue || createdAtMs + ONE_MONTH_MS
+                );
+                return {
+                  id: docId,
+                  senderName: String(fields.senderName?.stringValue || 'Web3 Explorer'),
+                  senderHandle: String(fields.senderHandle?.stringValue || 'Explorer'),
+                  topic: String(fields.topic?.stringValue || 'Node Infrastructure'),
+                  message: String(fields.message?.stringValue || ''),
+                  createdAt: String(
+                    fields.createdAt?.stringValue || new Date(createdAtMs).toISOString()
+                  ),
+                  createdAtMs,
+                  expiresAtMs,
+                };
+              })
+              .filter((n) => n.message && now < n.expiresAtMs)
+              .sort((a, b) => b.createdAtMs - a.createdAtMs);
+
+            if (firestoreNotes.length > 0) {
+              memoryNotes = firestoreNotes.slice(0, 25);
+            }
+          }
+        }
+      } catch {
+        // Fallback to memoryNotes
+      }
+    }
+
     return res.status(200).json({
       notes: memoryNotes.slice(0, 25),
       count: memoryNotes.length,
@@ -74,14 +140,44 @@ export default async function handler(req, res) {
 
       const createdAtMs = Date.now();
       const expiresAtMs = createdAtMs + ONE_MONTH_MS;
+      const safeHandle = senderHandle || 'Web3 Explorer';
+      const createdAtIso = new Date(createdAtMs).toISOString();
+      const docId = `note-${createdAtMs}-${Math.random().toString(36).slice(2, 7)}`;
+
+      if (fbConfig.enabled) {
+        try {
+          await fetch(
+            `${baseCollectionUrl}?documentId=${encodeURIComponent(docId)}&key=${encodeURIComponent(fbConfig.apiKey)}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                fields: {
+                  senderName: { stringValue: senderName },
+                  senderHandle: { stringValue: safeHandle },
+                  topic: { stringValue: topic },
+                  message: { stringValue: message },
+                  createdAt: { stringValue: createdAtIso },
+                  createdAtMs: { integerValue: String(createdAtMs) },
+                  expiresAtMs: { integerValue: String(expiresAtMs) },
+                  ...(authorToken ? { authorToken: { stringValue: authorToken } } : {}),
+                },
+              }),
+              signal: AbortSignal.timeout(4500),
+            }
+          );
+        } catch {
+          // Continue with in-memory storage
+        }
+      }
 
       const newNote = {
-        id: `note-${createdAtMs}-${Math.random().toString(36).slice(2, 7)}`,
+        id: docId,
         senderName,
-        senderHandle: senderHandle || 'Web3 Explorer',
+        senderHandle: safeHandle,
         topic,
         message,
-        createdAt: new Date(createdAtMs).toISOString(),
+        createdAt: createdAtIso,
         createdAtMs,
         expiresAtMs,
         ...(authorToken ? { authorToken } : {}),

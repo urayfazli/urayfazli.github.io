@@ -14,7 +14,26 @@ import firebaseConfig from '../firebase-applet-config.json';
 // when operating in proxied or offline-capable browser environments
 setLogLevel('silent');
 
-const app = initializeApp(firebaseConfig);
+const resolvedFirebaseConfig = {
+  ...firebaseConfig,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfig.projectId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfig.appId,
+  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfig.apiKey || '').trim(),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfig.authDomain,
+  firestoreDatabaseId:
+    import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || firebaseConfig.firestoreDatabaseId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfig.storageBucket,
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId,
+};
+
+export const isFirebaseClientConfigured = Boolean(
+  resolvedFirebaseConfig.apiKey &&
+    resolvedFirebaseConfig.apiKey.startsWith('AIza') &&
+    resolvedFirebaseConfig.projectId
+);
+
+const app = initializeApp(resolvedFirebaseConfig);
 
 function createFirestoreInstance(): Firestore {
   try {
@@ -23,15 +42,15 @@ function createFirestoreInstance(): Firestore {
       {
         experimentalAutoDetectLongPolling: true,
       },
-      firebaseConfig.firestoreDatabaseId
+      resolvedFirebaseConfig.firestoreDatabaseId
     );
   } catch {
-    return getFirestore(app, firebaseConfig.firestoreDatabaseId);
+    return getFirestore(app, resolvedFirebaseConfig.firestoreDatabaseId);
   }
 }
 
 export const db = createFirestoreInstance();
-export const auth = getAuth(app);
+export const auth = isFirebaseClientConfigured ? getAuth(app) : null;
 
 export enum OperationType {
   CREATE = 'create',
@@ -79,13 +98,13 @@ export function handleFirestoreError(
   const errInfo: FirestoreErrorInfo = {
     error: message,
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
       providerInfo:
-        auth.currentUser?.providerData.map((provider) => ({
+        auth?.currentUser?.providerData.map((provider) => ({
           providerId: provider.providerId,
           displayName: provider.displayName,
           email: provider.email,
@@ -99,6 +118,9 @@ export function handleFirestoreError(
 }
 
 export async function testConnection(): Promise<void> {
+  if (!isFirebaseClientConfigured) {
+    return;
+  }
   try {
     await getDocFromServer(doc(db, 'collaboration_notes', '_connection_check'));
   } catch (error) {

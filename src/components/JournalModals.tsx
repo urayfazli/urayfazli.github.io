@@ -12,7 +12,7 @@ import {
   setDoc,
   Timestamp,
 } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../firebase';
+import { db, handleFirestoreError, isFirebaseClientConfigured, OperationType } from '../firebase';
 import {
   CrownDoodle,
   ChibiMiniAvatar,
@@ -979,119 +979,128 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
     }
 
     const myAuthorToken = getOrCreateAuthorToken();
-    const notesRef = collection(db, COLLAB_NOTES_COLLECTION);
-    const notesQuery = query(notesRef, orderBy('createdAtMs', 'desc'), limit(30));
+    const fetchNotesFromApi = () => {
+      fetch('/api/notes')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (Array.isArray(data?.notes) && data.notes.length > 0) {
+            const now = Date.now();
+            setNotes(
+              data.notes.map((n: Partial<CollaborationNote>, idx: number) => {
+                const createdMs =
+                  typeof n.createdAtMs === 'number'
+                    ? n.createdAtMs
+                    : Date.parse(String(n.createdAt || '')) || now - idx * 60000;
+                return {
+                  id: String(n.id || `api-note-${idx}`),
+                  senderName: String(n.senderName || 'Web3 Explorer'),
+                  senderHandle: String(n.senderHandle || 'Explorer'),
+                  topic: String(n.topic || 'Node Infrastructure'),
+                  message: String(n.message || ''),
+                  createdAt: String(n.createdAt || new Date(createdMs).toISOString()),
+                  createdAtMs: createdMs,
+                  expiresAtMs:
+                    typeof n.expiresAtMs === 'number'
+                      ? n.expiresAtMs
+                      : createdMs + ONE_MONTH_MS,
+                  authorToken: n.authorToken,
+                  isOwn: Boolean(n.authorToken && n.authorToken === myAuthorToken),
+                };
+              })
+            );
+          }
+        })
+        .catch(() => {});
+    };
 
-    const unsubscribe = onSnapshot(
-      notesQuery,
-      (snapshot) => {
-        const now = Date.now();
-        const validNotes: CollaborationNote[] = [];
+    let unsubscribe = () => {};
 
-        snapshot.docs.forEach((docSnap) => {
-          const data = docSnap.data();
-          const createdAtMs =
-            typeof data.createdAtMs === 'number'
-              ? data.createdAtMs
-              : Date.parse(String(data.createdAt || '')) || now;
-          const expiresAtMs =
-            typeof data.expiresAtMs === 'number'
-              ? data.expiresAtMs
-              : createdAtMs + ONE_MONTH_MS;
+    if (!isFirebaseClientConfigured) {
+      fetchNotesFromApi();
+    } else {
+      const notesRef = collection(db, COLLAB_NOTES_COLLECTION);
+      const notesQuery = query(notesRef, orderBy('createdAtMs', 'desc'), limit(30));
 
-          // Automatic 1-Month (30-Day) Deletion: Purge expired notes from Firestore immediately
-          if (now >= expiresAtMs || now - createdAtMs >= ONE_MONTH_MS) {
-            deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, docSnap.id)).catch((err) => {
-              handleFirestoreError(err, OperationType.DELETE, `${COLLAB_NOTES_COLLECTION}/${docSnap.id}`);
+      unsubscribe = onSnapshot(
+        notesQuery,
+        (snapshot) => {
+          const now = Date.now();
+          const validNotes: CollaborationNote[] = [];
+
+          snapshot.docs.forEach((docSnap) => {
+            const data = docSnap.data();
+            const createdAtMs =
+              typeof data.createdAtMs === 'number'
+                ? data.createdAtMs
+                : Date.parse(String(data.createdAt || '')) || now;
+            const expiresAtMs =
+              typeof data.expiresAtMs === 'number'
+                ? data.expiresAtMs
+                : createdAtMs + ONE_MONTH_MS;
+
+            // Automatic 1-Month (30-Day) Deletion: Purge expired notes from Firestore immediately
+            if (now >= expiresAtMs || now - createdAtMs >= ONE_MONTH_MS) {
+              deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, docSnap.id)).catch((err) => {
+                handleFirestoreError(err, OperationType.DELETE, `${COLLAB_NOTES_COLLECTION}/${docSnap.id}`);
+              });
+              return;
+            }
+
+            validNotes.push({
+              id: docSnap.id,
+              senderName: String(data.senderName || 'Web3 Explorer'),
+              senderHandle: String(data.senderHandle || 'Explorer'),
+              topic: String(data.topic || 'Node Infrastructure'),
+              message: String(data.message || ''),
+              createdAt: String(data.createdAt || new Date(createdAtMs).toISOString()),
+              createdAtMs,
+              expiresAtMs,
+              authorToken: typeof data.authorToken === 'string' ? data.authorToken : undefined,
+              isOwn: Boolean(data.authorToken && data.authorToken === myAuthorToken),
             });
+          });
+
+          // Seed initial community notes once if Firestore collection is brand new
+          if (snapshot.empty && !hasSeededFirestoreRef.current) {
+            hasSeededFirestoreRef.current = true;
+            const seedBaseMs = Date.now();
+            const freshSeeds: CollaborationNote[] = DEFAULT_COLLAB_NOTES.map((seed, idx) => {
+              const createdAtMs = seedBaseMs - (2 - idx) * 60 * 1000;
+              const expiresAtMs = createdAtMs + ONE_MONTH_MS;
+              return {
+                ...seed,
+                createdAt: new Date(createdAtMs).toISOString(),
+                createdAtMs,
+                expiresAtMs,
+              };
+            });
+            freshSeeds.forEach((seed) => {
+              setDoc(doc(db, COLLAB_NOTES_COLLECTION, seed.id), {
+                senderName: seed.senderName,
+                senderHandle: seed.senderHandle,
+                topic: seed.topic,
+                message: seed.message,
+                createdAt: seed.createdAt,
+                createdAtMs: seed.createdAtMs,
+                expiresAtMs: seed.expiresAtMs,
+                expiresAt: Timestamp.fromMillis(seed.expiresAtMs),
+                authorToken: 'seed-community',
+              }).catch((err) => {
+                handleFirestoreError(err, OperationType.CREATE, `${COLLAB_NOTES_COLLECTION}/${seed.id}`);
+              });
+            });
+            setNotes(freshSeeds);
             return;
           }
 
-          validNotes.push({
-            id: docSnap.id,
-            senderName: String(data.senderName || 'Web3 Explorer'),
-            senderHandle: String(data.senderHandle || 'Explorer'),
-            topic: String(data.topic || 'Node Infrastructure'),
-            message: String(data.message || ''),
-            createdAt: String(data.createdAt || new Date(createdAtMs).toISOString()),
-            createdAtMs,
-            expiresAtMs,
-            authorToken: typeof data.authorToken === 'string' ? data.authorToken : undefined,
-            isOwn: Boolean(data.authorToken && data.authorToken === myAuthorToken),
-          });
-        });
-
-        // Seed initial community notes once if Firestore collection is brand new
-        if (snapshot.empty && !hasSeededFirestoreRef.current) {
-          hasSeededFirestoreRef.current = true;
-          const seedBaseMs = Date.now();
-          const freshSeeds: CollaborationNote[] = DEFAULT_COLLAB_NOTES.map((seed, idx) => {
-            const createdAtMs = seedBaseMs - (2 - idx) * 60 * 1000;
-            const expiresAtMs = createdAtMs + ONE_MONTH_MS;
-            return {
-              ...seed,
-              createdAt: new Date(createdAtMs).toISOString(),
-              createdAtMs,
-              expiresAtMs,
-            };
-          });
-          freshSeeds.forEach((seed) => {
-            setDoc(doc(db, COLLAB_NOTES_COLLECTION, seed.id), {
-              senderName: seed.senderName,
-              senderHandle: seed.senderHandle,
-              topic: seed.topic,
-              message: seed.message,
-              createdAt: seed.createdAt,
-              createdAtMs: seed.createdAtMs,
-              expiresAtMs: seed.expiresAtMs,
-              expiresAt: Timestamp.fromMillis(seed.expiresAtMs),
-              authorToken: 'seed-community',
-            }).catch((err) => {
-              handleFirestoreError(err, OperationType.CREATE, `${COLLAB_NOTES_COLLECTION}/${seed.id}`);
-            });
-          });
-          setNotes(freshSeeds);
-          return;
+          setNotes(validNotes);
+        },
+        (error) => {
+          handleFirestoreError(error, OperationType.LIST, COLLAB_NOTES_COLLECTION);
+          fetchNotesFromApi();
         }
-
-        setNotes(validNotes);
-      },
-      (error) => {
-        handleFirestoreError(error, OperationType.LIST, COLLAB_NOTES_COLLECTION);
-        // Fallback to /api/notes if Firestore is unreachable or blocked by network proxy
-        fetch('/api/notes')
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            if (Array.isArray(data?.notes) && data.notes.length > 0) {
-              const now = Date.now();
-              setNotes(
-                data.notes.map((n: Partial<CollaborationNote>, idx: number) => {
-                  const createdMs =
-                    typeof n.createdAtMs === 'number'
-                      ? n.createdAtMs
-                      : Date.parse(String(n.createdAt || '')) || now - idx * 60000;
-                  return {
-                    id: String(n.id || `api-note-${idx}`),
-                    senderName: String(n.senderName || 'Web3 Explorer'),
-                    senderHandle: String(n.senderHandle || 'Explorer'),
-                    topic: String(n.topic || 'Node Infrastructure'),
-                    message: String(n.message || ''),
-                    createdAt: String(n.createdAt || new Date(createdMs).toISOString()),
-                    createdAtMs: createdMs,
-                    expiresAtMs:
-                      typeof n.expiresAtMs === 'number'
-                        ? n.expiresAtMs
-                        : createdMs + ONE_MONTH_MS,
-                    authorToken: n.authorToken,
-                    isOwn: Boolean(n.authorToken && n.authorToken === myAuthorToken),
-                  };
-                })
-              );
-            }
-          })
-          .catch(() => {});
-      }
-    );
+      );
+    }
 
     // Periodic check while modal remains open to purge any note that crosses the 1-month mark
     const expiryCheckInterval = window.setInterval(() => {
@@ -1099,7 +1108,9 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
       setNotes((prev) =>
         prev.filter((note) => {
           if (now >= note.expiresAtMs) {
-            deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, note.id)).catch(() => {});
+            if (isFirebaseClientConfigured) {
+              deleteDoc(doc(db, COLLAB_NOTES_COLLECTION, note.id)).catch(() => {});
+            }
             return false;
           }
           return true;
@@ -1187,22 +1198,7 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
 
     try {
       let noteId = `local-${nowMs}`;
-      try {
-        const docRef = await addDoc(collection(db, COLLAB_NOTES_COLLECTION), {
-          senderName: safeName,
-          senderHandle: safeHandle,
-          topic: safeTopic,
-          message: safeMessage,
-          createdAt: createdAtIso,
-          createdAtMs: nowMs,
-          expiresAtMs,
-          expiresAt: Timestamp.fromMillis(expiresAtMs),
-          authorToken,
-        });
-        noteId = docRef.id;
-      } catch (firestoreErr) {
-        handleFirestoreError(firestoreErr, OperationType.CREATE, COLLAB_NOTES_COLLECTION);
-        // Fallback to serverless /api/notes so submission succeeds even if Firestore is offline
+      const submitViaApiFallback = async () => {
         const apiRes = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1219,6 +1215,28 @@ export const ConnectJournalModal: React.FC<ConnectModalProps> = ({
           if (apiData?.note?.id) {
             noteId = String(apiData.note.id);
           }
+        }
+      };
+
+      if (!isFirebaseClientConfigured) {
+        await submitViaApiFallback();
+      } else {
+        try {
+          const docRef = await addDoc(collection(db, COLLAB_NOTES_COLLECTION), {
+            senderName: safeName,
+            senderHandle: safeHandle,
+            topic: safeTopic,
+            message: safeMessage,
+            createdAt: createdAtIso,
+            createdAtMs: nowMs,
+            expiresAtMs,
+            expiresAt: Timestamp.fromMillis(expiresAtMs),
+            authorToken,
+          });
+          noteId = docRef.id;
+        } catch (firestoreErr) {
+          handleFirestoreError(firestoreErr, OperationType.CREATE, COLLAB_NOTES_COLLECTION);
+          await submitViaApiFallback();
         }
       }
 
